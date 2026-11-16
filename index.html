@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд трансляций</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #0a0e27;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.08) 0%, transparent 50%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .event-card { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            cursor: pointer;
+        }
+        .event-card:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border-color: rgba(148, 163, 184, 0.3);
+            z-index: 10;
+        }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+        .dot-active { background-color: #10b981; box-shadow: 0 0 12px #10b981, 0 0 20px rgba(16, 185, 129, 0.5); }
+        .dot-moved { background-color: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239, 68, 68, 0.5); }
+        .dot-special { background-color: #fbbf24; box-shadow: 0 0 15px #fbbf24, 0 0 25px rgba(251, 191, 36, 0.6); animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        .faded-event { opacity: 0.4; }
+        .faded-event:hover { opacity: 0.7; }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glow-text { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8), 0 0 60px rgba(102, 126, 234, 0.4); }
+        .neon-border { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); }
+
+        .month-select {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            text-align: center;
+            padding-right: 3rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+        .month-select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3); }
+        .month-select option { background: #0f172a; text-align: center; }
+
+        .month-title {
+            font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
+            margin-bottom: 1rem; padding-left: 0.5rem; border-left: 4px solid #667eea;
+        }
+
+        .calendar-grid { display: grid; gap: 0.5rem; grid-template-columns: repeat(7, 1fr); }
+        @media (max-width: 1024px) { .calendar-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 768px) { .calendar-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 380px) { .calendar-grid { grid-template-columns: 1fr; } }
+
+        .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
+        @media (max-width: 768px) { .calendar-header { display: none; } }
+
+        @media (max-width: 768px) {
+            .prev-month-day, .next-month-day { display: none !important; }
+        }
+
+        @media (max-width: 768px) {
+            .day-cell { min-height: 100px; padding: 0.5rem; }
+            .event-card { padding: 0.5rem; }
+            .event-title { font-size: 0.75rem; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; }
+            .event-info { font-size: 0.65rem; }
+            .empty-day-text { font-size: 0.6rem; }
+        }
+
+        .empty-day-icon { opacity: 0.25; transition: opacity 0.3s ease; }
+        .empty-day-icon:hover { opacity: 0.45; }
+        .empty-day-text { font-size: 0.55rem; color: #94a3b8; text-align: center; line-height: 1.3; opacity: 0.5; font-style: italic; }
+
+        /* Поиск сериалов */
+        .search-container { position: relative; width: 100%; }
+        .search-input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        .search-input::placeholder { color: #64748b; }
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            pointer-events: none;
+        }
+        .search-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .search-dropdown.active { display: block; }
+        .search-dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            transition: background 0.15s;
+        }
+        .search-dropdown-item:last-child { border-bottom: none; }
+        .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
+        .search-dropdown-item.selected { background: rgba(102, 126, 234, 0.3); }
+        .search-dropdown-empty {
+            padding: 14px;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Неоновые кнопки-фильтры */
+        .filter-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .filter-btn:hover { background: rgba(30, 41, 59, 0.8); }
+        .filter-btn.active { color: white; }
+        .filter-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        /* В эфире - зелёное свечение */
+        .filter-btn.airing { border-color: rgba(16, 185, 129, 0.3); }
+        .filter-btn.airing .filter-dot { background: #10b981; box-shadow: 0 0 10px #10b981, 0 0 18px rgba(16, 185, 129, 0.5); }
+        .filter-btn.airing.active { 
+            background: rgba(16, 185, 129, 0.15); 
+            border-color: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+        
+        /* Ждём новый сезон - синее свечение */
+        .filter-btn.new-season { border-color: rgba(59, 130, 246, 0.3); }
+        .filter-btn.new-season .filter-dot { background: #3b82f6; box-shadow: 0 0 10px #3b82f6, 0 0 18px rgba(59, 130, 246, 0.5); }
+        .filter-btn.new-season.active { 
+            background: rgba(59, 130, 246, 0.15); 
+            border-color: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+        
+        /* Сериал завершён - фиолетовое свечение */
+        .filter-btn.ended { border-color: rgba(168, 85, 247, 0.3); }
+        .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
+        .filter-btn.ended.active { 
+            background: rgba(168, 85, 247, 0.15); 
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 1rem;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .flip-container { perspective: 1500px; width: 100%; max-width: 520px; min-height: 200px; max-height: 90vh; }
+        .flip-card { width: 100%; height: 100%; min-height: 200px; position: relative; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .flip-card.flipped { transform: rotateY(180deg); }
+        .flip-face {
+            position: absolute; width: 100%; min-height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            border-radius: 24px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(102, 126, 234, 0.3);
+        }
+        .flip-front { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(102, 126, 234, 0.3); }
+        .flip-back { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid rgba(168, 85, 247, 0.4); transform: rotateY(180deg); padding: 1.5rem 2rem; }
+
+        .close-btn {
+            position: absolute; top: 1rem; right: 1rem; width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; z-index: 10;
+        }
+        .close-btn:hover { background: rgba(239, 68, 68, 0.4); transform: rotate(90deg); }
+
+        .info-row { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(148, 163, 184, 0.1); }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.35rem; font-weight: 600; }
+        .info-value { font-size: 1rem; color: #e2e8f0; font-weight: 500; line-height: 1.5; }
+
+        .quote-box {
+            background: rgba(102, 126, 234, 0.08); border-left: 3px solid #667eea; border-radius: 0 12px 12px 0;
+            padding: 1rem 1.25rem; margin-top: 0.5rem; cursor: pointer; transition: all 0.2s ease; position: relative;
+        }
+        .quote-box:hover { background: rgba(102, 126, 234, 0.15); border-left-color: #a78bfa; }
+        .quote-box:active { transform: scale(0.99); }
+        .quote-box.copied { background: rgba(16, 185, 129, 0.15); border-left-color: #10b981; }
+        .quote-text { font-size: 0.95rem; color: #e2e8f0; line-height: 1.6; font-style: italic; white-space: pre-wrap; word-break: break-word; }
+        .copy-hint { font-size: 0.7rem; color: #94a3b8; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.35rem; }
+        .copy-hint.copied { color: #10b981; }
+
+        @media (max-width: 640px) { .flip-back { padding: 1.25rem 1.25rem 2rem; } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text mb-2">🎬 Дашборд трансляций</h1>
+                <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                <select id="month-filter" class="month-select px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer w-full md:w-[200px]"></select>
+            </div>
+        </header>
+
+        <!-- Панель фильтров -->
+        <div class="glass-card rounded-2xl p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-3">
+                <!-- Поиск сериалов -->
+                <div class="search-container flex-1">
+                    <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
+                    <div id="search-dropdown" class="search-dropdown"></div>
+                    <input type="hidden" id="selected-series" value="">
+                </div>
+                
+                <!-- Кнопки-фильтры -->
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-btn airing" data-filter="airing">
+                        <span class="filter-dot"></span>
+                        В эфире
+                    </button>
+                    <button class="filter-btn new-season" data-filter="new-season">
+                        <span class="filter-dot"></span>
+                        Ждём новый сезон
+                    </button>
+                    <button class="filter-btn ended" data-filter="ended">
+                        <span class="filter-dot"></span>
+                        Сериал завершён
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="schedule-section" class="glass-card rounded-3xl overflow-hidden p-4 md:p-6">
+            <div id="calendar-wrapper"></div>
+            
+            <div class="flex flex-wrap gap-6 mt-6 justify-center text-sm text-slate-400 pb-2 px-6">
+                <div class="flex items-center"><span class="status-dot dot-active"></span> В эфире</div>
+                <div class="flex items-center"><span class="status-dot dot-moved"></span> Перенос</div>
+                <div class="flex items-center"><span class="status-dot dot-special"></span> Финал / Новинка</div>
+            </div>
+            <div class="text-center text-xs text-slate-500 mt-2">💡 Нажмите на карточку трансляции, чтобы узнать подробности</div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="flip-container">
+            <div class="flip-card" id="flip-card">
+                <div class="flip-face flip-front"></div>
+                <div class="flip-face flip-back">
+                    <button class="close-btn" onclick="closeModal()" aria-label="Закрыть">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                        <span class="text-purple-400 mr-2">✨</span> Дополнительная информация
+                    </h3>
+                    <div id="modal-back-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSCGpum3bqWe33FPYcvCEnBkTF6m0v-6A7Hz2zRX91h0xWFUkgA8Kwse7f6X3tMoB3lLQh0tGVahZ1V/pub?gid=560542131&single=true&output=csv',
+            colDate: 'Дата', colSeries: 'Сериал', colSeason: 'Сезон', colEpisode: 'Серия',
+            colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
+            colVoice: 'Озвучка от AlisaDirilis', colDub: 'Дубляж',
+            colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей'
+        };
+
+        let allEvents = [];
+        let uniqueSeries = [];
+        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        const dayNamesFull = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+        const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        const currentMonthIndex = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const today = new Date();
+
+        // Состояние фильтров
+        let activeFilters = {
+            search: '',
+            airing: false,
+            newSeason: false,
+            ended: false
+        };
+
+        const monthSelect = document.getElementById('month-filter');
+        const seriesSearch = document.getElementById('series-search');
+        const searchDropdown = document.getElementById('search-dropdown');
+        const selectedSeriesInput = document.getElementById('selected-series');
+        
+        const allOption = document.createElement('option');
+        allOption.value = 'all'; allOption.textContent = '💜 Весь период';
+        monthSelect.appendChild(allOption);
+        monthNames.forEach((name, index) => {
+            const option = document.createElement('option');
+            option.value = index; option.textContent = `${name} ${currentYear}`;
+            if (index === currentMonthIndex) option.selected = true;
+            monthSelect.appendChild(option);
+        });
+
+        monthSelect.addEventListener('change', () => renderView());
+
+        // ===== ПОИСК СЕРИАЛОВ =====
+        seriesSearch.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            selectedSeriesInput.value = '';
+            activeFilters.search = '';
+            
+            if (!query) {
+                searchDropdown.classList.remove('active');
+                renderView();
+                return;
+            }
+            
+            const matches = uniqueSeries.filter(s => s.toLowerCase().includes(query));
+            
+            if (matches.length === 0) {
+                searchDropdown.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
+                searchDropdown.classList.add('active');
+                return;
+            }
+            
+            searchDropdown.innerHTML = matches.map(s => 
+                `<div class="search-dropdown-item" data-series="${escapeHtml(s)}">${escapeHtml(s)}</div>`
+            ).join('');
+            searchDropdown.classList.add('active');
+            
+            searchDropdown.querySelectorAll('.search-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const seriesName = item.dataset.series;
+                    seriesSearch.value = seriesName;
+                    selectedSeriesInput.value = seriesName;
+                    activeFilters.search = seriesName;
+                    searchDropdown.classList.remove('active');
+                    renderView();
+                });
+            });
+        });
+
+        seriesSearch.addEventListener('focus', function() {
+            if (this.value.trim()) {
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchDropdown.classList.remove('active');
+            }
+        });
+
+        // ===== КНОПКИ-ФИЛЬТРЫ =====
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                this.classList.toggle('active');
+                activeFilters[filter] = this.classList.contains('active');
+                renderView();
+            });
+        });
+
+        // ===== ЛОГИКА ФИЛЬТРАЦИИ =====
+        
+        // Получает последний статус сериала на указанную дату (включительно)
+        function getLastStatusBefore(seriesName, beforeDate) {
+            const relevant = allEvents
+                .filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate)
+                .sort((a, b) => a._parsedDate - b._parsedDate);
+            
+            if (relevant.length === 0) return null;
+            return relevant[relevant.length - 1];
+        }
+
+        // Проверяет, есть ли у сериала эфиры в текущем месяце до today (без финала)
+        function isAiringInCurrentMonth(seriesName) {
+            const monthStart = new Date(currentYear, currentMonthIndex, 1);
+            const monthEnd = new Date(currentYear, currentMonthIndex + 1, 0);
+            
+            const events = allEvents.filter(e => {
+                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                if (!e._parsedDate) return false;
+                if (e._parsedDate < monthStart || e._parsedDate > monthEnd) return false;
+                if (e._parsedDate > today) return false;
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
+                if (status.includes('перенос') || status.includes('перенес')) return false;
+                return true;
+            });
+            
+            return events.length > 0;
+        }
+
+        // Проверяет, ждём ли новый сезон (последний статус до today = финал сезона)
+        function isWaitingNewSeason(seriesName) {
+            const lastEvent = getLastStatusBefore(seriesName, today);
+            if (!lastEvent) return false;
+            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
+            return status.includes('финал сезона');
+        }
+
+        // Проверяет, завершён ли сериал (последний статус до today = финал сериала)
+        function isSeriesEnded(seriesName) {
+            const lastEvent = getLastStatusBefore(seriesName, today);
+            if (!lastEvent) return false;
+            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
+            return status.includes('финал сериала');
+        }
+
+        // Получает список сериалов для каждого фильтра
+        function getFilteredSeriesList() {
+            const airingSeries = new Set();
+            const newSeasonSeries = new Set();
+            const endedSeries = new Set();
+            
+            uniqueSeries.forEach(seriesName => {
+                if (isAiringInCurrentMonth(seriesName)) airingSeries.add(seriesName);
+                if (isWaitingNewSeason(seriesName)) newSeasonSeries.add(seriesName);
+                if (isSeriesEnded(seriesName)) endedSeries.add(seriesName);
+            });
+            
+            return { airingSeries, newSeasonSeries, endedSeries };
+        }
+
+        function matchesActiveFilters(seriesName) {
+            // Если ни один фильтр не активен — показываем все
+            const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
+            if (!hasAnyFilter) return true;
+            
+            // Поиск по имени
+            if (activeFilters.search && seriesName !== activeFilters.search) return false;
+            
+            // Кнопочные фильтры (ИЛИ между ними)
+            const buttonFiltersActive = activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
+            if (buttonFiltersActive) {
+                let matches = false;
+                if (activeFilters.airing && isAiringInCurrentMonth(seriesName)) matches = true;
+                if (activeFilters.newSeason && isWaitingNewSeason(seriesName)) matches = true;
+                if (activeFilters.ended && isSeriesEnded(seriesName)) matches = true;
+                if (!matches) return false;
+            }
+            
+            return true;
+        }
+
+        Papa.parse(CONFIG.csvUrl, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) {
+                allEvents = results.data
+                    .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
+                    .map(row => { const d = parseDate(row[CONFIG.colDate]); return { ...row, _parsedDate: d }; })
+                    .sort((a, b) => (a._parsedDate || 0) - (b._parsedDate || 0));
+                
+                const seriesSet = new Set();
+                allEvents.forEach(event => { const name = event[CONFIG.colSeries].trim(); if (name) seriesSet.add(name); });
+                uniqueSeries = Array.from(seriesSet).sort();
+                
+                renderView();
+                setTimeout(() => scrollToToday(), 300);
+            },
+            error: function() {
+                document.getElementById('calendar-wrapper').innerHTML = `<div class="p-8 text-center text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20">Ошибка загрузки расписания. Проверьте ссылку CSV.</div>`;
+            }
+        });
+
+        function scrollToToday() {
+            const todayCell = document.getElementById('today-cell');
+            if (todayCell) {
+                todayCell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                todayCell.style.transition = 'all 0.5s ease';
+                todayCell.style.boxShadow = '0 0 30px rgba(102, 126, 234, 0.6)';
+                setTimeout(() => { todayCell.style.boxShadow = ''; }, 2000);
+            }
+        }
+
+        function renderView() {
+            const wrapper = document.getElementById('calendar-wrapper');
+            wrapper.innerHTML = '';
+            const monthFilter = monthSelect.value;
+            
+            if (monthFilter === 'all') {
+                const monthsWithEvents = new Set();
+                allEvents.forEach(event => {
+                    if (event._parsedDate && event._parsedDate.getFullYear() === currentYear) {
+                        if (!matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
+                        monthsWithEvents.add(event._parsedDate.getMonth());
+                    }
+                });
+                if (monthsWithEvents.size === 0) {
+                    wrapper.innerHTML = '<div class="text-center text-slate-400 py-12">Нет событий по выбранным фильтрам</div>';
+                    return;
+                }
+                const sortedMonths = Array.from(monthsWithEvents).sort((a, b) => a - b);
+                sortedMonths.forEach(monthIndex => wrapper.appendChild(createMonthBlock(monthIndex)));
+            } else {
+                wrapper.appendChild(createMonthBlock(parseInt(monthFilter)));
+            }
+        }
+
+        function createMonthBlock(monthIndex) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mb-8 last:mb-0';
+            const title = document.createElement('div');
+            title.className = 'month-title';
+            title.textContent = `${monthNames[monthIndex]} ${currentYear}`;
+            wrapper.appendChild(title);
+
+            const header = document.createElement('div');
+            header.className = 'calendar-header';
+            dayNamesFull.forEach((name, idx) => {
+                const dayEl = document.createElement('div');
+                dayEl.className = `text-center text-sm font-bold py-2 ${idx >= 5 ? 'text-purple-400' : 'text-slate-400'}`;
+                dayEl.textContent = name;
+                header.appendChild(dayEl);
+            });
+            wrapper.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'calendar-grid';
+            wrapper.appendChild(grid);
+            renderMonthGrid(grid, monthIndex);
+            return wrapper;
+        }
+
+        function getEmptyDayIcon() {
+            return `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 md:w-12 md:h-12 mx-auto mb-1">
+                <path d="M22 14C22 12 23.5 10 25 10C26.5 10 27 11.5 27 13" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                <path d="M30 12C30 10 31.5 8 33 8C34.5 8 35 9.5 35 11" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                <path d="M38 14C38 12 39.5 10 41 10C42.5 10 43 11.5 43 13" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+                <path d="M12 24H44V40C44 48 38 54 30 54H26C18 54 12 48 12 40V24Z" fill="#1e293b" stroke="#94a3b8" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M44 28H48C52 28 54 30 54 34C54 38 52 40 48 40H44" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M27 36L24 33C22.5 31.5 22.5 29 24 27.5C25.5 26 27.5 26 29 27.5L30 28.5L31 27.5C32.5 26 34.5 26 36 27.5C37.5 29 37.5 31.5 36 33L33 36L30 39.5L27 36Z" fill="#ef4444" opacity="0.8"/>
+            </svg>`;
+        }
+
+        function renderMonthGrid(grid, monthIndex) {
+            grid.innerHTML = '';
+            const firstDay = new Date(currentYear, monthIndex, 1);
+            const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+            let startDayOfWeek = firstDay.getDay();
+            startDayOfWeek = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+            const eventsByMonthDay = {};
+            allEvents.forEach(event => {
+                const d = event._parsedDate;
+                if (d && d.getMonth() === monthIndex && d.getFullYear() === currentYear && matchesActiveFilters(event[CONFIG.colSeries].trim())) {
+                    const day = d.getDate();
+                    if (!eventsByMonthDay[day]) eventsByMonthDay[day] = [];
+                    eventsByMonthDay[day].push(event);
+                }
+            });
+
+            if (startDayOfWeek > 0) {
+                const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
+                const prevYear = monthIndex === 0 ? currentYear - 1 : currentYear;
+                const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+                for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell prev-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20';
+                    const dateObj = new Date(prevYear, prevMonth, day);
+                    const dayOfWeek = dateObj.getDay();
+                    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    const isWeekend = dayIndex >= 5;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'flex items-baseline justify-between mb-2';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
+                    cell.appendChild(dayHeader);
+                    const dayEvents = allEvents.filter(e => {
+                        const d = e._parsedDate;
+                        return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
+                    });
+                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true)));
+                    grid.appendChild(cell);
+                }
+            }
+
+            const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === currentYear;
+            const todayDate = today.getDate();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                const isToday = isCurrentMonth && day === todayDate;
+                const dateObj = new Date(currentYear, monthIndex, day);
+                const dayOfWeek = dateObj.getDay();
+                const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                const isWeekend = dayIndex >= 5;
+                
+                cell.className = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 ${isToday ? 'neon-border border-purple-500/50' : 'hover:bg-slate-800/60'}`;
+                if (isToday) cell.id = 'today-cell';
+                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'flex items-baseline justify-between mb-2';
+                const isMobile = window.innerWidth < 768;
+                const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isToday ? 'text-purple-400' : (isWeekend ? 'text-purple-400/70' : 'text-slate-500')}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold ${isToday ? 'text-purple-400' : 'text-slate-300'}">${day}</span>`;
+                cell.appendChild(dayHeader);
+
+                const dayEvents = eventsByMonthDay[day] || [];
+                if (dayEvents.length > 0) {
+                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, false)));
+                } else {
+                    const emptyBlock = document.createElement('div');
+                    emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                    emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                    cell.appendChild(emptyBlock);
+                }
+                grid.appendChild(cell);
+            }
+
+            const totalCells = startDayOfWeek + daysInMonth;
+            const remainingCells = 7 - (totalCells % 7);
+            if (remainingCells < 7) {
+                const nextMonth = monthIndex === 11 ? 0 : monthIndex + 1;
+                const nextYear = monthIndex === 11 ? currentYear + 1 : currentYear;
+                for (let i = 0; i < remainingCells; i++) {
+                    const day = i + 1;
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell next-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20';
+                    const dateObj = new Date(nextYear, nextMonth, day);
+                    const dayOfWeek = dateObj.getDay();
+                    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    const isWeekend = dayIndex >= 5;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'flex items-baseline justify-between mb-2';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
+                    cell.appendChild(dayHeader);
+                    const dayEvents = allEvents.filter(e => {
+                        const d = e._parsedDate;
+                        return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
+                    });
+                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true)));
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function createEventElement(event, isFaded) {
+            const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
+            let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
+            let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
+
+            if (statusRaw.includes('финал сезона') || statusRaw.includes('финал сериала') || statusRaw.includes('новинка')) {
+                isSpecial = true; dotClass = 'dot-special'; specialText = statusRaw;
+                bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
+            } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
+                dotClass = 'dot-moved'; isMoved = true;
+                bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
+            }
+
+            const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+            const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+            let seasonEpisodeDisplay = '';
+            if (season && episode) seasonEpisodeDisplay = `Сезон ${season} Серия ${episode}`;
+            else if (season) seasonEpisodeDisplay = `Сезон ${season}`;
+            else if (episode) seasonEpisodeDisplay = `Серия ${episode}`;
+            
+            const mod = event[CONFIG.colModerator] ? event[CONFIG.colModerator].trim() : 'Не назначен';
+            const banText = event[CONFIG.colBan] ? event[CONFIG.colBan].trim() : '';
+            const hasBan = banText && banText !== '-';
+
+            const eventEl = document.createElement('div');
+            eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${isFaded ? 'faded-event' : ''}`;
+            
+            let html = `<div class="flex items-center mb-1 gap-1"><span class="status-dot ${dotClass}"></span><span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span></div>`;
+            if (seasonEpisodeDisplay) html += `<div class="text-[10px] text-slate-500 mb-0.5 font-medium event-info">${seasonEpisodeDisplay}</div>`;
+            html += `<div class="text-[10px] text-slate-400 event-info" style="word-wrap: break-word;">Модератор: ${mod}</div>`;
+            if (isMoved) html += `<div class="text-[10px] text-red-400 font-bold mt-0.5">Перенос</div>`;
+            if (isSpecial && specialText) html += `<div class="text-[10px] text-yellow-400 font-bold mt-0.5 capitalize">${specialText}</div>`;
+            if (hasBan) html += `<div class="text-[10px] text-red-400 mt-1 font-semibold flex items-center bg-red-500/10 border border-red-500/30 px-1.5 py-1 rounded-lg w-fit" style="word-wrap: break-word;"><svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> ${escapeHtml(banText)}</div>`;
+
+            eventEl.innerHTML = html;
+            eventEl.addEventListener('click', (e) => { e.stopPropagation(); openModal(event); });
+            return eventEl;
+        }
+
+        const modalOverlay = document.getElementById('modal-overlay');
+        const flipCard = document.getElementById('flip-card');
+        const flipContainer = document.querySelector('.flip-container');
+
+        function formatDateWithDay(dateStr) {
+            if (!dateStr) return '—';
+            const d = parseDate(dateStr.toString().trim());
+            if (!d) return dateStr;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const dayName = d.toLocaleDateString('ru-RU', { weekday: 'long' });
+            return `${day}.${month} (${dayName})`;
+        }
+
+        function openModal(event) {
+            const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
+            let isMoved = false;
+            if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) isMoved = true;
+
+            const backContent = document.getElementById('modal-back-content');
+            backContent.innerHTML = '';
+            const rows = [];
+
+            if (isMoved) {
+                const reason = event[CONFIG.colMoveReason] ? event[CONFIG.colMoveReason].trim() : '';
+                const answer = event[CONFIG.colMoveAnswer] ? event[CONFIG.colMoveAnswer].trim() : '';
+                if (reason) rows.push({ label: '📋 Причина переноса', value: reason });
+                if (answer) rows.push({ label: '💬 Ответ для пользователей', value: answer, isQuote: true });
+            } else {
+                const voice = event[CONFIG.colVoice] ? event[CONFIG.colVoice].trim() : '';
+                const dub = event[CONFIG.colDub] ? event[CONFIG.colDub].trim() : '';
+                let voiceValue = 'ожидаем';
+                if (voice) voiceValue = formatDateWithDay(voice);
+                rows.push({ label: '🎙️ Озвучка от AlisaDirilis', value: voiceValue });
+                let dubValue = 'ожидаем';
+                if (dub) {
+                    const dubLower = dub.toLowerCase();
+                    if (dubLower.includes('не будет')) dubValue = 'Не будет';
+                    else dubValue = formatDateWithDay(dub);
+                }
+                rows.push({ label: '🎤 Дубляж', value: dubValue });
+            }
+
+            rows.forEach(row => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'info-row';
+                if (row.isQuote) {
+                    rowEl.innerHTML = `<div class="info-label">${row.label}</div><div class="quote-box" data-copy-text="${escapeHtml(row.value)}"><div class="quote-text">${escapeHtml(row.value)}</div><div class="copy-hint"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg><span class="copy-hint-text">Нажмите, чтобы скопировать</span></div></div>`;
+                } else {
+                    rowEl.innerHTML = `<div class="info-label">${row.label}</div><div class="info-value">${escapeHtml(row.value)}</div>`;
+                }
+                backContent.appendChild(rowEl);
+            });
+
+            backContent.querySelectorAll('.quote-box').forEach(box => {
+                box.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const text = box.getAttribute('data-copy-text');
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        box.classList.add('copied');
+                        const hint = box.querySelector('.copy-hint-text');
+                        if (hint) hint.textContent = '✓ Скопировано!';
+                        const hintContainer = box.querySelector('.copy-hint');
+                        if (hintContainer) hintContainer.classList.add('copied');
+                        setTimeout(() => {
+                            box.classList.remove('copied');
+                            if (hint) hint.textContent = 'Нажмите, чтобы скопировать';
+                            if (hintContainer) hintContainer.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+                        document.body.appendChild(textarea); textarea.select();
+                        try {
+                            document.execCommand('copy');
+                            box.classList.add('copied');
+                            const hint = box.querySelector('.copy-hint-text');
+                            if (hint) hint.textContent = '✓ Скопировано!';
+                            setTimeout(() => { box.classList.remove('copied'); if (hint) hint.textContent = 'Нажмите, чтобы скопировать'; }, 2000);
+                        } catch (e2) { console.error('Не удалось скопировать', e2); }
+                        document.body.removeChild(textarea);
+                    }
+                });
+            });
+
+            setTimeout(() => {
+                const backFace = document.querySelector('.flip-back');
+                const contentHeight = backFace.scrollHeight;
+                const minHeight = Math.max(200, contentHeight + 60);
+                flipContainer.style.height = `${minHeight}px`;
+                flipCard.style.height = `${minHeight}px`;
+            }, 10);
+
+            flipCard.classList.remove('flipped');
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => flipCard.classList.add('flipped'), 50);
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+                flipCard.classList.remove('flipped');
+                setTimeout(() => { flipContainer.style.height = ''; flipCard.style.height = ''; }, 300);
+            }, 300);
+        }
+
+        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
+
+        function escapeHtml(text) { 
+            if (!text) return ''; 
+            const div = document.createElement('div'); 
+            div.textContent = text; 
+            return div.innerHTML; 
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.toString().trim().split(/[\.\/\-]/);
+            if (parts.length >= 2) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                const year = parts.length >= 3 ? parseInt(parts[2], 10) : currentYear;
+                const d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>
