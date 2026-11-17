@@ -58,24 +58,67 @@
         .glow-text { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8), 0 0 60px rgba(102, 126, 234, 0.4); }
         .neon-border { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); }
 
-        .month-select {
-            background: rgba(30, 41, 59, 0.8);
-            color: #e2e8f0;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            text-align: center;
-            padding-right: 3rem;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
+        /* ===== КАСТОМНЫЙ DROPDOWN МЕСЯЦА ===== */
+        .custom-select-wrapper { position: relative; width: 100%; max-width: 240px; }
+        .custom-select-trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px;
+            color: #e2e8f0; font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; user-select: none;
         }
-        .month-select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3); }
-        .month-select option { background: #0f172a; }
-        .month-select option[disabled] { color: #667eea; font-weight: 700; }
-        .month-select option.year-header { color: #a78bfa; font-weight: 700; }
-        .month-select option.all-years { font-weight: 700; font-size: 15px; }
+        .custom-select-trigger:hover { border-color: rgba(148, 163, 184, 0.4); background: rgba(30, 41, 59, 0.9); }
+        .custom-select-trigger.open {
+            border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+        }
+        .custom-select-trigger .trigger-text { flex: 1; text-align: center; }
+        .custom-select-trigger .trigger-arrow {
+            width: 16px; height: 16px; color: #94a3b8;
+            transition: transform 0.3s ease; flex-shrink: 0;
+        }
+        .custom-select-trigger.open .trigger-arrow { transform: rotate(180deg); }
+
+        .custom-select-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.2); border-top: none;
+            border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+            max-height: 320px; overflow-y: auto; z-index: 1000;
+            display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .custom-select-dropdown.open { display: block; animation: slideDown 0.25s ease; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .custom-select-option {
+            padding: 10px 16px; color: #e2e8f0; font-size: 14px;
+            cursor: pointer; transition: background 0.15s;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+        }
+        .custom-select-option:last-child { border-bottom: none; }
+        .custom-select-option:hover { background: rgba(102, 126, 234, 0.15); }
+        .custom-select-option.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+            color: white; font-weight: 600;
+        }
+        .custom-select-option.year-header {
+            color: #a78bfa; font-weight: 700; font-size: 13px; text-align: center;
+            padding: 10px 16px 6px; cursor: default; border-bottom: none; letter-spacing: 0.5px;
+        }
+        .custom-select-option.year-header:hover { background: transparent; }
+        .custom-select-option.all-years {
+            font-weight: 700; font-size: 15px; text-align: center;
+            padding: 12px 16px; color: #e2e8f0;
+        }
+        .custom-select-option.all-years:hover { background: rgba(102, 126, 234, 0.15); }
+
+        .custom-select-dropdown::-webkit-scrollbar { width: 6px; }
+        .custom-select-dropdown::-webkit-scrollbar-track { background: transparent; }
+        .custom-select-dropdown::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
+        .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
@@ -106,7 +149,7 @@
         .empty-day-icon:hover { opacity: 0.45; }
         .empty-day-text { font-size: 0.55rem; color: #94a3b8; text-align: center; line-height: 1.3; opacity: 0.5; font-style: italic; }
 
-        /* Поиск */
+        /* ===== ПОИСК ===== */
         .search-container { position: relative; width: 100%; }
         .search-input-wrapper { position: relative; }
         .search-input {
@@ -126,7 +169,7 @@
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
 
-        /* 🔥 Плавная анимация dropdown и списков фильтров через grid */
+        /* ===== ПЛАВНАЯ АНИМАЦИЯ СПИСКОВ ===== */
         .search-dropdown, .filter-list-container {
             display: grid;
             grid-template-rows: 0fr;
@@ -141,24 +184,22 @@
         }
 
         .search-dropdown-inner {
-            position: fixed;
             background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2);
             border-radius: 12px;
             max-height: 240px;
             overflow-y: auto;
-            z-index: 99999;
+            z-index: 100;
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            display: none;
         }
-        .search-dropdown.active .search-dropdown-inner { display: block; }
 
         .search-dropdown-item { padding: 10px 15px; cursor: pointer; font-size: 14px; color: #e2e8f0; border-bottom: 1px solid rgba(148, 163, 184, 0.1); transition: background 0.15s; }
         .search-dropdown-item:last-child { border-bottom: none; }
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
 
+        /* ===== КНОПКИ ФИЛЬТРОВ ===== */
         .filter-btn {
             position: relative; display: flex; align-items: center; gap: 8px;
             padding: 10px 16px; background: rgba(30, 41, 59, 0.5);
@@ -181,10 +222,15 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
+        /* ===== СПИСКИ ФИЛЬТРОВ ===== */
+        .filter-list-container { margin-top: 0; padding-top: 4px; }
+        .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
+        
         .filter-list { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 8px; 
+            gap: 10px; 
+            padding-top: 4px;
         }
         .filter-list-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -204,11 +250,8 @@
         .filter-list-item:hover .filter-list-date { background: rgba(102, 126, 234, 0.3); }
         .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
 
-        /* Специальные стили для фильтров календаря */
-        .dimmed-cell {
-            opacity: 0.3;
-            filter: grayscale(0.4);
-        }
+        /* ===== СТИЛИ ДЛЯ ФИЛЬТРОВ КАЛЕНДАРЯ ===== */
+        .dimmed-cell { opacity: 0.3; filter: grayscale(0.4); }
         .highlighted-cell {
             border-color: rgba(168, 85, 247, 0.6) !important;
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
@@ -220,15 +263,16 @@
 
         .new-season-empty-msg {
             text-align: center;
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 20px;
+            margin: 20px 0 0 0;
             border-radius: 12px;
-            border: 1px dashed rgba(148, 163, 184, 0.3);
-            background: rgba(30, 41, 59, 0.4);
+            border: 1px dashed rgba(59, 130, 246, 0.4);
+            background: rgba(59, 130, 246, 0.08);
             display: none;
         }
         .new-season-empty-msg.visible { display: block; animation: fadeIn 0.4s ease; }
 
+        /* ===== ТУЛТИП НОВИНКИ ===== */
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
         .novelty-tooltip {
             position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
@@ -242,6 +286,7 @@
         }
         .novelty-wrapper:hover .novelty-tooltip, .novelty-wrapper.show-tooltip .novelty-tooltip { opacity: 1; }
 
+        /* ===== МОДАЛКА ===== */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
@@ -297,7 +342,17 @@
             </div>
             
             <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                <select id="month-filter" class="month-select px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer w-full md:w-[220px]"></select>
+                <!-- Кастомный dropdown месяца -->
+                <div class="custom-select-wrapper">
+                    <div class="custom-select-trigger" id="month-trigger">
+                        <span class="trigger-text" id="month-trigger-text">Загрузка...</span>
+                        <svg class="trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="custom-select-dropdown" id="month-dropdown"></div>
+                    <input type="hidden" id="month-filter" value="all">
+                </div>
             </div>
         </header>
 
@@ -320,12 +375,19 @@
                 </div>
             </div>
             
+            <!-- Поиск dropdown -->
+            <div id="search-dropdown" class="search-dropdown">
+                <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+            </div>
+            
+            <!-- Списки фильтров -->
             <div id="filter-lists">
                 <div id="airing-list" class="filter-list-container"></div>
                 <div id="new-season-list" class="filter-list-container"></div>
                 <div id="ended-list" class="filter-list-container"></div>
             </div>
             
+            <!-- Сообщение для пустого фильтра "Ждём новый сезон" -->
             <div id="new-season-empty-msg" class="new-season-empty-msg">
                 <p class="text-lg text-slate-300 font-medium">Уже дождались! Заваривай чай и смотри новые серии ♡</p>
             </div>
@@ -341,10 +403,6 @@
             </div>
             <div class="text-center text-xs text-slate-500 mt-2">💡 Нажмите на карточку трансляции, чтобы узнать подробности</div>
         </div>
-    </div>
-
-    <div id="search-dropdown" class="search-dropdown">
-        <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
     </div>
 
     <div id="modal-overlay" class="modal-overlay">
@@ -389,34 +447,87 @@
 
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false };
 
-        const monthSelect = document.getElementById('month-filter');
         const seriesSearch = document.getElementById('series-search');
         const searchClear = document.getElementById('search-clear');
         const searchDropdown = document.getElementById('search-dropdown');
         const searchDropdownInner = document.getElementById('search-dropdown-inner');
         const selectedSeriesInput = document.getElementById('selected-series');
         const newSeasonEmptyMsg = document.getElementById('new-season-empty-msg');
+        const monthFilterInput = document.getElementById('month-filter');
+        const monthTrigger = document.getElementById('month-trigger');
+        const monthTriggerText = document.getElementById('month-trigger-text');
+        const monthDropdown = document.getElementById('month-dropdown');
 
-        monthSelect.addEventListener('change', () => renderView());
-
-        function positionDropdown() {
-            const rect = seriesSearch.getBoundingClientRect();
-            searchDropdownInner.style.top = (rect.bottom + 4) + 'px';
-            searchDropdownInner.style.left = rect.left + 'px';
-            searchDropdownInner.style.width = rect.width + 'px';
+        // ===== КАСТОМНЫЙ DROPDOWN МЕСЯЦА =====
+        function populateMonthFilter() {
+            monthDropdown.innerHTML = '';
+            
+            const allOption = document.createElement('div');
+            allOption.className = 'custom-select-option all-years';
+            allOption.dataset.value = 'all';
+            allOption.textContent = `${currentYear} год`;
+            monthDropdown.appendChild(allOption);
+            
+            availableYears.forEach(year => {
+                const yearHeader = document.createElement('div');
+                yearHeader.className = 'custom-select-option year-header';
+                yearHeader.textContent = `── ${year} год ──`;
+                monthDropdown.appendChild(yearHeader);
+                
+                monthNames.forEach((name, index) => {
+                    const option = document.createElement('div');
+                    option.className = 'custom-select-option';
+                    option.dataset.value = `${year}-${index}`;
+                    option.textContent = `${name} ${year}`;
+                    if (year === currentYear && index === currentMonthIndex) {
+                        option.classList.add('selected');
+                        monthTriggerText.textContent = `${name} ${year}`;
+                        monthFilterInput.value = `${year}-${index}`;
+                    }
+                    monthDropdown.appendChild(option);
+                });
+            });
+            
+            monthDropdown.querySelectorAll('.custom-select-option:not(.year-header)').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const value = option.dataset.value;
+                    monthFilterInput.value = value;
+                    monthTriggerText.textContent = option.textContent;
+                    
+                    monthDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                    
+                    closeMonthDropdown();
+                    renderView();
+                });
+            });
         }
 
-        function openDropdown() {
-            positionDropdown();
-            searchDropdown.classList.add('active');
+        function openMonthDropdown() {
+            monthTrigger.classList.add('open');
+            monthDropdown.classList.add('open');
         }
 
-        function closeDropdown() {
-            searchDropdown.classList.remove('active');
+        function closeMonthDropdown() {
+            monthTrigger.classList.remove('open');
+            monthDropdown.classList.remove('open');
         }
 
-        window.addEventListener('scroll', () => { if (searchDropdown.classList.contains('active')) positionDropdown(); }, true);
-        window.addEventListener('resize', () => { if (searchDropdown.classList.contains('active')) positionDropdown(); });
+        monthTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (monthDropdown.classList.contains('open')) closeMonthDropdown();
+            else openMonthDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select-wrapper')) closeMonthDropdown();
+            if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) closeDropdown();
+        });
+
+        // ===== ПОИСК =====
+        function openDropdown() { searchDropdown.classList.add('active'); }
+        function closeDropdown() { searchDropdown.classList.remove('active'); }
 
         seriesSearch.addEventListener('input', function() {
             const query = this.value.trim().toLowerCase();
@@ -466,12 +577,7 @@
             if (this.value.trim()) this.dispatchEvent(new Event('input'));
         });
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) {
-                closeDropdown();
-            }
-        });
-
+        // ===== КНОПКИ ФИЛЬТРОВ =====
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const filter = this.dataset.filter;
@@ -482,12 +588,12 @@
             });
         });
 
+        // ===== ЛОГИКА ФИЛЬТРАЦИИ =====
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
             return relevant.length > 0 ? relevant[relevant.length - 1] : null;
         }
 
-        // 🔥 Обновлённая логика: финалы включаются, если дата >= сегодня
         function isAiringInCurrentMonth(seriesName) {
             const monthStart = new Date(currentYear, currentMonthIndex, 1);
             const monthEnd = new Date(currentYear, currentMonthIndex + 1, 0);
@@ -496,7 +602,6 @@
                 if (e._parsedDate < monthStart || e._parsedDate > monthEnd) return false;
                 const status = String(e[CONFIG.colStatus] || '').toLowerCase();
                 if (status.includes('перенос') || status.includes('перенес')) return false;
-                // Исключаем только прошедшие финалы
                 if ((status.includes('финал сезона') || status.includes('финал сериала')) && e._parsedDate < today) return false;
                 if (status.includes('в эфире') || status.includes('новинка') || 
                     status.includes('финал сезона') || status.includes('финал сериала')) return true;
@@ -514,7 +619,6 @@
             return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала');
         }
 
-        // 🔥 Обновлённая логика: финалы включаются в список
         function getAiringList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
@@ -567,10 +671,11 @@
             if (activeFilters.ended) activeFilterNames.push('ended');
             const multipleFilters = activeFilterNames.length > 1;
             
+            // ===== В ЭФИРЕ =====
             if (activeFilters.airing) {
                 const items = getAiringList();
-                airingList.innerHTML = items.length > 0 
-                    ? `<div><div class="filter-list">${items.map(item => {
+                if (items.length > 0) {
+                    airingList.innerHTML = `<div><div class="filter-list">${items.map(item => {
                         const borders = multipleFilters ? 'border-airing' : '';
                         const status = String(item.event[CONFIG.colStatus] || '').toLowerCase();
                         let metaText = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
@@ -581,47 +686,64 @@
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${metaText}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
                         </div>`;
-                    }).join('')}</div></div>`
-                    : '<div><div class="filter-list-empty">Нет сериалов в эфире в этом месяце</div></div>';
-                airingList.classList.add('active');
-                attachListClickHandlers(airingList);
-            } else { airingList.classList.remove('active'); }
+                    }).join('')}</div></div>`;
+                    airingList.classList.add('active');
+                    attachListClickHandlers(airingList);
+                } else {
+                    airingList.innerHTML = '<div><div class="filter-list-empty">Нет сериалов в эфире в этом месяце</div></div>';
+                    airingList.classList.add('active');
+                }
+            } else { 
+                airingList.classList.remove('active'); 
+                setTimeout(() => { if (!activeFilters.airing) airingList.innerHTML = ''; }, 400);
+            }
             
+            // ===== ЖДЁМ НОВЫЙ СЕЗОН =====
+            const newSeasonItems = getNewSeasonList();
             if (activeFilters.newSeason) {
-                const items = getNewSeasonList();
-                newSeasonList.innerHTML = items.length > 0
-                    ? `<div><div class="filter-list">${items.map(item => {
+                if (newSeasonItems.length > 0) {
+                    newSeasonList.innerHTML = `<div><div class="filter-list">${newSeasonItems.map(item => {
                         const borders = multipleFilters ? 'border-new-season' : '';
                         return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сезона ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
                         </div>`;
-                    }).join('')}</div></div>`
-                    : '<div><div class="filter-list-empty">Нет сериалов, ожидающих новый сезон</div></div>';
-                newSeasonList.classList.add('active');
-                attachListClickHandlers(newSeasonList);
-            } else { newSeasonList.classList.remove('active'); }
+                    }).join('')}</div></div>`;
+                    newSeasonList.classList.add('active');
+                    attachListClickHandlers(newSeasonList);
+                    newSeasonEmptyMsg.classList.remove('visible');
+                } else {
+                    // 🔥 Пустой список — не раскрываем, показываем только сообщение
+                    newSeasonList.innerHTML = '';
+                    newSeasonList.classList.remove('active');
+                    newSeasonEmptyMsg.classList.add('visible');
+                }
+            } else { 
+                newSeasonList.classList.remove('active'); 
+                newSeasonEmptyMsg.classList.remove('visible');
+                setTimeout(() => { if (!activeFilters.newSeason) newSeasonList.innerHTML = ''; }, 400);
+            }
             
+            // ===== СЕРИАЛ ЗАВЕРШЁН =====
             if (activeFilters.ended) {
                 const items = getEndedSeriesList();
-                endedList.innerHTML = items.length > 0
-                    ? `<div><div class="filter-list">${items.map(item => {
+                if (items.length > 0) {
+                    endedList.innerHTML = `<div><div class="filter-list">${items.map(item => {
                         const borders = multipleFilters ? 'border-ended' : '';
                         return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сериала • Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
                         </div>`;
-                    }).join('')}</div></div>`
-                    : '<div><div class="filter-list-empty">Нет завершённых сериалов</div></div>';
-                endedList.classList.add('active');
-                attachListClickHandlers(endedList);
-            } else { endedList.classList.remove('active'); }
-
-            // Управление сообщением "Уже дождались"
-            if (activeFilters.newSeason && getNewSeasonList().length === 0) {
-                newSeasonEmptyMsg.classList.add('visible');
-            } else {
-                newSeasonEmptyMsg.classList.remove('visible');
+                    }).join('')}</div></div>`;
+                    endedList.classList.add('active');
+                    attachListClickHandlers(endedList);
+                } else {
+                    endedList.innerHTML = '<div><div class="filter-list-empty">Нет завершённых сериалов</div></div>';
+                    endedList.classList.add('active');
+                }
+            } else { 
+                endedList.classList.remove('active'); 
+                setTimeout(() => { if (!activeFilters.ended) endedList.innerHTML = ''; }, 400);
             }
         }
 
@@ -642,8 +764,11 @@
             if (parts.length !== 3) return;
             const day = parseInt(parts[0]), month = parseInt(parts[1]) - 1, year = parseInt(parts[2]);
             const filterValue = `${year}-${month}`;
-            if (monthSelect.value !== filterValue) {
-                monthSelect.value = filterValue;
+            if (monthFilterInput.value !== filterValue) {
+                monthFilterInput.value = filterValue;
+                // Обновляем текст триггера
+                const option = monthDropdown.querySelector(`[data-value="${filterValue}"]`);
+                if (option) monthTriggerText.textContent = option.textContent;
                 renderView();
                 setTimeout(() => highlightCell(day, seriesName), 150);
             } else {
@@ -682,6 +807,7 @@
             return true;
         }
 
+        // ===== ЗАГРУЗКА ДАННЫХ =====
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -708,25 +834,6 @@
             }
         });
 
-        function populateMonthFilter() {
-            monthSelect.innerHTML = '';
-            const allOption = document.createElement('option');
-            allOption.value = 'all'; allOption.textContent = `${currentYear} год`; allOption.className = 'all-years';
-            monthSelect.appendChild(allOption);
-            
-            availableYears.forEach(year => {
-                const yearHeader = document.createElement('option');
-                yearHeader.disabled = true; yearHeader.textContent = `── ${year} год ──`; yearHeader.className = 'year-header';
-                monthSelect.appendChild(yearHeader);
-                monthNames.forEach((name, index) => {
-                    const option = document.createElement('option');
-                    option.value = `${year}-${index}`; option.textContent = `${name} ${year}`;
-                    if (year === currentYear && index === currentMonthIndex) option.selected = true;
-                    monthSelect.appendChild(option);
-                });
-            });
-        }
-
         function parseFilterValue(value) {
             if (value === 'all') return { mode: 'all', year: null, month: null };
             const parts = value.split('-');
@@ -746,7 +853,7 @@
         function renderView() {
             const wrapper = document.getElementById('calendar-wrapper');
             wrapper.innerHTML = '';
-            const filter = parseFilterValue(monthSelect.value);
+            const filter = parseFilterValue(monthFilterInput.value);
             
             if (filter.mode === 'all') {
                 const monthsWithEvents = new Set();
@@ -817,13 +924,18 @@
             let startDayOfWeek = firstDay.getDay();
             startDayOfWeek = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
 
+            // Для "Сериал завершён" загружаем ВСЕ события месяца
+            const useAllEvents = activeFilters.ended;
             const eventsByMonthDay = {};
+            
             allEvents.forEach(event => {
                 const d = event._parsedDate;
-                if (d && d.getMonth() === monthIndex && d.getFullYear() === year && matchesActiveFilters(event[CONFIG.colSeries].trim())) {
-                    const day = d.getDate();
-                    if (!eventsByMonthDay[day]) eventsByMonthDay[day] = [];
-                    eventsByMonthDay[day].push(event);
+                if (d && d.getMonth() === monthIndex && d.getFullYear() === year) {
+                    if (useAllEvents || matchesActiveFilters(event[CONFIG.colSeries].trim())) {
+                        const day = d.getDate();
+                        if (!eventsByMonthDay[day]) eventsByMonthDay[day] = [];
+                        eventsByMonthDay[day].push(event);
+                    }
                 }
             });
 
@@ -857,9 +969,12 @@
             const todayDate = today.getDate();
 
             for (let day = 1; day <= daysInMonth; day++) {
-                const cell = document.createElement('div');
-                const isToday = isCurrentMonth && day === todayDate;
                 const dateObj = new Date(year, monthIndex, day);
+                
+                // Для фильтра "В эфире" скрываем прошлые дни текущего месяца
+                if (activeFilters.airing && dateObj < today) continue;
+                
+                const isToday = isCurrentMonth && day === todayDate;
                 const dayOfWeek = dateObj.getDay();
                 const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
                 const isWeekend = dayIndex >= 5;
@@ -869,6 +984,7 @@
                 let cellClasses = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 hover:bg-slate-800/60`;
                 if (isTodayHighlight) cellClasses += ' neon-border border-purple-500/50';
                 
+                const cell = document.createElement('div');
                 cell.className = cellClasses;
                 if (isToday && !activeFilters.ended) cell.id = 'today-cell';
                 
@@ -885,16 +1001,14 @@
                     dayEvents = dayEvents.filter(e => e._parsedDate >= today);
                 }
 
-                let hasEndedSeries = false;
-                if (activeFilters.ended && dayEvents.length > 0) {
-                    hasEndedSeries = dayEvents.some(e => isSeriesEnded(e[CONFIG.colSeries].trim()));
-                }
-
+                // Логика для "Сериал завершён"
                 if (activeFilters.ended) {
+                    const hasEndedSeries = dayEvents.some(e => isSeriesEnded(e[CONFIG.colSeries].trim()));
+                    
                     if (hasEndedSeries) {
                         cell.classList.add('highlighted-cell');
                         cell.classList.remove('hover:bg-slate-800/60');
-                    } else if (dayEvents.length > 0) {
+                    } else {
                         cell.classList.add('dimmed-cell');
                     }
                 }
