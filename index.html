@@ -110,7 +110,7 @@
         .search-container { position: relative; width: 100%; z-index: 500; }
         .search-input-wrapper { position: relative; }
         .search-input {
-            width: 100%; padding: 12px 40px 12px 40px;
+            width: 100%; padding: 12px 80px 12px 40px;
             background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2);
             border-radius: 12px; color: #e2e8f0; font-size: 14px; font-family: inherit; transition: all 0.2s;
         }
@@ -119,9 +119,9 @@
         .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; z-index: 2; }
         .search-clear {
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            color: rgba(148, 163, 184, 0.5); cursor: pointer; font-size: 12px;
+            color: rgba(148, 163, 184, 0.6); cursor: pointer; font-size: 12px; font-weight: 500;
             padding: 4px 8px; border-radius: 6px; transition: all 0.2s;
-            display: none;
+            display: none; white-space: nowrap;
         }
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
@@ -163,7 +163,6 @@
         .filter-list-container { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, margin 0.3s ease; margin-top: 0; }
         .filter-list-container.active { max-height: 2000px; margin-top: 12px; overflow-y: auto; }
         
-        /* Сетка для списка "В эфире" — адаптивные колонки */
         .filter-list { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -177,7 +176,6 @@
         }
         .filter-list-item:hover { background: rgba(30, 41, 59, 0.8); transform: translateY(-1px); }
         
-        /* Цветные границы при активных фильтрах */
         .filter-list-item.border-airing { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
         .filter-list-item.border-new-season { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 8px rgba(59, 130, 246, 0.2); }
         .filter-list-item.border-ended { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
@@ -188,7 +186,6 @@
         .filter-list-item:hover .filter-list-date { background: rgba(102, 126, 234, 0.3); }
         .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
 
-        /* Тултип "Смотрим без подписки" — только один */
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
         .novelty-tooltip {
             position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
@@ -321,7 +318,8 @@
 
     <script>
         const CONFIG = {
-            csvUrl: 'https://docs.google.com/spreadsheets/d/1Z12S-J7TPvlmBqkPFGGshu_MDHknhiA8jemAMyxYYNk/pub?gid=560542131&single=true&output=csv',
+            // ✅ ОБНОВЛЁННАЯ СТАБИЛЬНАЯ ССЫЛКА
+            csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSCGpum3bqWe33FPYcvCEnBkTF6m0v-6A7Hz2zRX91h0xWFUkgA8Kwse7f6X3tMoB3lLQh0tGVahZ1V/pub?output=csv',
             colDate: 'Дата', colSeries: 'Сериал', colSeason: 'Сезон', colEpisode: 'Серия',
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
             colTranslator: 'Переводчик',
@@ -350,7 +348,6 @@
 
         monthSelect.addEventListener('change', () => renderView());
 
-        // ===== ПОИСК С КНОПКОЙ ОЧИСТКИ =====
         seriesSearch.addEventListener('input', function() {
             const query = this.value.trim().toLowerCase();
             searchClear.classList.toggle('visible', this.value.length > 0);
@@ -403,7 +400,6 @@
             if (!e.target.closest('.search-container')) searchDropdown.classList.remove('active');
         });
 
-        // ===== КНОПКИ-ФИЛЬТРЫ =====
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const filter = this.dataset.filter;
@@ -414,7 +410,6 @@
             });
         });
 
-        // ===== ЛОГИКА ФИЛЬТРАЦИИ =====
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
             return relevant.length > 0 ? relevant[relevant.length - 1] : null;
@@ -428,7 +423,6 @@
                 if (e[CONFIG.colSeries].trim() !== seriesName || !e._parsedDate) return false;
                 if (e._parsedDate < monthStart || e._parsedDate > monthEnd || e._parsedDate > today) return false;
                 const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                // Исключаем только финалы и переносы. "Новинка" и "В эфире" — подходят.
                 if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
                 if (status.includes('перенос') || status.includes('перенес')) return false;
                 return true;
@@ -490,7 +484,6 @@
             const newSeasonList = document.getElementById('new-season-list');
             const endedList = document.getElementById('ended-list');
             
-            // Считаем, какие фильтры активны (для цветных границ)
             const activeFilterNames = [];
             if (activeFilters.airing) activeFilterNames.push('airing');
             if (activeFilters.newSeason) activeFilterNames.push('new-season');
@@ -620,8 +613,9 @@
                 renderView();
                 setTimeout(() => scrollToToday(), 300);
             },
-            error: function() {
-                document.getElementById('calendar-wrapper').innerHTML = `<div class="p-8 text-center text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20">Ошибка загрузки расписания. Проверьте ссылку CSV.</div>`;
+            error: function(err) {
+                console.error("Ошибка загрузки CSV:", err);
+                document.getElementById('calendar-wrapper').innerHTML = `<div class="p-8 text-center text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20">Ошибка загрузки расписания. Проверьте ссылку CSV и доступ к таблице.</div>`;
             }
         });
 
@@ -828,7 +822,6 @@
             }
         }
 
-        // Отслеживание первого клика по "Новинке" на мобильных
         const noveltyFirstClick = new Set();
 
         function createEventElement(event, isFaded) {
@@ -886,14 +879,12 @@
 
             eventEl.innerHTML = html;
             
-            // Обработчик клика для "Новинки"
             if (isNovelty) {
                 eventEl.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const isMobile = window.innerWidth < 768;
                     if (isMobile) {
                         if (!noveltyFirstClick.has(noveltyKey)) {
-                            // Первый клик — показать тултип
                             const wrapper = eventEl.querySelector('.novelty-wrapper');
                             if (wrapper) {
                                 wrapper.classList.add('show-tooltip');
@@ -904,12 +895,10 @@
                                 }, 2000);
                             }
                         } else {
-                            // Второй клик — открыть модалку
                             noveltyFirstClick.delete(noveltyKey);
                             openModal(event);
                         }
                     } else {
-                        // Десктоп — сразу модалка (тултип работает через hover)
                         openModal(event);
                     }
                 });
