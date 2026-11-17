@@ -106,36 +106,34 @@
         .empty-day-icon:hover { opacity: 0.45; }
         .empty-day-text { font-size: 0.55rem; color: #94a3b8; text-align: center; line-height: 1.3; opacity: 0.5; font-style: italic; }
 
-        .search-container { position: relative; width: 100%; z-index: 100; }
+        /* Поиск — поверх всего */
+        .search-container { position: relative; width: 100%; z-index: 500; }
+        .search-input-wrapper { position: relative; }
         .search-input {
-            width: 100%;
-            padding: 12px 15px 12px 40px;
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.2);
-            border-radius: 12px;
-            color: #e2e8f0;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.2s;
+            width: 100%; padding: 12px 40px 12px 40px;
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px; color: #e2e8f0; font-size: 14px; font-family: inherit; transition: all 0.2s;
         }
         .search-input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2); }
         .search-input::placeholder { color: #64748b; }
-        .search-icon {
-            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: #64748b; pointer-events: none; z-index: 2;
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; z-index: 2; }
+        .search-clear {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            color: rgba(148, 163, 184, 0.5); cursor: pointer; font-size: 12px;
+            padding: 4px 8px; border-radius: 6px; transition: all 0.2s;
+            display: none;
         }
+        .search-clear.visible { display: block; }
+        .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
         .search-dropdown {
             position: absolute; top: calc(100% + 4px); left: 0; right: 0;
             background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px;
-            max-height: 240px; overflow-y: auto; z-index: 200;
+            max-height: 240px; overflow-y: auto; z-index: 1000;
             display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
         .search-dropdown.active { display: block; }
-        .search-dropdown-item {
-            padding: 10px 15px; cursor: pointer; font-size: 14px; color: #e2e8f0;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1); transition: background 0.15s;
-        }
+        .search-dropdown-item { padding: 10px 15px; cursor: pointer; font-size: 14px; color: #e2e8f0; border-bottom: 1px solid rgba(148, 163, 184, 0.1); transition: background 0.15s; }
         .search-dropdown-item:last-child { border-bottom: none; }
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
@@ -144,8 +142,7 @@
             position: relative; display: flex; align-items: center; gap: 8px;
             padding: 10px 16px; background: rgba(30, 41, 59, 0.5);
             border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px;
-            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.3s ease; white-space: nowrap;
+            color: #94a3b8; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; white-space: nowrap;
         }
         .filter-btn:hover { background: rgba(30, 41, 59, 0.8); }
         .filter-btn.active { color: white; }
@@ -153,72 +150,62 @@
         
         .filter-btn.airing { border-color: rgba(16, 185, 129, 0.3); }
         .filter-btn.airing .filter-dot { background: #10b981; box-shadow: 0 0 10px #10b981, 0 0 18px rgba(16, 185, 129, 0.5); }
-        .filter-btn.airing.active { 
-            background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.6);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); color: #6ee7b7;
-        }
+        .filter-btn.airing.active { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); color: #6ee7b7; }
         
         .filter-btn.new-season { border-color: rgba(59, 130, 246, 0.3); }
         .filter-btn.new-season .filter-dot { background: #3b82f6; box-shadow: 0 0 10px #3b82f6, 0 0 18px rgba(59, 130, 246, 0.5); }
-        .filter-btn.new-season.active { 
-            background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.6);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); color: #93c5fd;
-        }
+        .filter-btn.new-season.active { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); color: #93c5fd; }
         
         .filter-btn.ended { border-color: rgba(168, 85, 247, 0.3); }
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
-        .filter-btn.ended.active { 
-            background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6);
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe;
-        }
+        .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
-        .filter-list-container {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.4s ease, margin 0.3s ease; margin-top: 0;
+        .filter-list-container { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, margin 0.3s ease; margin-top: 0; }
+        .filter-list-container.active { max-height: 2000px; margin-top: 12px; overflow-y: auto; }
+        
+        /* Сетка для списка "В эфире" — адаптивные колонки */
+        .filter-list { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px; 
         }
-        .filter-list-container.active { max-height: 600px; margin-top: 12px; overflow-y: auto; }
-        .filter-list { display: flex; flex-direction: column; gap: 6px; }
         .filter-list-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px 14px; background: rgba(30, 41, 59, 0.5);
             border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 10px;
-            cursor: pointer; transition: all 0.2s; flex-wrap: wrap; gap: 8px;
+            cursor: pointer; transition: all 0.2s; gap: 8px;
         }
-        .filter-list-item:hover {
-            background: rgba(30, 41, 59, 0.8); border-color: rgba(148, 163, 184, 0.3);
-            transform: translateX(2px);
-        }
+        .filter-list-item:hover { background: rgba(30, 41, 59, 0.8); transform: translateY(-1px); }
+        
+        /* Цветные границы при активных фильтрах */
+        .filter-list-item.border-airing { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+        .filter-list-item.border-new-season { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 8px rgba(59, 130, 246, 0.2); }
+        .filter-list-item.border-ended { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
+        
         .filter-list-name { font-weight: 600; font-size: 14px; color: #e2e8f0; }
         .filter-list-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-        .filter-list-date {
-            font-size: 13px; color: #cbd5e1; font-weight: 500;
-            padding: 4px 10px; background: rgba(102, 126, 234, 0.15);
-            border-radius: 6px; transition: all 0.2s;
-        }
+        .filter-list-date { font-size: 13px; color: #cbd5e1; font-weight: 500; padding: 4px 10px; background: rgba(102, 126, 234, 0.15); border-radius: 6px; flex-shrink: 0; }
         .filter-list-item:hover .filter-list-date { background: rgba(102, 126, 234, 0.3); }
-        .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; }
+        .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
 
+        /* Тултип "Смотрим без подписки" — только один */
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
         .novelty-tooltip {
-            position: absolute; bottom: calc(100% + 8px); left: 50%;
-            transform: translateX(-50%); background: rgba(251, 191, 36, 0.95);
-            color: #1e1b4b; padding: 6px 12px; border-radius: 8px;
-            font-size: 11px; font-weight: 700; white-space: nowrap;
-            pointer-events: none; opacity: 0; transition: opacity 0.2s;
-            z-index: 50; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+            position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+            background: rgba(251, 191, 36, 0.95); color: #1e1b4b; padding: 6px 12px; border-radius: 8px;
+            font-size: 11px; font-weight: 700; white-space: nowrap; pointer-events: none; opacity: 0;
+            transition: opacity 0.2s; z-index: 50; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
         }
         .novelty-tooltip::after {
-            content: ''; position: absolute; top: 100%; left: 50%;
-            transform: translateX(-50%); border: 5px solid transparent;
-            border-top-color: rgba(251, 191, 36, 0.95);
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border: 5px solid transparent; border-top-color: rgba(251, 191, 36, 0.95);
         }
-        .novelty-wrapper:hover .novelty-tooltip,
-        .novelty-wrapper.show-tooltip .novelty-tooltip { opacity: 1; }
+        .novelty-wrapper:hover .novelty-tooltip, .novelty-wrapper.show-tooltip .novelty-tooltip { opacity: 1; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            z-index: 2000; display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 1rem;
         }
         .modal-overlay.active { opacity: 1; pointer-events: all; }
@@ -276,24 +263,21 @@
         <div class="glass-card rounded-2xl p-4 mb-6">
             <div class="flex flex-col md:flex-row gap-3">
                 <div class="search-container flex-1">
-                    <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
+                        <span class="search-clear" id="search-clear" title="Очистить">✕ Очистить</span>
+                    </div>
                     <div id="search-dropdown" class="search-dropdown"></div>
                     <input type="hidden" id="selected-series" value="">
                 </div>
                 
                 <div class="flex flex-wrap gap-2">
-                    <button class="filter-btn airing" data-filter="airing">
-                        <span class="filter-dot"></span>В эфире
-                    </button>
-                    <button class="filter-btn new-season" data-filter="new-season">
-                        <span class="filter-dot"></span>Ждём новый сезон
-                    </button>
-                    <button class="filter-btn ended" data-filter="ended">
-                        <span class="filter-dot"></span>Сериал завершён
-                    </button>
+                    <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
+                    <button class="filter-btn new-season" data-filter="new-season"><span class="filter-dot"></span>Ждём новый сезон</button>
+                    <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
                 </div>
             </div>
             
@@ -337,7 +321,7 @@
 
     <script>
         const CONFIG = {
-            csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSCGpum3bqWe33FPYcvCEnBkTF6m0v-6A7Hz2zRX91h0xWFUkgA8Kwse7f6X3tMoB3lLQh0tGVahZ1V/pub?gid=560542131&single=true&output=csv',
+            csvUrl: 'https://docs.google.com/spreadsheets/d/1Z12S-J7TPvlmBqkPFGGshu_MDHknhiA8jemAMyxYYNk/pub?gid=560542131&single=true&output=csv',
             colDate: 'Дата', colSeries: 'Сериал', colSeason: 'Сезон', colEpisode: 'Серия',
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
             colTranslator: 'Переводчик',
@@ -360,14 +344,16 @@
 
         const monthSelect = document.getElementById('month-filter');
         const seriesSearch = document.getElementById('series-search');
+        const searchClear = document.getElementById('search-clear');
         const searchDropdown = document.getElementById('search-dropdown');
         const selectedSeriesInput = document.getElementById('selected-series');
 
         monthSelect.addEventListener('change', () => renderView());
 
-        // ===== ПОИСК СЕРИАЛОВ =====
+        // ===== ПОИСК С КНОПКОЙ ОЧИСТКИ =====
         seriesSearch.addEventListener('input', function() {
             const query = this.value.trim().toLowerCase();
+            searchClear.classList.toggle('visible', this.value.length > 0);
             selectedSeriesInput.value = '';
             activeFilters.search = '';
             
@@ -390,12 +376,23 @@
                 item.addEventListener('click', () => {
                     const seriesName = item.dataset.series;
                     seriesSearch.value = seriesName;
+                    searchClear.classList.add('visible');
                     selectedSeriesInput.value = seriesName;
                     activeFilters.search = seriesName;
                     searchDropdown.classList.remove('active');
                     renderView();
                 });
             });
+        });
+
+        searchClear.addEventListener('click', function(e) {
+            e.stopPropagation();
+            seriesSearch.value = '';
+            searchClear.classList.remove('visible');
+            selectedSeriesInput.value = '';
+            activeFilters.search = '';
+            searchDropdown.classList.remove('active');
+            renderView();
         });
 
         seriesSearch.addEventListener('focus', function() {
@@ -419,70 +416,53 @@
 
         // ===== ЛОГИКА ФИЛЬТРАЦИИ =====
         function getLastStatusBefore(seriesName, beforeDate) {
-            const relevant = allEvents
-                .filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate)
-                .sort((a, b) => a._parsedDate - b._parsedDate);
-            if (relevant.length === 0) return null;
-            return relevant[relevant.length - 1];
+            const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
+            return relevant.length > 0 ? relevant[relevant.length - 1] : null;
         }
 
         function isAiringInCurrentMonth(seriesName) {
             const monthStart = new Date(currentYear, currentMonthIndex, 1);
             const monthEnd = new Date(currentYear, currentMonthIndex + 1, 0);
             
-            const events = allEvents.filter(e => {
-                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                if (!e._parsedDate) return false;
-                if (e._parsedDate < monthStart || e._parsedDate > monthEnd) return false;
-                if (e._parsedDate > today) return false;
+            return allEvents.some(e => {
+                if (e[CONFIG.colSeries].trim() !== seriesName || !e._parsedDate) return false;
+                if (e._parsedDate < monthStart || e._parsedDate > monthEnd || e._parsedDate > today) return false;
                 const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                // Исключаем только финалы и переносы. "Новинка" и "В эфире" — подходят.
                 if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
                 if (status.includes('перенос') || status.includes('перенес')) return false;
                 return true;
             });
-            return events.length > 0;
         }
 
         function isWaitingNewSeason(seriesName) {
             const lastEvent = getLastStatusBefore(seriesName, today);
-            if (!lastEvent) return false;
-            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
-            return status.includes('финал сезона');
+            return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона');
         }
 
         function isSeriesEnded(seriesName) {
             const lastEvent = getLastStatusBefore(seriesName, today);
-            if (!lastEvent) return false;
-            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
-            return status.includes('финал сериала');
+            return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала');
         }
 
         function getAiringList() {
             const monthStart = new Date(currentYear, currentMonthIndex, 1);
             const monthEnd = new Date(currentYear, currentMonthIndex + 1, 0);
             const result = [];
-            
             uniqueSeries.forEach(seriesName => {
                 if (!isAiringInCurrentMonth(seriesName)) return;
-                const events = allEvents
-                    .filter(e => {
-                        if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                        if (!e._parsedDate) return false;
-                        if (e._parsedDate < monthStart || e._parsedDate > monthEnd) return false;
-                        if (e._parsedDate < today) return false;
-                        const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                        if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
-                        if (status.includes('перенос') || status.includes('перенес')) return false;
-                        return true;
-                    })
-                    .sort((a, b) => a._parsedDate - b._parsedDate);
+                const events = allEvents.filter(e => {
+                    if (e[CONFIG.colSeries].trim() !== seriesName || !e._parsedDate) return false;
+                    if (e._parsedDate < monthStart || e._parsedDate > monthEnd || e._parsedDate < today) return false;
+                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                    if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
+                    if (status.includes('перенос') || status.includes('перенес')) return false;
+                    return true;
+                }).sort((a, b) => a._parsedDate - b._parsedDate);
                 
-                if (events.length > 0) {
-                    result.push({ series: seriesName, date: events[0]._parsedDate, event: events[0] });
-                }
+                if (events.length > 0) result.push({ series: seriesName, date: events[0]._parsedDate, event: events[0] });
             });
-            result.sort((a, b) => a.date - b.date);
-            return result;
+            return result.sort((a, b) => a.date - b.date);
         }
 
         function getNewSeasonList() {
@@ -492,8 +472,7 @@
                 const lastEvent = getLastStatusBefore(seriesName, today);
                 result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
             });
-            result.sort((a, b) => b.date - a.date);
-            return result;
+            return result.sort((a, b) => b.date - a.date);
         }
 
         function getEndedSeriesList() {
@@ -503,8 +482,7 @@
                 const lastEvent = getLastStatusBefore(seriesName, today);
                 result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
             });
-            result.sort((a, b) => b.date - a.date);
-            return result;
+            return result.sort((a, b) => b.date - a.date);
         }
 
         function updateFilterLists() {
@@ -512,94 +490,75 @@
             const newSeasonList = document.getElementById('new-season-list');
             const endedList = document.getElementById('ended-list');
             
+            // Считаем, какие фильтры активны (для цветных границ)
+            const activeFilterNames = [];
+            if (activeFilters.airing) activeFilterNames.push('airing');
+            if (activeFilters.newSeason) activeFilterNames.push('new-season');
+            if (activeFilters.ended) activeFilterNames.push('ended');
+            const multipleFilters = activeFilterNames.length > 1;
+            
             if (activeFilters.airing) {
                 const items = getAiringList();
                 airingList.innerHTML = items.length > 0 
-                    ? `<div class="filter-list">${items.map(item => `
-                        <div class="filter-list-item" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
-                            <div>
-                                <div class="filter-list-name">${escapeHtml(item.series)}</div>
-                                <div class="filter-list-meta">Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div>
-                            </div>
+                    ? `<div class="filter-list">${items.map(item => {
+                        const borders = multipleFilters ? 'border-airing' : '';
+                        return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
-                        </div>
-                    `).join('')}</div>`
+                        </div>`;
+                    }).join('')}</div>`
                     : '<div class="filter-list-empty">Нет сериалов в эфире в этом месяце</div>';
                 airingList.classList.add('active');
                 attachListClickHandlers(airingList);
-            } else {
-                airingList.classList.remove('active');
-                setTimeout(() => { airingList.innerHTML = ''; }, 400);
-            }
+            } else { airingList.classList.remove('active'); setTimeout(() => { airingList.innerHTML = ''; }, 400); }
             
             if (activeFilters.newSeason) {
                 const items = getNewSeasonList();
                 newSeasonList.innerHTML = items.length > 0
-                    ? `<div class="filter-list">${items.map(item => `
-                        <div class="filter-list-item" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
-                            <div>
-                                <div class="filter-list-name">${escapeHtml(item.series)}</div>
-                                <div class="filter-list-meta">Финал сезона ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div>
-                            </div>
+                    ? `<div class="filter-list">${items.map(item => {
+                        const borders = multipleFilters ? 'border-new-season' : '';
+                        return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сезона ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
-                        </div>
-                    `).join('')}</div>`
+                        </div>`;
+                    }).join('')}</div>`
                     : '<div class="filter-list-empty">Нет сериалов, ожидающих новый сезон</div>';
                 newSeasonList.classList.add('active');
                 attachListClickHandlers(newSeasonList);
-            } else {
-                newSeasonList.classList.remove('active');
-                setTimeout(() => { newSeasonList.innerHTML = ''; }, 400);
-            }
+            } else { newSeasonList.classList.remove('active'); setTimeout(() => { newSeasonList.innerHTML = ''; }, 400); }
             
             if (activeFilters.ended) {
                 const items = getEndedSeriesList();
                 endedList.innerHTML = items.length > 0
-                    ? `<div class="filter-list">${items.map(item => `
-                        <div class="filter-list-item" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
-                            <div>
-                                <div class="filter-list-name">${escapeHtml(item.series)}</div>
-                                <div class="filter-list-meta">Финал сериала • Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div>
-                            </div>
+                    ? `<div class="filter-list">${items.map(item => {
+                        const borders = multipleFilters ? 'border-ended' : '';
+                        return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сериала • Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
-                        </div>
-                    `).join('')}</div>`
+                        </div>`;
+                    }).join('')}</div>`
                     : '<div class="filter-list-empty">Нет завершённых сериалов</div>';
                 endedList.classList.add('active');
                 attachListClickHandlers(endedList);
-            } else {
-                endedList.classList.remove('active');
-                setTimeout(() => { endedList.innerHTML = ''; }, 400);
-            }
+            } else { endedList.classList.remove('active'); setTimeout(() => { endedList.innerHTML = ''; }, 400); }
         }
 
         function attachListClickHandlers(container) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const dateStr = item.dataset.date;
-                    const seriesName = item.dataset.series;
-                    scrollToCell(dateStr, seriesName);
-                });
+                item.addEventListener('click', () => scrollToCell(item.dataset.date, item.dataset.series));
             });
         }
 
         function formatDateDMY(date) {
             if (!date) return '';
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}.${month}.${year}`;
+            return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
         }
-
         function formatDateForCell(date) { return formatDateDMY(date); }
 
         function scrollToCell(dateStr, seriesName) {
             const parts = dateStr.split('.');
             if (parts.length !== 3) return;
-            const day = parseInt(parts[0]);
-            const month = parseInt(parts[1]) - 1;
-            const year = parseInt(parts[2]);
-            
+            const day = parseInt(parts[0]), month = parseInt(parts[1]) - 1, year = parseInt(parts[2]);
             const filterValue = `${year}-${month}`;
             if (monthSelect.value !== filterValue) {
                 monthSelect.value = filterValue;
@@ -611,12 +570,10 @@
         }
 
         function highlightCell(day, seriesName) {
-            const cells = document.querySelectorAll('.day-cell');
-            cells.forEach(cell => {
+            document.querySelectorAll('.day-cell').forEach(cell => {
                 const dayNum = cell.querySelector('.text-sm.font-bold');
                 if (dayNum && parseInt(dayNum.textContent) === day) {
-                    const cards = cell.querySelectorAll('.event-card');
-                    cards.forEach(card => {
+                    cell.querySelectorAll('.event-card').forEach(card => {
                         const title = card.querySelector('.event-title');
                         if (title && title.textContent.trim() === seriesName) {
                             cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
@@ -632,11 +589,8 @@
         function matchesActiveFilters(seriesName) {
             const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
             if (!hasAnyFilter) return true;
-            
             if (activeFilters.search && seriesName !== activeFilters.search) return false;
-            
-            const buttonFiltersActive = activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
-            if (buttonFiltersActive) {
+            if (activeFilters.airing || activeFilters.newSeason || activeFilters.ended) {
                 let matches = false;
                 if (activeFilters.airing && isAiringInCurrentMonth(seriesName)) matches = true;
                 if (activeFilters.newSeason && isWaitingNewSeason(seriesName)) matches = true;
@@ -646,17 +600,14 @@
             return true;
         }
 
-        // ===== ЗАГРУЗКА ДАННЫХ И ПОСТРОЕНИЕ ФИЛЬТРА МЕСЯЦОВ =====
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                allEvents = results.data
-                    .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
+                allEvents = results.data.filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
                     .map(row => { const d = parseDate(row[CONFIG.colDate]); return { ...row, _parsedDate: d }; })
                     .sort((a, b) => (a._parsedDate || 0) - (b._parsedDate || 0));
                 
-                const seriesSet = new Set();
-                const yearsSet = new Set();
+                const seriesSet = new Set(), yearsSet = new Set();
                 allEvents.forEach(event => { 
                     const name = event[CONFIG.colSeries].trim(); 
                     if (name) seriesSet.add(name);
@@ -676,40 +627,27 @@
 
         function populateMonthFilter() {
             monthSelect.innerHTML = '';
-            
-            // Опция "Все года" (жирным шрифтом)
             const allOption = document.createElement('option');
-            allOption.value = 'all';
-            allOption.textContent = `${currentYear} год`;
-            allOption.className = 'all-years';
+            allOption.value = 'all'; allOption.textContent = `${currentYear} год`; allOption.className = 'all-years';
             monthSelect.appendChild(allOption);
             
-            // Группы по годам
             availableYears.forEach(year => {
                 const yearHeader = document.createElement('option');
-                yearHeader.disabled = true;
-                yearHeader.textContent = `── ${year} год ──`;
-                yearHeader.className = 'year-header';
+                yearHeader.disabled = true; yearHeader.textContent = `── ${year} год ──`; yearHeader.className = 'year-header';
                 monthSelect.appendChild(yearHeader);
-                
                 monthNames.forEach((name, index) => {
                     const option = document.createElement('option');
-                    option.value = `${year}-${index}`;
-                    option.textContent = `${name} ${year}`;
+                    option.value = `${year}-${index}`; option.textContent = `${name} ${year}`;
                     if (year === currentYear && index === currentMonthIndex) option.selected = true;
                     monthSelect.appendChild(option);
                 });
             });
         }
 
-        // Парсинг значения фильтра: 'all' или 'YYYY-MM'
         function parseFilterValue(value) {
             if (value === 'all') return { mode: 'all', year: null, month: null };
             const parts = value.split('-');
-            if (parts.length === 2) {
-                return { mode: 'month', year: parseInt(parts[0]), month: parseInt(parts[1]) };
-            }
-            return { mode: 'all', year: null, month: null };
+            return parts.length === 2 ? { mode: 'month', year: parseInt(parts[0]), month: parseInt(parts[1]) } : { mode: 'all', year: null, month: null };
         }
 
         function scrollToToday() {
@@ -728,28 +666,20 @@
             const filter = parseFilterValue(monthSelect.value);
             
             if (filter.mode === 'all') {
-                // Показываем все месяцы всех годов, где есть события
-                const monthsWithEvents = new Set(); // ключ: "YYYY-MM"
+                const monthsWithEvents = new Set();
                 allEvents.forEach(event => {
-                    if (!event._parsedDate) return;
-                    if (!matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
-                    const key = `${event._parsedDate.getFullYear()}-${event._parsedDate.getMonth()}`;
-                    monthsWithEvents.add(key);
+                    if (!event._parsedDate || !matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
+                    monthsWithEvents.add(`${event._parsedDate.getFullYear()}-${event._parsedDate.getMonth()}`);
                 });
-                
                 if (monthsWithEvents.size === 0) {
                     wrapper.innerHTML = '<div class="text-center text-slate-400 py-12">Нет событий по выбранным фильтрам</div>';
                     return;
                 }
-                
-                // Сортируем по году и месяцу
-                const sortedKeys = Array.from(monthsWithEvents).sort((a, b) => {
+                Array.from(monthsWithEvents).sort((a, b) => {
                     const [ya, ma] = a.split('-').map(Number);
                     const [yb, mb] = b.split('-').map(Number);
                     return ya - yb || ma - mb;
-                });
-                
-                sortedKeys.forEach(key => {
+                }).forEach(key => {
                     const [year, month] = key.split('-').map(Number);
                     wrapper.appendChild(createMonthBlock(year, month));
                 });
@@ -811,7 +741,6 @@
                 }
             });
 
-            // Ячейки предыдущего месяца
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
@@ -830,11 +759,10 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
                     cell.appendChild(dayHeader);
-                    const dayEvents = allEvents.filter(e => {
+                    allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
-                    });
-                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true)));
+                    }).forEach(event => cell.appendChild(createEventElement(event, true)));
                     grid.appendChild(cell);
                 }
             }
@@ -872,7 +800,6 @@
                 grid.appendChild(cell);
             }
 
-            // Ячейки следующего месяца
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
@@ -892,15 +819,17 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
                     cell.appendChild(dayHeader);
-                    const dayEvents = allEvents.filter(e => {
+                    allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
-                    });
-                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true)));
+                    }).forEach(event => cell.appendChild(createEventElement(event, true)));
                     grid.appendChild(cell);
                 }
             }
         }
+
+        // Отслеживание первого клика по "Новинке" на мобильных
+        const noveltyFirstClick = new Set();
 
         function createEventElement(event, isFaded) {
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
@@ -933,35 +862,64 @@
             const eventEl = document.createElement('div');
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${isFaded ? 'faded-event' : ''}`;
             
-            const noveltyTooltip = (isSpecial && specialText.includes('новинка')) 
-                ? `<div class="novelty-tooltip">Смотрим без подписки</div>` 
-                : '';
-            const noveltyClass = (isSpecial && specialText.includes('новинка')) ? 'novelty-wrapper' : '';
+            const isNovelty = isSpecial && specialText.includes('новинка');
+            const noveltyKey = `${event[CONFIG.colSeries]}-${formatDateDMY(eventDate)}`;
             
-            let html = `<div class="flex items-center mb-1 gap-1"><div class="${noveltyClass}"><span class="status-dot ${effectiveDotClass}"></span>${noveltyTooltip}<span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span></div></div>`;
+            let html = `<div class="flex items-center mb-1 gap-1">`;
+            if (isNovelty) {
+                html += `<div class="novelty-wrapper" data-novelty-key="${noveltyKey}">
+                    <span class="status-dot ${effectiveDotClass}"></span>
+                    <div class="novelty-tooltip">Смотрим без подписки</div>
+                    <span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span>
+                </div>`;
+            } else {
+                html += `<span class="status-dot ${effectiveDotClass}"></span>
+                    <span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span>`;
+            }
+            html += `</div>`;
+            
             if (seasonEpisodeDisplay) html += `<div class="text-[10px] text-slate-500 mb-0.5 font-medium event-info">${seasonEpisodeDisplay}</div>`;
             html += `<div class="text-[10px] text-slate-400 event-info" style="word-wrap: break-word;">Модератор: ${mod}</div>`;
             if (isMoved) html += `<div class="text-[10px] text-red-400 font-bold mt-0.5">Перенос</div>`;
-            if (isSpecial && specialText) html += `<div class="text-[10px] text-yellow-400 font-bold mt-0.5 capitalize novelty-wrapper" style="cursor: help;"><div class="novelty-tooltip">Смотрим без подписки</div>${specialText}</div>`;
+            if (isSpecial && specialText) html += `<div class="text-[10px] text-yellow-400 font-bold mt-0.5 capitalize">${specialText}</div>`;
             if (hasBan) html += `<div class="text-[10px] text-red-400 mt-1 font-semibold flex items-center bg-red-500/10 border border-red-500/30 px-1.5 py-1 rounded-lg w-fit" style="word-wrap: break-word;"><svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> ${escapeHtml(banText)}</div>`;
 
             eventEl.innerHTML = html;
             
-            if (isSpecial && specialText.includes('новинка')) {
+            // Обработчик клика для "Новинки"
+            if (isNovelty) {
                 eventEl.addEventListener('click', (e) => {
-                    const noveltyEl = eventEl.querySelector('.novelty-wrapper');
-                    if (noveltyEl) {
-                        noveltyEl.classList.toggle('show-tooltip');
-                        setTimeout(() => noveltyEl.classList.remove('show-tooltip'), 2000);
+                    e.stopPropagation();
+                    const isMobile = window.innerWidth < 768;
+                    if (isMobile) {
+                        if (!noveltyFirstClick.has(noveltyKey)) {
+                            // Первый клик — показать тултип
+                            const wrapper = eventEl.querySelector('.novelty-wrapper');
+                            if (wrapper) {
+                                wrapper.classList.add('show-tooltip');
+                                noveltyFirstClick.add(noveltyKey);
+                                setTimeout(() => {
+                                    wrapper.classList.remove('show-tooltip');
+                                    noveltyFirstClick.delete(noveltyKey);
+                                }, 2000);
+                            }
+                        } else {
+                            // Второй клик — открыть модалку
+                            noveltyFirstClick.delete(noveltyKey);
+                            openModal(event);
+                        }
+                    } else {
+                        // Десктоп — сразу модалка (тултип работает через hover)
+                        openModal(event);
                     }
+                });
+            } else {
+                eventEl.addEventListener('click', (e) => { 
+                    e.stopPropagation(); 
+                    openModal(event); 
                 });
             }
             
-            eventEl.addEventListener('click', (e) => { 
-                if (e.target.closest('.novelty-wrapper')) return;
-                e.stopPropagation(); 
-                openModal(event); 
-            });
             return eventEl;
         }
 
@@ -973,10 +931,7 @@
             if (!dateStr) return '—';
             const d = parseDate(dateStr.toString().trim());
             if (!d) return dateStr;
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const dayName = d.toLocaleDateString('ru-RU', { weekday: 'long' });
-            return `${day}.${month} (${dayName})`;
+            return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')} (${d.toLocaleDateString('ru-RU', { weekday: 'long' })})`;
         }
 
         function openModal(event) {
