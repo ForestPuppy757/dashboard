@@ -203,20 +203,76 @@
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
 
+        /* 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК ИНФОРМАЦИИ О ТРАНСЛЯЦИЯХ */
         .search-info-block {
             margin-top: 12px;
-            padding: 12px 16px;
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 10px;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
             display: none;
             animation: fadeIn 0.3s ease;
         }
-        .search-info-block.visible { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .search-info-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-        .search-info-series { font-size: 15px; font-weight: 700; color: #e2e8f0; }
-        .search-info-date { font-size: 13px; color: #cbd5e1; padding: 4px 10px; background: rgba(102, 126, 234, 0.2); border-radius: 6px; }
-        .search-info-meta { font-size: 12px; color: #94a3b8; }
+        .search-info-block.visible { display: block; }
+        .search-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 640px) {
+            .search-info-grid { grid-template-columns: 1fr; }
+        }
+        .search-info-card {
+            padding: 12px 14px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .search-info-card:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
+        }
+        .search-info-card.past { border-left: 3px solid rgba(148, 163, 184, 0.4); }
+        .search-info-card.next { border-left: 3px solid #10b981; }
+        .search-info-card-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .search-info-card-series {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+        .search-info-card-meta {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .search-info-card-date {
+            font-size: 12px;
+            color: #cbd5e1;
+            font-weight: 600;
+            padding: 4px 10px;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 6px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .search-info-card.next .search-info-card-date {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+        }
 
         .filter-btn {
             position: relative; display: flex; align-items: center; gap: 8px;
@@ -408,13 +464,9 @@
                 </div>
             </div>
             
+            <!-- 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК С ПРОШЕДШЕЙ И БЛИЖАЙШЕЙ ТРАНСЛЯЦИЕЙ -->
             <div id="search-info-block" class="search-info-block">
-                <div>
-                    <div class="search-info-label">Ближайшая трансляция</div>
-                    <div class="search-info-series" id="search-info-series"></div>
-                    <div class="search-info-meta" id="search-info-meta"></div>
-                </div>
-                <div class="search-info-date" id="search-info-date"></div>
+                <div class="search-info-grid" id="search-info-grid"></div>
             </div>
             
             <div id="search-dropdown" class="search-dropdown">
@@ -491,14 +543,26 @@
         const searchDropdown = document.getElementById('search-dropdown');
         const searchDropdownInner = document.getElementById('search-dropdown-inner');
         const searchInfoBlock = document.getElementById('search-info-block');
-        const searchInfoSeries = document.getElementById('search-info-series');
-        const searchInfoMeta = document.getElementById('search-info-meta');
-        const searchInfoDate = document.getElementById('search-info-date');
+        const searchInfoGrid = document.getElementById('search-info-grid');
         const newSeasonEmptyMsg = document.getElementById('new-season-empty-msg');
         const monthFilterInput = document.getElementById('month-filter');
         const monthTrigger = document.getElementById('month-trigger');
         const monthTriggerText = document.getElementById('month-trigger-text');
         const monthDropdown = document.getElementById('month-dropdown');
+
+        // ===== ТАБЛИЦА РАСКЛАДКИ QWERTY → ЙЦУКЕН =====
+        const layoutMap = {
+            'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
+            'a': 'ф', 's': 'ы', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'э',
+            'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т', 'm': 'ь', ',': 'б', '.': 'ю', '/': '.',
+            'Q': 'Й', 'W': 'Ц', 'E': 'У', 'R': 'К', 'T': 'Е', 'Y': 'Н', 'U': 'Г', 'I': 'Ш', 'O': 'Щ', 'P': 'З', '{': 'Х', '}': 'Ъ',
+            'A': 'Ф', 'S': 'Ы', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р', 'J': 'О', 'K': 'Л', 'L': 'Д', ':': 'Ж', '"': 'Э',
+            'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И', 'N': 'Т', 'M': 'Ь', '<': 'Б', '>': 'Ю', '?': ','
+        };
+
+        function convertLayout(text) {
+            return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
+        }
 
         function populateMonthFilter() {
             monthDropdown.innerHTML = '';
@@ -569,8 +633,9 @@
         function openDropdown() { searchDropdown.classList.add('active'); }
         function closeDropdown() { searchDropdown.classList.remove('active'); }
 
+        // 🔥 ПОИСК С АВТОПЕРЕВОДОМ РАСКЛАДКИ
         seriesSearch.addEventListener('input', function() {
-            const query = this.value.trim().toLowerCase();
+            let query = this.value.trim();
             searchClear.classList.toggle('visible', this.value.length > 0);
             
             if (!query) { 
@@ -581,7 +646,24 @@
                 return; 
             }
             
-            const matches = uniqueSeries.filter(s => s.toLowerCase().includes(query));
+            const queryLower = query.toLowerCase();
+            
+            // Сначала ищем по прямому вводу
+            let matches = uniqueSeries.filter(s => s.toLowerCase().includes(queryLower));
+            
+            // 🔥 Если ничего не найдено — пробуем перевести раскладку
+            if (matches.length === 0) {
+                const converted = convertLayout(query);
+                const convertedLower = converted.toLowerCase();
+                matches = uniqueSeries.filter(s => s.toLowerCase().includes(convertedLower));
+                
+                // Если нашли по переведённой раскладке — подставляем в поле
+                if (matches.length > 0) {
+                    this.value = converted;
+                }
+            }
+            
+            const finalQuery = this.value.trim().toLowerCase();
             
             if (matches.length === 0) {
                 searchDropdownInner.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
@@ -631,31 +713,100 @@
             }).sort((a, b) => a._parsedDate - b._parsedDate);
             
             if (upcoming.length > 0) return upcoming[0];
-            
+            return null;
+        }
+
+        function findLastPastEvent(seriesName) {
             const past = allEvents.filter(e => {
                 if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                return e._parsedDate && e._parsedDate < today;
+                if (!e._parsedDate || e._parsedDate >= today) return false;
+                return true;
             }).sort((a, b) => b._parsedDate - a._parsedDate);
             
             return past.length > 0 ? past[0] : null;
         }
 
+        // 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК С ПРОШЕДШЕЙ И БЛИЖАЙШЕЙ ТРАНСЛЯЦИЕЙ
         function updateSearchInfo(seriesName) {
-            const nearest = findNearestEvent(seriesName);
-            if (nearest) {
-                searchInfoSeries.textContent = nearest[CONFIG.colSeries];
-                const season = nearest[CONFIG.colSeason] ? nearest[CONFIG.colSeason].trim() : '';
-                const episode = nearest[CONFIG.colEpisode] ? nearest[CONFIG.colEpisode].trim() : '';
+            const pastEvent = findLastPastEvent(seriesName);
+            const nextEvent = findNearestEvent(seriesName);
+            
+            if (!pastEvent && !nextEvent) {
+                searchInfoBlock.classList.remove('visible');
+                return;
+            }
+            
+            let html = '';
+            
+            // Левая колонка — прошедшая трансляция
+            if (pastEvent) {
+                const season = pastEvent[CONFIG.colSeason] ? pastEvent[CONFIG.colSeason].trim() : '';
+                const episode = pastEvent[CONFIG.colEpisode] ? pastEvent[CONFIG.colEpisode].trim() : '';
                 let metaText = '';
                 if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
                 else if (season) metaText = `Сезон ${season}`;
                 else if (episode) metaText = `Серия ${episode}`;
-                searchInfoMeta.textContent = metaText;
-                searchInfoDate.textContent = formatDateDMY(nearest._parsedDate);
-                searchInfoBlock.classList.add('visible');
+                
+                html += `<div class="search-info-card past" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                    <div>
+                        <div class="search-info-card-label">Прошедшая трансляция</div>
+                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                        <div class="search-info-card-meta">${metaText}</div>
+                    </div>
+                    <div class="search-info-card-date">${formatDateDMY(pastEvent._parsedDate)}</div>
+                </div>`;
             } else {
-                searchInfoBlock.classList.remove('visible');
+                html += `<div class="search-info-card past" style="opacity: 0.4;">
+                    <div>
+                        <div class="search-info-card-label">Прошедшая трансляция</div>
+                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                        <div class="search-info-card-meta">Нет данных</div>
+                    </div>
+                    <div class="search-info-card-date">—</div>
+                </div>`;
             }
+            
+            // Правая колонка — ближайшая трансляция
+            if (nextEvent) {
+                const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
+                const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
+                let metaText = '';
+                if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
+                else if (season) metaText = `Сезон ${season}`;
+                else if (episode) metaText = `Серия ${episode}`;
+                
+                html += `<div class="search-info-card next" data-date="${formatDateForCell(nextEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                    <div>
+                        <div class="search-info-card-label">Ближайшая трансляция</div>
+                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                        <div class="search-info-card-meta">${metaText}</div>
+                    </div>
+                    <div class="search-info-card-date">${formatDateDMY(nextEvent._parsedDate)}</div>
+                </div>`;
+            } else {
+                html += `<div class="search-info-card next" style="opacity: 0.4;">
+                    <div>
+                        <div class="search-info-card-label">Ближайшая трансляция</div>
+                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                        <div class="search-info-card-meta">Нет данных</div>
+                    </div>
+                    <div class="search-info-card-date">—</div>
+                </div>`;
+            }
+            
+            searchInfoGrid.innerHTML = html;
+            searchInfoBlock.classList.add('visible');
+            
+            // 🔥 Обработчики клика на карточки
+            searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const dateStr = card.dataset.date;
+                    const series = card.dataset.series;
+                    if (dateStr && series && dateStr !== 'undefined') {
+                        scrollToCell(dateStr, series);
+                    }
+                });
+            });
         }
 
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1034,14 +1185,6 @@
             </svg>`;
         }
 
-        function hasSeriesFinal(seriesName) {
-            return allEvents.some(e => {
-                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                return status.includes('финал сериала');
-            });
-        }
-
         function renderMonthGrid(grid, year, monthIndex) {
             grid.innerHTML = '';
             const firstDay = new Date(year, monthIndex, 1);
@@ -1090,7 +1233,7 @@
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    applyCellHighlighting(cell, dayEvents, dateObj, false);
+                    applyCellHighlighting(cell, dayEvents, dateObj, true);
                     grid.appendChild(cell);
                 }
             }
@@ -1127,7 +1270,6 @@
                 }
                 
                 applyCellHighlighting(cell, dayEvents, dateObj, false);
-                
                 grid.appendChild(cell);
             }
 
@@ -1156,7 +1298,7 @@
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    applyCellHighlighting(cell, dayEvents, dateObj, false);
+                    applyCellHighlighting(cell, dayEvents, dateObj, true);
                     grid.appendChild(cell);
                 }
             }
