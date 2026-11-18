@@ -722,11 +722,11 @@
             return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
         }
 
-        // 🔥 НАДЁЖНЫЙ ПАРСЕР ДАТ — пробует все возможные форматы
+        // 🔥 НОВЫЙ ПАРСЕР ДАТ для формата Д.ММ.ГГГГ (5.11.2026)
         function parseDate(dateStr) {
             if (!dateStr) return null;
             
-            // Если уже объект Date (PapaParse с dynamicTyping)
+            // Если уже объект Date
             if (dateStr instanceof Date) {
                 return isNaN(dateStr.getTime()) ? null : dateStr;
             }
@@ -734,63 +734,43 @@
             const str = String(dateStr).trim();
             if (!str) return null;
             
-            // Формат 1: ДД.ММ.ГГГГ (русский, основной)
-            let match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            // Формат: Д.ММ.ГГГГ или ДД.ММ.ГГГГ (1 или 2 цифры дня, 2 цифры месяца, 4 цифры года)
+            const match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
             if (match) {
                 const day = parseInt(match[1], 10);
                 const month = parseInt(match[2], 10) - 1;
                 const year = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
-            }
-            
-            // Формат 2: ДД/ММ/ГГГГ
-            match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (match) {
-                const day = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const year = parseInt(match[3], 10);
-                const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
-            }
-            
-            // Формат 3: ГГГГ-ММ-ДД (ISO)
-            match = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-            if (match) {
-                const year = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const day = parseInt(match[3], 10);
-                const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
-            }
-            
-            // Формат 4: ДД.ММ.ГГ (короткий год) — добавляем 2000
-            match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
-            if (match) {
-                const day = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const year = 2000 + parseInt(match[3], 10);
-                const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
-            }
-            
-            // Формат 5: ММ/ДД/ГГГГ (американский) — только если первый компонент > 12 (явно день)
-            match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (match) {
-                const first = parseInt(match[1], 10);
-                const second = parseInt(match[2], 10);
-                const year = parseInt(match[3], 10);
-                // Если первое число > 12 — это точно день (ДД/ММ), уже обработано выше
-                // Если второе число > 12 — это точно день (ММ/ДД)
-                if (second > 12) {
-                    const month = first - 1;
-                    const day = second;
-                    const d = new Date(year, month, day);
-                    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+                    return d;
                 }
             }
             
-            // Fallback: стандартный парсинг
+            // Формат: ДД/ММ/ГГГГ
+            const match2 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (match2) {
+                const day = parseInt(match2[1], 10);
+                const month = parseInt(match2[2], 10) - 1;
+                const year = parseInt(match2[3], 10);
+                const d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+                    return d;
+                }
+            }
+            
+            // Формат: ГГГГ-ММ-ДД (ISO)
+            const match3 = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (match3) {
+                const year = parseInt(match3[1], 10);
+                const month = parseInt(match3[2], 10) - 1;
+                const day = parseInt(match3[3], 10);
+                const d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+                    return d;
+                }
+            }
+            
+            // Fallback
             const d = new Date(str);
             if (!isNaN(d.getTime())) return d;
             
@@ -1405,39 +1385,29 @@
             download: true, 
             header: true, 
             skipEmptyLines: true,
-            dynamicTyping: false, // 🔥 ВАЖНО: не парсить даты автоматически
+            dynamicTyping: false,
             complete: function(results) {
-                console.log('=== ОТЛАДКА ЗАГРУЗКИ CSV ===');
-                console.log('CSV загружен, строк:', results.data.length);
+                console.log('=== ЗАГРУЗКА CSV ===');
+                console.log('Строк:', results.data.length);
                 console.log('Заголовки:', results.meta.fields);
                 
-                // 🔥 ПОКАЗЫВАЕМ ПЕРВЫЕ 5 СЫРЫХ ЗНАЧЕНИЙ ДАТ
                 if (results.data.length > 0) {
-                    console.log('=== ПЕРВЫЕ 5 СТРОК (сырые даты) ===');
-                    for (let i = 0; i < Math.min(5, results.data.length); i++) {
-                        console.log(`Строка ${i}:`, {
-                            rawDate: results.data[i][CONFIG.colDate],
-                            type: typeof results.data[i][CONFIG.colDate],
-                            series: results.data[i][CONFIG.colSeries]
-                        });
-                    }
+                    console.log('Первая строка:', results.data[0]);
                 }
                 
                 let parsedCount = 0;
                 let failedCount = 0;
-                const failedSamples = [];
                 
                 allEvents = results.data
                     .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
                     .map(row => {
-                        const rawDate = row[CONFIG.colDate];
-                        const d = parseDate(rawDate);
+                        const d = parseDate(row[CONFIG.colDate]);
                         if (d) {
                             parsedCount++;
                         } else {
                             failedCount++;
-                            if (failedSamples.length < 10) {
-                                failedSamples.push({ raw: rawDate, series: row[CONFIG.colSeries] });
+                            if (failedCount <= 5) {
+                                console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для:', row[CONFIG.colSeries]);
                             }
                         }
                         return { ...row, _parsedDate: d };
@@ -1445,12 +1415,8 @@
                     .filter(row => row._parsedDate !== null)
                     .sort((a, b) => (a._parsedDate || 0) - (b._parsedDate || 0));
                 
-                console.log(`✅ Успешно распарсено: ${parsedCount}`);
-                console.log(`❌ Ошибок парсинга: ${failedCount}`);
-                if (failedSamples.length > 0) {
-                    console.log('Примеры ошибочных дат:', failedSamples);
-                }
-                console.log('Событий после фильтрации:', allEvents.length);
+                console.log(`✅ Распарсено: ${parsedCount}, ❌ Ошибок: ${failedCount}`);
+                console.log('Событий:', allEvents.length);
                 
                 const seriesSet = new Set(), yearsSet = new Set();
                 allEvents.forEach(event => { 
@@ -1461,8 +1427,8 @@
                 uniqueSeries = Array.from(seriesSet).sort();
                 availableYears = Array.from(yearsSet).sort();
                 
-                console.log('Уникальных сериалов:', uniqueSeries);
-                console.log('Доступные годы:', availableYears);
+                console.log('Сериалы:', uniqueSeries);
+                console.log('Годы:', availableYears);
                 
                 populateMonthFilter();
                 renderUpdates();
@@ -1471,7 +1437,7 @@
             },
             error: function(err) {
                 console.error("Ошибка загрузки CSV:", err);
-                document.getElementById('calendar-wrapper').innerHTML = `<div class="p-8 text-center text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20">Ошибка загрузки расписания. Проверьте ссылку CSV и доступ к таблице.</div>`;
+                document.getElementById('calendar-wrapper').innerHTML = `<div class="p-8 text-center text-red-400 bg-red-500/10 rounded-2xl border border-red-500/20">Ошибка загрузки расписания.</div>`;
             }
         });
 
