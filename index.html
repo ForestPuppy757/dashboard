@@ -16,6 +16,7 @@
                 radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.08) 0%, transparent 50%);
             min-height: 100vh;
             color: #e2e8f0;
+            overflow-x: hidden;
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -57,6 +58,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(148, 163, 184, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
         }
         
         .glow-text { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8), 0 0 60px rgba(102, 126, 234, 0.4); }
@@ -86,7 +88,7 @@
         .custom-select-dropdown {
             position: absolute; top: 100%; left: 0;
             width: 240px; min-width: 240px;
-            background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.98);
             border: 1px solid rgba(148, 163, 184, 0.2); border-top: none;
             border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
             max-height: 320px; overflow-y: auto; z-index: 1000;
@@ -129,7 +131,11 @@
         .custom-select-dropdown::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
         .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
-        /* 🔥 КНОПКА ОБНОВЛЕНИЙ */
+        /* КНОПКА ОБНОВЛЕНИЙ - ИСПРАВЛЕННАЯ */
+        .updates-wrapper {
+            position: relative;
+            display: inline-block;
+        }
         .updates-btn {
             display: flex;
             align-items: center;
@@ -169,7 +175,7 @@
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
         }
 
-        /* 🔥 DROPDOWN ОБНОВЛЕНИЙ */
+        /* DROPDOWN ОБНОВЛЕНИЙ - ИСПРАВЛЕННЫЙ */
         .updates-dropdown {
             position: absolute;
             top: calc(100% + 8px);
@@ -177,7 +183,6 @@
             width: 380px;
             max-width: 90vw;
             background: rgba(15, 23, 42, 0.98);
-            backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2);
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -319,7 +324,6 @@
         .search-dropdown-inner {
             position: relative;
             background: rgba(15, 23, 42, 0.98);
-            backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2);
             border-radius: 12px;
             max-height: 240px;
@@ -523,7 +527,7 @@
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85);
             z-index: 2000; display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 1rem;
         }
@@ -587,8 +591,8 @@
                     <input type="hidden" id="month-filter" value="all">
                 </div>
                 
-                <!-- 🔥 КНОПКА ОБНОВЛЕНИЙ -->
-                <div style="position: relative;">
+                <!-- КНОПКА ОБНОВЛЕНИЙ -->
+                <div class="updates-wrapper">
                     <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
                         ⚡
                         <span class="updates-badge" id="updates-badge" style="display: none;">0</span>
@@ -677,13 +681,13 @@
             colTranslator: 'Переводчик',
             colVoice: 'Озвучка от AlisaDirilis', colDub: 'Дубляж',
             colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей',
-            colUpdated: 'Обновлено' // 🔥 НОВЫЙ СТОЛБЕЦ
+            colUpdated: 'Обновлено'
         };
 
         let allEvents = [];
         let uniqueSeries = [];
         let availableYears = [];
-        let todayUpdates = []; // 🔥 Список обновлений за сегодня
+        let todayUpdates = [];
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         const dayNamesFull = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
         const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -787,7 +791,6 @@
             else openMonthDropdown();
         });
 
-        // 🔥 Обработчик кнопки обновлений
         updatesBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             updatesDropdown.classList.toggle('open');
@@ -797,7 +800,7 @@
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-select-wrapper')) closeMonthDropdown();
             if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) closeDropdown();
-            if (!e.target.closest('.updates-btn') && !e.target.closest('.updates-dropdown')) {
+            if (!e.target.closest('.updates-wrapper')) {
                 updatesDropdown.classList.remove('open');
                 updatesBtn.classList.remove('active');
             }
@@ -1305,29 +1308,26 @@
             return true;
         }
 
-        // 🔥 Функция для получения обновлений за сегодня
         function getTodayUpdates() {
             const updates = [];
             const todayStr = formatDateDMY(today);
             
             allEvents.forEach(event => {
-                const updatedStr = event[CONFIG.colUpdated] ? event[CONFIG.colUpdated].trim() : '';
+                const updatedStr = event[CONFIG.colUpdated] ? String(event[CONFIG.colUpdated]).trim() : '';
                 if (!updatedStr) return;
                 
-                // Проверяем, что дата обновления = сегодня
                 const updatedDate = parseDate(updatedStr);
                 if (!updatedDate || updatedDate.getTime() !== today.getTime()) return;
                 
                 const series = event[CONFIG.colSeries].trim();
                 const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
                 const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
-                const voice = event[CONFIG.colVoice] ? event[CONFIG.colVoice].trim() : '';
-                const dub = event[CONFIG.colDub] ? event[CONFIG.colDub].trim() : '';
+                const voice = event[CONFIG.colVoice] ? String(event[CONFIG.colVoice]).trim() : '';
+                const dub = event[CONFIG.colDub] ? String(event[CONFIG.colDub]).trim() : '';
                 const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
                 const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
                 
-                // Определяем тип обновления
-                if (voice && voice !== 'ожидаем') {
+                if (voice && voice !== 'ожидаем' && voice !== '') {
                     updates.push({
                         type: 'voice',
                         series: series,
@@ -1336,7 +1336,7 @@
                     });
                 }
                 
-                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет') {
+                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
                     updates.push({
                         type: 'dub',
                         series: series,
@@ -1355,7 +1355,7 @@
                     });
                 }
                 
-                if (translator && translator !== 'Не назначен') {
+                if (translator && translator !== 'Не назначен' && translator !== '') {
                     updates.push({
                         type: 'translator',
                         series: series,
@@ -1368,7 +1368,6 @@
             return updates;
         }
 
-        // 🔥 Отображение обновлений
         function renderUpdates() {
             todayUpdates = getTodayUpdates();
             
@@ -1417,7 +1416,7 @@
                 availableYears = Array.from(yearsSet).sort();
                 
                 populateMonthFilter();
-                renderUpdates(); // 🔥 Загружаем обновления
+                renderUpdates();
                 renderView();
                 setTimeout(() => scrollToToday(), 300);
             },
@@ -2010,10 +2009,10 @@
         function parseDate(dateStr) {
             if (!dateStr) return null;
             const parts = dateStr.toString().trim().split(/[\.\/\-]/);
-            if (parts.length >= 2) {
+            if (parts.length >= 3) {
                 const day = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10) - 1;
-                const year = parts.length >= 3 ? parseInt(parts[2], 10) : currentYear;
+                const year = parseInt(parts[2], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
