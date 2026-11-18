@@ -303,6 +303,7 @@
         #filter-lists {
             display: flex;
             flex-direction: column;
+            min-height: 0;
         }
         .filter-list-container { margin-top: 0; padding-top: 4px; }
         .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
@@ -370,15 +371,15 @@
         .new-season-empty-msg {
             text-align: center;
             padding: 20px;
-            margin-top: 20px;
+            margin-top: 16px;
             border-radius: 12px;
             border: 1px dashed rgba(59, 130, 246, 0.4);
             background: rgba(59, 130, 246, 0.08);
             display: none;
+            animation: fadeIn 0.4s ease;
         }
         .new-season-empty-msg.visible { 
             display: block; 
-            animation: fadeIn 0.4s ease;
         }
 
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
@@ -493,9 +494,10 @@
                 <div id="airing-list" class="filter-list-container"></div>
                 <div id="new-season-list" class="filter-list-container"></div>
                 <div id="ended-list" class="filter-list-container"></div>
-                <div id="new-season-empty-msg" class="new-season-empty-msg">
-                    <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
-                </div>
+            </div>
+            <!-- 🔥 Сообщение вынесено ВНЕ #filter-lists -->
+            <div id="new-season-empty-msg" class="new-season-empty-msg">
+                <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
             </div>
         </div>
 
@@ -906,7 +908,6 @@
             return result.sort((a, b) => a.date - b.date);
         }
 
-        // 🔥 Новая логика для "Ждём новый сезон"
         function getNewSeasonList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
@@ -922,7 +923,6 @@
                 
                 const nextNew = getNextSeasonAfterFinal(seriesName);
                 
-                // Если есть новая серия и она уже прошла (дата < today) — не показываем
                 if (nextNew && nextNew._parsedDate < today) return;
                 
                 result.push({
@@ -987,7 +987,6 @@
                 setTimeout(() => { if (!activeFilters.airing) airingList.innerHTML = ''; }, 400);
             }
             
-            // 🔥 Обновлённая логика "Ждём новый сезон"
             const newSeasonItems = getNewSeasonList();
             if (activeFilters.newSeason) {
                 if (newSeasonItems.length > 0) {
@@ -1427,22 +1426,22 @@
                     cell.classList.remove('hover:bg-slate-800/60');
                     dayEvents.forEach(event => {
                         if (event[CONFIG.colSeries].trim() === searchSeries) {
-                            cell.appendChild(createEventElement(event, false, false, true));
+                            cell.appendChild(createEventElement(event, false, false, true, false));
                         } else {
-                            cell.appendChild(createEventElement(event, true, false, false));
+                            cell.appendChild(createEventElement(event, true, false, false, false));
                         }
                     });
                 } else if (hasSearchSeries) {
                     dayEvents.forEach(event => {
                         if (event[CONFIG.colSeries].trim() === searchSeries) {
-                            cell.appendChild(createEventElement(event, false, false, false));
+                            cell.appendChild(createEventElement(event, false, false, false, false));
                         } else {
-                            cell.appendChild(createEventElement(event, true, false, false));
+                            cell.appendChild(createEventElement(event, true, false, false, false));
                         }
                     });
                 } else if (dayEvents.length > 0) {
                     cell.classList.add('dimmed-cell');
-                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                    dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                 } else {
                     cell.classList.add('dimmed-cell');
                     if (!isPrevMonth) {
@@ -1453,11 +1452,10 @@
                     }
                 }
             } else if (activeFilters.newSeason && selectedNewSeasonSeries) {
-                // 🔥 Логика для "Ждём новый сезон" с выбранным сериалом
                 const hasSelectedNewSeason = dayEvents.some(e => {
                     if (e[CONFIG.colSeries].trim() !== selectedNewSeasonSeries) return false;
                     const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    return status.includes('финал сезона') || (status.includes('в эфире') && !status.includes('финал'));
+                    return status.includes('финал сезона') || status.includes('в эфире');
                 });
                 
                 if (hasSelectedNewSeason) {
