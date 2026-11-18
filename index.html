@@ -47,7 +47,6 @@
             50% { opacity: 0.8; transform: scale(1.1); }
         }
         
-        /* 🔥 Два уровня тусклости */
         .faded-event { opacity: 0.35; }
         .faded-event:hover { opacity: 0.55; }
         .past-event { opacity: 0.7; }
@@ -1205,7 +1204,7 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
-            // 🔥 Ячейки предыдущего месяца — всегда тусклые (isFaded=true)
+            // 🔥 Ячейки предыдущего месяца — тусклые, кружочки тоже тусклые (isFaded=true)
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
@@ -1213,7 +1212,7 @@
                 for (let i = startDayOfWeek - 1; i >= 0; i--) {
                     const day = daysInPrevMonth - i;
                     const cell = document.createElement('div');
-                    cell.className = 'day-cell prev-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20';
+                    cell.className = 'day-cell prev-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20 dimmed-cell';
                     const dateObj = new Date(prevYear, prevMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -1234,6 +1233,7 @@
                         cell.classList.add('dimmed-cell');
                     }
                     
+                    // 🔥 isPrevMonth=true → кружочки тусклые
                     applyCellHighlighting(cell, dayEvents, dateObj, true);
                     grid.appendChild(cell);
                 }
@@ -1275,7 +1275,7 @@
                 grid.appendChild(cell);
             }
 
-            // 🔥 Ячейки следующего месяца — всегда тусклые (isFaded=true)
+            // 🔥 Ячейки следующего месяца — тусклые, но кружочки яркие (isFaded=false)
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
@@ -1284,7 +1284,7 @@
                 for (let i = 0; i < remainingCells; i++) {
                     const day = i + 1;
                     const cell = document.createElement('div');
-                    cell.className = 'day-cell next-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20';
+                    cell.className = 'day-cell next-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20 dimmed-cell';
                     const dateObj = new Date(nextYear, nextMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -1301,7 +1301,8 @@
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    applyCellHighlighting(cell, dayEvents, dateObj, true);
+                    // 🔥 isPrevMonth=false → кружочки яркие
+                    applyCellHighlighting(cell, dayEvents, dateObj, false);
                     grid.appendChild(cell);
                 }
             }
@@ -1424,10 +1425,6 @@
 
         const noveltyFirstClick = new Set();
 
-        // 🔥 Новая логика тусклости:
-        // - isFaded (prev/next month) → faded-event (opacity 0.35) + тусклые точки
-        // - isPast в month/year режиме → past-event (opacity 0.7) + тусклые точки
-        // - isFuture → яркая карточка + яркие точки
         function createEventElement(event, isFaded, isEndedHighlight, isSearchHighlight) {
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
@@ -1436,27 +1433,22 @@
             const eventDate = event._parsedDate;
             const isPast = eventDate && eventDate < today;
             
-            // 🔥 Определяем уровень тусклости
-            const isDeepFaded = isFaded; // prev/next month
-            const isLightFaded = isPast && !isFaded; // прошедшие в текущем/годовом режиме
+            const isDeepFaded = isFaded;
+            const isLightFaded = isPast && !isFaded;
             
             if (statusRaw.includes('финал сезона') || statusRaw.includes('финал сериала') || statusRaw.includes('новинка')) {
                 isSpecial = true;
                 specialText = statusRaw;
                 bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
-                if (isDeepFaded) dotClass = 'dot-special-past';
-                else if (isLightFaded) dotClass = 'dot-special-past';
+                if (isDeepFaded || isLightFaded) dotClass = 'dot-special-past';
                 else dotClass = 'dot-special';
             } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
                 isMoved = true;
                 bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
-                if (isDeepFaded) dotClass = 'dot-moved-past';
-                else if (isLightFaded) dotClass = 'dot-moved-past';
+                if (isDeepFaded || isLightFaded) dotClass = 'dot-moved-past';
                 else dotClass = 'dot-moved';
             } else {
-                // Обычный "В эфире"
-                if (isDeepFaded) dotClass = 'dot-past';
-                else if (isLightFaded) dotClass = 'dot-past';
+                if (isDeepFaded || isLightFaded) dotClass = 'dot-past';
                 else dotClass = 'dot-active';
             }
 
