@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Дашборд трансляций</title>
-    <!-- НАДЁЖНЫЙ CDN TAILWIND -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -567,13 +566,10 @@
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <!-- HEADER С INLINE СТИЛЯМИ ДЛЯ НАДЁЖНОСТИ -->
         <header style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text" style="margin-bottom: 0.5rem;">🎬 Дашборд трансляций</h1>
-                    <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
-                </div>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text" style="margin-bottom: 0.5rem;">🎬 Дашборд трансляций</h1>
+                <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
             </div>
             
             <div style="display: flex; flex-direction: row; align-items: center; gap: 0.75rem; width: 100%; justify-content: flex-end;">
@@ -588,7 +584,6 @@
                     <input type="hidden" id="month-filter" value="all">
                 </div>
                 
-                <!-- КНОПКА ОБНОВЛЕНИЙ -->
                 <div style="position: relative;">
                     <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
                         ⚡
@@ -672,6 +667,7 @@
 
     <script>
         const CONFIG = {
+            // 🔥 ПРАВИЛЬНАЯ CSV-ССЫЛКА (pub?output=csv, а не pubhtml)
             csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSCGpum3bqWe33FPYcvCEnBkTF6m0v-6A7Hz2zRX91h0xWFUkgA8Kwse7f6X3tMoB3lLQh0tGVahZ1V/pub?output=csv',
             colDate: 'Дата', colSeries: 'Сериал', colSeason: 'Сезон', colEpisode: 'Серия',
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
@@ -1331,12 +1327,79 @@
             `).join('');
         }
 
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const str = String(dateStr).trim();
+            
+            const formats = [
+                /^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})$/,
+                /^(\d{4})[\.\/\-](\d{1,2})[\.\/\-](\d{1,2})$/,
+                /^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{2})$/
+            ];
+            
+            for (const fmt of formats) {
+                const match = str.match(fmt);
+                if (match) {
+                    let a = parseInt(match[1], 10);
+                    let b = parseInt(match[2], 10);
+                    let c = parseInt(match[3], 10);
+                    
+                    let day, month, year;
+                    
+                    if (fmt === formats[0]) {
+                        day = a; month = b - 1; year = c;
+                    } else if (fmt === formats[1]) {
+                        year = a; month = b - 1; day = c;
+                    } else {
+                        day = a; month = b - 1; year = c + (c < 50 ? 2000 : 1900);
+                    }
+                    
+                    const d = new Date(year, month, day);
+                    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+                        return d;
+                    }
+                }
+            }
+            
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) return d;
+            
+            return null;
+        }
+
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
-                allEvents = results.data.filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
-                    .map(row => { const d = parseDate(row[CONFIG.colDate]); return { ...row, _parsedDate: d }; })
+                console.log('=== ОТЛАДКА ЗАГРУЗКИ CSV ===');
+                console.log('CSV загружен, строк:', results.data.length);
+                console.log('Заголовки:', results.meta.fields);
+                
+                if (results.data.length > 0) {
+                    console.log('Первая строка:', results.data[0]);
+                }
+                
+                let parsedCount = 0;
+                let failedCount = 0;
+                
+                allEvents = results.data
+                    .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
+                    .map(row => {
+                        const d = parseDate(row[CONFIG.colDate]);
+                        if (d) {
+                            parsedCount++;
+                        } else {
+                            failedCount++;
+                            if (failedCount <= 5) {
+                                console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для сериала:', row[CONFIG.colSeries]);
+                            }
+                        }
+                        return { ...row, _parsedDate: d };
+                    })
+                    .filter(row => row._parsedDate !== null)
                     .sort((a, b) => (a._parsedDate || 0) - (b._parsedDate || 0));
+                
+                console.log(`Успешно распарсено дат: ${parsedCount}, ошибок: ${failedCount}`);
+                console.log('Событий после фильтрации:', allEvents.length);
                 
                 const seriesSet = new Set(), yearsSet = new Set();
                 allEvents.forEach(event => { 
@@ -1346,6 +1409,9 @@
                 });
                 uniqueSeries = Array.from(seriesSet).sort();
                 availableYears = Array.from(yearsSet).sort();
+                
+                console.log('Уникальных сериалов:', uniqueSeries);
+                console.log('Доступные годы:', availableYears);
                 
                 populateMonthFilter();
                 renderUpdates();
@@ -1379,6 +1445,8 @@
             wrapper.innerHTML = '';
             const filter = parseFilterValue(monthFilterInput.value);
             
+            console.log('renderView вызван, фильтр:', filter, 'событий:', allEvents.length);
+            
             if (filter.mode === 'all') {
                 currentRenderContext = { mode: 'year', year: null, month: null };
                 
@@ -1387,6 +1455,8 @@
                     if (!event._parsedDate || !matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
                     monthsWithEvents.add(`${event._parsedDate.getFullYear()}-${event._parsedDate.getMonth()}`);
                 });
+                
+                console.log('Месяцев с событиями:', monthsWithEvents.size);
                 
                 if (monthsWithEvents.size === 0) {
                     wrapper.innerHTML = '<div class="text-center text-slate-400 py-12">Нет событий по выбранным фильтрам</div>';
@@ -1936,19 +2006,6 @@
             const div = document.createElement('div'); 
             div.textContent = text; 
             return div.innerHTML; 
-        }
-
-        function parseDate(dateStr) {
-            if (!dateStr) return null;
-            const parts = dateStr.toString().trim().split(/[\.\/\-]/);
-            if (parts.length >= 3) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1;
-                const year = parseInt(parts[2], 10);
-                const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
-            }
-            return null;
         }
     </script>
 </body>
