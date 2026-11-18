@@ -919,7 +919,7 @@
             </svg>`;
         }
 
-        // 🔥 НОВАЯ ЛОГИКА С ПОДЪЁМОМ СТРОК
+        // 🔥 НОВАЯ ЛОГИКА: ячейки предыдущего месяца + подъём строк при фильтре "В эфире"
         function renderMonthGrid(grid, year, monthIndex) {
             grid.innerHTML = '';
             const firstDay = new Date(year, monthIndex, 1);
@@ -944,13 +944,49 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
-            // 🔥 Собираем только видимые дни с их позициями в сетке
-            const visibleDays = [];
-            
+            // 🔥 Собираем все ячейки с их позициями в сетке
+            const allCells = [];
+
+            // Ячейки предыдущего месяца (всегда отображаются)
+            if (startDayOfWeek > 0) {
+                const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
+                const prevYear = monthIndex === 0 ? year - 1 : year;
+                const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+                
+                for (let i = startDayOfWeek - 1; i >= 0; i--) {
+                    const day = daysInPrevMonth - i;
+                    const absolutePosition = i;
+                    const row = Math.floor(absolutePosition / 7) + 1;
+                    const col = (absolutePosition % 7) + 1;
+                    
+                    const dateObj = new Date(prevYear, prevMonth, day);
+                    const dayOfWeek = dateObj.getDay();
+                    const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                    
+                    const dayEvents = allEvents.filter(e => {
+                        const d = e._parsedDate;
+                        return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
+                    });
+                    
+                    allCells.push({
+                        type: 'prev-month',
+                        day, dayIndex, dateObj, dayEvents,
+                        row, col,
+                        isPastDay: true,
+                        absolutePosition
+                    });
+                }
+            }
+
+            // Дни текущего месяца
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const dayOfWeek = dateObj.getDay();
-                const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 0=Пн, 6=Вс
+                const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+                
+                const absolutePosition = startDayOfWeek + (day - 1);
+                const row = Math.floor(absolutePosition / 7) + 1;
+                const col = (absolutePosition % 7) + 1;
                 
                 const isPastDay = dateObj < today;
                 const dayEvents = eventsByMonthDay[day] || [];
@@ -960,71 +996,103 @@
                 const shouldHide = activeFilters.airing && isPastDay && !hasEvents;
                 
                 if (!shouldHide) {
-                    // Абсолютная позиция в сетке (0-based)
-                    const absolutePosition = startDayOfWeek + (day - 1);
-                    // Номер строки (1-based)
-                    const row = Math.floor(absolutePosition / 7) + 1;
-                    // Номер колонки (1-based)
-                    const col = (absolutePosition % 7) + 1;
-                    
-                    visibleDays.push({ day, dayIndex, dateObj, dayEvents, isPastDay, row, col });
+                    allCells.push({
+                        type: 'current-month',
+                        day, dayIndex, dateObj, dayEvents,
+                        row, col,
+                        isPastDay,
+                        absolutePosition
+                    });
                 }
             }
 
-            // 🔥 Рендерим только видимые дни с явным позиционированием
-            visibleDays.forEach(({ day, dayIndex, dateObj, dayEvents, isPastDay, row, col }) => {
-                const isToday = isCurrentMonth && day === todayDate;
-                const isWeekend = dayIndex >= 5;
-                const isTodayHighlight = isToday && !activeFilters.ended;
-                
-                let cellClasses = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 hover:bg-slate-800/60`;
-                if (isTodayHighlight) cellClasses += ' neon-border border-purple-500/50';
-                
-                const cell = document.createElement('div');
-                cell.className = cellClasses;
-                // 🔥 Явное позиционирование в сетке
-                cell.style.gridColumn = col;
-                cell.style.gridRow = row;
-                
-                if (isToday && !activeFilters.ended) cell.id = 'today-cell';
-                
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'flex items-baseline justify-between mb-2';
-                const isMobile = window.innerWidth < 768;
-                const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isTodayHighlight ? 'text-purple-400' : (isWeekend ? 'text-purple-400/70' : 'text-slate-500')}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold ${isTodayHighlight ? 'text-purple-400' : 'text-slate-300'}">${day}</span>`;
-                cell.appendChild(dayHeader);
-
-                // Для фильтра "В эфире" затемняем прошедшие дни
-                if (activeFilters.airing && isPastDay) {
-                    cell.classList.add('dimmed-cell');
+            // 🔥 Пересчитываем строки с учётом скрытых дней
+            let currentRow = 1;
+            let previousCol = 0;
+            
+            allCells.forEach((cell, index) => {
+                if (index === 0) {
+                    currentRow = 1;
+                } else if (cell.col <= previousCol) {
+                    currentRow++;
                 }
+                cell.displayRow = currentRow;
+                previousCol = cell.col;
+            });
+
+            // 🔥 Рендерим все ячейки с явным позиционированием
+            allCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, isPastDay, col, displayRow } = cell;
                 
-                // Для фильтра "Сериал завершён" — своя логика
-                if (activeFilters.ended) {
-                    const hasEndedSeries = dayEvents.some(e => isSeriesEnded(e[CONFIG.colSeries].trim()));
+                if (type === 'prev-month') {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = 'day-cell prev-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20';
+                    cellEl.style.gridColumn = col;
+                    cellEl.style.gridRow = displayRow;
                     
-                    if (hasEndedSeries) {
-                        cell.classList.add('highlighted-cell');
-                        cell.classList.remove('hover:bg-slate-800/60');
-                    } else if (dayEvents.length > 0 && !isPastDay) {
-                        cell.classList.add('dimmed-cell');
-                    }
-                }
+                    const isWeekend = dayIndex >= 5;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'flex items-baseline justify-between mb-2';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
+                    cellEl.appendChild(dayHeader);
+                    
+                    dayEvents.forEach(event => cellEl.appendChild(createEventElement(event, true, false)));
+                    grid.appendChild(cellEl);
+                } else {
+                    const isToday = isCurrentMonth && day === todayDate;
+                    const isWeekend = dayIndex >= 5;
+                    const isTodayHighlight = isToday && !activeFilters.ended;
+                    
+                    let cellClasses = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 hover:bg-slate-800/60`;
+                    if (isTodayHighlight) cellClasses += ' neon-border border-purple-500/50';
+                    
+                    const cellEl = document.createElement('div');
+                    cellEl.className = cellClasses;
+                    cellEl.style.gridColumn = col;
+                    cellEl.style.gridRow = displayRow;
+                    
+                    if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
+                    
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'flex items-baseline justify-between mb-2';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isTodayHighlight ? 'text-purple-400' : (isWeekend ? 'text-purple-400/70' : 'text-slate-500')}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold ${isTodayHighlight ? 'text-purple-400' : 'text-slate-300'}">${day}</span>`;
+                    cellEl.appendChild(dayHeader);
 
-                if (dayEvents.length > 0) {
-                    dayEvents.forEach(event => {
-                        const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
-                        cell.appendChild(createEventElement(event, false, isEndedHighlight));
-                    });
-                } else if (!isPastDay) {
-                    const emptyBlock = document.createElement('div');
-                    emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
-                    emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
-                    cell.appendChild(emptyBlock);
+                    // Для фильтра "В эфире" затемняем прошедшие дни
+                    if (activeFilters.airing && isPastDay) {
+                        cellEl.classList.add('dimmed-cell');
+                    }
+                    
+                    // Для фильтра "Сериал завершён"
+                    if (activeFilters.ended) {
+                        const hasEndedSeries = dayEvents.some(e => isSeriesEnded(e[CONFIG.colSeries].trim()));
+                        
+                        if (hasEndedSeries) {
+                            cellEl.classList.add('highlighted-cell');
+                            cellEl.classList.remove('hover:bg-slate-800/60');
+                        } else if (dayEvents.length > 0 && !isPastDay) {
+                            cellEl.classList.add('dimmed-cell');
+                        }
+                    }
+
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => {
+                            const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
+                            cellEl.appendChild(createEventElement(event, false, isEndedHighlight));
+                        });
+                    } else if (!isPastDay) {
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cellEl.appendChild(emptyBlock);
+                    }
+                    
+                    grid.appendChild(cellEl);
                 }
-                
-                grid.appendChild(cell);
             });
         }
 
