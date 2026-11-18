@@ -58,6 +58,7 @@
         .glow-text { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8), 0 0 60px rgba(102, 126, 234, 0.4); }
         .neon-border { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); }
 
+        /* ===== КАСТОМНЫЙ DROPDOWN МЕСЯЦА ===== */
         .custom-select-wrapper { position: relative; width: 100%; max-width: 240px; }
         .custom-select-trigger {
             display: flex; align-items: center; justify-content: space-between;
@@ -153,6 +154,7 @@
         .empty-day-icon:hover { opacity: 0.45; }
         .empty-day-text { font-size: 0.55rem; color: #94a3b8; text-align: center; line-height: 1.3; opacity: 0.5; font-style: italic; }
 
+        /* ===== ПОИСК ===== */
         .search-container { position: relative; width: 100%; }
         .search-input-wrapper { position: relative; }
         .search-input {
@@ -172,6 +174,7 @@
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
 
+        /* ===== ПЛАВНАЯ АНИМАЦИЯ СПИСКОВ ===== */
         .search-dropdown, .filter-list-container {
             display: grid;
             grid-template-rows: 0fr;
@@ -203,6 +206,23 @@
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
 
+        /* ===== БЛОК ИНФОРМАЦИИ О БЛИЖАЙШЕЙ ТРАНСЛЯЦИИ ===== */
+        .search-info-block {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .search-info-block.visible { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .search-info-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .search-info-series { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+        .search-info-date { font-size: 13px; color: #cbd5e1; padding: 4px 10px; background: rgba(102, 126, 234, 0.2); border-radius: 6px; }
+        .search-info-meta { font-size: 12px; color: #94a3b8; }
+
+        /* ===== КНОПКИ ФИЛЬТРОВ ===== */
         .filter-btn {
             position: relative; display: flex; align-items: center; gap: 8px;
             padding: 10px 16px; background: rgba(30, 41, 59, 0.5);
@@ -225,6 +245,7 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
+        /* ===== СПИСКИ ФИЛЬТРОВ ===== */
         #filter-lists {
             display: flex;
             flex-direction: column;
@@ -256,7 +277,8 @@
         .filter-list-item:hover .filter-list-date { background: rgba(102, 126, 234, 0.3); }
         .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
 
-        .dimmed-cell { opacity: 0.3; filter: grayscale(0.4); }
+        /* ===== СТИЛИ ДЛЯ ФИЛЬТРОВ КАЛЕНДАРЯ ===== */
+        .dimmed-cell { opacity: 0.25; filter: grayscale(0.5); }
         .highlighted-cell {
             border-color: rgba(168, 85, 247, 0.6) !important;
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
@@ -264,6 +286,14 @@
         .highlighted-event {
             border-color: rgba(168, 85, 247, 0.8) !important;
             background: rgba(168, 85, 247, 0.15) !important;
+        }
+        .search-highlight-cell {
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+        .search-highlight-event {
+            border-color: rgba(16, 185, 129, 0.7) !important;
+            background: rgba(16, 185, 129, 0.12) !important;
         }
 
         .new-season-empty-msg {
@@ -280,6 +310,7 @@
             animation: fadeIn 0.4s ease;
         }
 
+        /* ===== ТУЛТИП НОВИНКИ ===== */
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
         .novelty-tooltip {
             position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
@@ -293,6 +324,7 @@
         }
         .novelty-wrapper:hover .novelty-tooltip, .novelty-wrapper.show-tooltip .novelty-tooltip { opacity: 1; }
 
+        /* ===== МОДАЛКА ===== */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
@@ -380,6 +412,16 @@
                 </div>
             </div>
             
+            <!-- 🔥 Блок информации о ближайшей трансляции -->
+            <div id="search-info-block" class="search-info-block">
+                <div>
+                    <div class="search-info-label">Ближайшая трансляция</div>
+                    <div class="search-info-series" id="search-info-series"></div>
+                    <div class="search-info-meta" id="search-info-meta"></div>
+                </div>
+                <div class="search-info-date" id="search-info-date"></div>
+            </div>
+            
             <div id="search-dropdown" class="search-dropdown">
                 <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
             </div>
@@ -452,13 +494,17 @@
         const searchClear = document.getElementById('search-clear');
         const searchDropdown = document.getElementById('search-dropdown');
         const searchDropdownInner = document.getElementById('search-dropdown-inner');
-        const selectedSeriesInput = document.getElementById('selected-series');
+        const searchInfoBlock = document.getElementById('search-info-block');
+        const searchInfoSeries = document.getElementById('search-info-series');
+        const searchInfoMeta = document.getElementById('search-info-meta');
+        const searchInfoDate = document.getElementById('search-info-date');
         const newSeasonEmptyMsg = document.getElementById('new-season-empty-msg');
         const monthFilterInput = document.getElementById('month-filter');
         const monthTrigger = document.getElementById('month-trigger');
         const monthTriggerText = document.getElementById('month-trigger-text');
         const monthDropdown = document.getElementById('month-dropdown');
 
+        // ===== КАСТОМНЫЙ DROPDOWN МЕСЯЦА =====
         function populateMonthFilter() {
             monthDropdown.innerHTML = '';
             
@@ -525,16 +571,21 @@
             if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) closeDropdown();
         });
 
+        // ===== ПОИСК =====
         function openDropdown() { searchDropdown.classList.add('active'); }
         function closeDropdown() { searchDropdown.classList.remove('active'); }
 
         seriesSearch.addEventListener('input', function() {
             const query = this.value.trim().toLowerCase();
             searchClear.classList.toggle('visible', this.value.length > 0);
-            selectedSeriesInput.value = '';
-            activeFilters.search = '';
             
-            if (!query) { closeDropdown(); renderView(); return; }
+            if (!query) { 
+                closeDropdown(); 
+                activeFilters.search = '';
+                searchInfoBlock.classList.remove('visible');
+                renderView(); 
+                return; 
+            }
             
             const matches = uniqueSeries.filter(s => s.toLowerCase().includes(query));
             
@@ -554,9 +605,9 @@
                     const seriesName = item.dataset.series;
                     seriesSearch.value = seriesName;
                     searchClear.classList.add('visible');
-                    selectedSeriesInput.value = seriesName;
                     activeFilters.search = seriesName;
                     closeDropdown();
+                    updateSearchInfo(seriesName);
                     renderView();
                 });
             });
@@ -566,8 +617,8 @@
             e.stopPropagation();
             seriesSearch.value = '';
             searchClear.classList.remove('visible');
-            selectedSeriesInput.value = '';
             activeFilters.search = '';
+            searchInfoBlock.classList.remove('visible');
             closeDropdown();
             renderView();
         });
@@ -576,6 +627,54 @@
             if (this.value.trim()) this.dispatchEvent(new Event('input'));
         });
 
+        // 🔥 Обновление блока информации о ближайшей трансляции
+        function updateSearchInfo(seriesName) {
+            const upcoming = allEvents.filter(e => {
+                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                if (!e._parsedDate || e._parsedDate < today) return false;
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                if (status.includes('перенос') || status.includes('перенес')) return false;
+                return true;
+            }).sort((a, b) => a._parsedDate - b._parsedDate);
+            
+            if (upcoming.length > 0) {
+                const event = upcoming[0];
+                searchInfoSeries.textContent = event[CONFIG.colSeries];
+                const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+                const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+                let metaText = '';
+                if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
+                else if (season) metaText = `Сезон ${season}`;
+                else if (episode) metaText = `Серия ${episode}`;
+                searchInfoMeta.textContent = metaText;
+                searchInfoDate.textContent = formatDateDMY(event._parsedDate);
+                searchInfoBlock.classList.add('visible');
+            } else {
+                // Если ближайших нет — показать последний прошедший
+                const past = allEvents.filter(e => {
+                    if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                    return e._parsedDate && e._parsedDate < today;
+                }).sort((a, b) => b._parsedDate - a._parsedDate);
+                
+                if (past.length > 0) {
+                    const event = past[0];
+                    searchInfoSeries.textContent = event[CONFIG.colSeries];
+                    const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+                    const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+                    let metaText = '';
+                    if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
+                    else if (season) metaText = `Сезон ${season}`;
+                    else if (episode) metaText = `Серия ${episode}`;
+                    searchInfoMeta.textContent = metaText;
+                    searchInfoDate.textContent = formatDateDMY(event._parsedDate);
+                    searchInfoBlock.classList.add('visible');
+                } else {
+                    searchInfoBlock.classList.remove('visible');
+                }
+            }
+        }
+
+        // ===== КНОПКИ ФИЛЬТРОВ =====
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const filter = this.dataset.filter;
@@ -586,6 +685,7 @@
             });
         });
 
+        // ===== ЛОГИКА ФИЛЬТРАЦИИ =====
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
             return relevant.length > 0 ? relevant[relevant.length - 1] : null;
@@ -907,7 +1007,7 @@
             </svg>`;
         }
 
-        // 🔥 ВОЗВРАТ К КЛАССИЧЕСКОЙ СЕТКЕ БЕЗ ЯВНОГО ПОЗИЦИОНИРОВАНИЯ
+        // 🔥 КЛАССИЧЕСКАЯ СЕТКА С ПОДДЕРЖКОЙ ПОДСВЕТКИ ПОИСКА
         function renderMonthGrid(grid, year, monthIndex) {
             grid.innerHTML = '';
             const firstDay = new Date(year, monthIndex, 1);
@@ -948,10 +1048,36 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
                     cell.appendChild(dayHeader);
-                    allEvents.filter(e => {
+                    
+                    const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
-                    }).forEach(event => cell.appendChild(createEventElement(event, true, false)));
+                    });
+                    
+                    // 🔥 Подсветка/затемнение при поиске
+                    if (activeFilters.search) {
+                        const hasSearchSeries = dayEvents.some(e => e[CONFIG.colSeries].trim() === activeFilters.search);
+                        if (hasSearchSeries) {
+                            cell.classList.add('search-highlight-cell');
+                            dayEvents.forEach(event => {
+                                if (event[CONFIG.colSeries].trim() === activeFilters.search) {
+                                    cell.appendChild(createEventElement(event, false, false, true));
+                                }
+                            });
+                        } else if (dayEvents.length > 0) {
+                            cell.classList.add('dimmed-cell');
+                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                        } else {
+                            cell.classList.add('dimmed-cell');
+                            const emptyBlock = document.createElement('div');
+                            emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                            emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                            cell.appendChild(emptyBlock);
+                        }
+                    } else {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                    }
+                    
                     grid.appendChild(cell);
                 }
             }
@@ -959,7 +1085,6 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
-            // 🔥 Все дни месяца в потоке (без явного позиционирования)
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const isToday = isCurrentMonth && day === todayDate;
@@ -1004,17 +1129,45 @@
                     }
                 }
 
-                if (dayEvents.length > 0) {
-                    dayEvents.forEach(event => {
-                        const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
-                        cell.appendChild(createEventElement(event, false, isEndedHighlight));
-                    });
-                } else if (!isPastDay) {
-                    const emptyBlock = document.createElement('div');
-                    emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
-                    emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
-                    cell.appendChild(emptyBlock);
+                // 🔥 Логика подсветки при поиске
+                if (activeFilters.search) {
+                    const hasSearchSeries = dayEvents.some(e => e[CONFIG.colSeries].trim() === activeFilters.search);
+                    if (hasSearchSeries) {
+                        cell.classList.add('search-highlight-cell');
+                        cell.classList.remove('hover:bg-slate-800/60');
+                        dayEvents.forEach(event => {
+                            if (event[CONFIG.colSeries].trim() === activeFilters.search) {
+                                cell.appendChild(createEventElement(event, false, false, true));
+                            } else {
+                                cell.appendChild(createEventElement(event, true, false, false));
+                            }
+                        });
+                    } else if (dayEvents.length > 0) {
+                        cell.classList.add('dimmed-cell');
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                    } else {
+                        cell.classList.add('dimmed-cell');
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
+                    }
+                } else {
+                    // Обычный режим
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => {
+                            const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
+                            cell.appendChild(createEventElement(event, false, isEndedHighlight, false));
+                        });
+                    } else {
+                        // 🔥 Иконка чашки для всех пустых дней (включая прошедшие)
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
+                    }
                 }
+                
                 grid.appendChild(cell);
             }
 
@@ -1038,10 +1191,35 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
                     cell.appendChild(dayHeader);
-                    allEvents.filter(e => {
+                    
+                    const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
-                    }).forEach(event => cell.appendChild(createEventElement(event, true, false)));
+                    });
+                    
+                    if (activeFilters.search) {
+                        const hasSearchSeries = dayEvents.some(e => e[CONFIG.colSeries].trim() === activeFilters.search);
+                        if (hasSearchSeries) {
+                            cell.classList.add('search-highlight-cell');
+                            dayEvents.forEach(event => {
+                                if (event[CONFIG.colSeries].trim() === activeFilters.search) {
+                                    cell.appendChild(createEventElement(event, false, false, true));
+                                }
+                            });
+                        } else if (dayEvents.length > 0) {
+                            cell.classList.add('dimmed-cell');
+                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                        } else {
+                            cell.classList.add('dimmed-cell');
+                            const emptyBlock = document.createElement('div');
+                            emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                            emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                            cell.appendChild(emptyBlock);
+                        }
+                    } else {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                    }
+                    
                     grid.appendChild(cell);
                 }
             }
@@ -1049,7 +1227,7 @@
 
         const noveltyFirstClick = new Set();
 
-        function createEventElement(event, isFaded, isEndedHighlight) {
+        function createEventElement(event, isFaded, isEndedHighlight, isSearchHighlight) {
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
             let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
@@ -1080,6 +1258,7 @@
             const eventEl = document.createElement('div');
             let extraClasses = isFaded ? 'faded-event' : '';
             if (isEndedHighlight) extraClasses += ' highlighted-event';
+            if (isSearchHighlight) extraClasses += ' search-highlight-event';
             
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${extraClasses}`;
             
@@ -1273,7 +1452,5 @@
             return null;
         }
     </script>
-</body>
-</html>
 </body>
 </html>
