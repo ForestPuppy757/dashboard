@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Дашборд трансляций</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- НАДЁЖНЫЙ CDN TAILWIND -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -128,6 +129,129 @@
         .custom-select-dropdown::-webkit-scrollbar-track { background: transparent; }
         .custom-select-dropdown::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
         .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
+
+        .updates-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .updates-btn:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+        .updates-btn.active {
+            border-color: #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+        }
+        .updates-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        }
+
+        .updates-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 380px;
+            max-width: 90vw;
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .updates-dropdown.open {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+        .updates-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-weight: 700;
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+        .updates-dropdown-empty {
+            padding: 24px 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .update-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            transition: background 0.15s;
+        }
+        .update-item:last-child {
+            border-bottom: none;
+        }
+        .update-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+        .update-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 6px;
+        }
+        .update-type.voice {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .update-type.dub {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .update-type.status {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .update-type.translator {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .update-series {
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .update-detail {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
 
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
@@ -443,13 +567,16 @@
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text mb-2">🎬 Дашборд трансляций</h1>
-                <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
+        <!-- HEADER С INLINE СТИЛЯМИ ДЛЯ НАДЁЖНОСТИ -->
+        <header style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text" style="margin-bottom: 0.5rem;">🎬 Дашборд трансляций</h1>
+                    <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
+                </div>
             </div>
             
-            <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div style="display: flex; flex-direction: row; align-items: center; gap: 0.75rem; width: 100%; justify-content: flex-end;">
                 <div class="custom-select-wrapper">
                     <div class="custom-select-trigger" id="month-trigger">
                         <span class="trigger-text" id="month-trigger-text">Загрузка...</span>
@@ -459,6 +586,18 @@
                     </div>
                     <div class="custom-select-dropdown" id="month-dropdown"></div>
                     <input type="hidden" id="month-filter" value="all">
+                </div>
+                
+                <!-- КНОПКА ОБНОВЛЕНИЙ -->
+                <div style="position: relative;">
+                    <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
+                        ⚡
+                        <span class="updates-badge" id="updates-badge" style="display: none;">0</span>
+                    </button>
+                    <div class="updates-dropdown" id="updates-dropdown">
+                        <div class="updates-dropdown-header">📋 Обновления сегодня</div>
+                        <div id="updates-list"></div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -538,12 +677,14 @@
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
             colTranslator: 'Переводчик',
             colVoice: 'Озвучка от AlisaDirilis', colDub: 'Дубляж',
-            colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей'
+            colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей',
+            colUpdated: 'Обновлено'
         };
 
         let allEvents = [];
         let uniqueSeries = [];
         let availableYears = [];
+        let todayUpdates = [];
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         const dayNamesFull = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
         const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -568,6 +709,10 @@
         const monthTrigger = document.getElementById('month-trigger');
         const monthTriggerText = document.getElementById('month-trigger-text');
         const monthDropdown = document.getElementById('month-dropdown');
+        const updatesBtn = document.getElementById('updates-btn');
+        const updatesBadge = document.getElementById('updates-badge');
+        const updatesDropdown = document.getElementById('updates-dropdown');
+        const updatesList = document.getElementById('updates-list');
 
         const layoutMap = {
             'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
@@ -643,9 +788,19 @@
             else openMonthDropdown();
         });
 
+        updatesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            updatesDropdown.classList.toggle('open');
+            updatesBtn.classList.toggle('active');
+        });
+
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-select-wrapper')) closeMonthDropdown();
             if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) closeDropdown();
+            if (!e.target.closest('.updates-btn') && !e.target.closest('.updates-dropdown')) {
+                updatesDropdown.classList.remove('open');
+                updatesBtn.classList.remove('active');
+            }
         });
 
         function openDropdown() { searchDropdown.classList.add('active'); }
@@ -848,7 +1003,6 @@
             });
         }
 
-        // 🔥 ИСПРАВЛЕНО: теперь используем getLastStatusBefore(today), а не getLastStatusOverall
         function isWaitingNewSeason(seriesName) {
             const lastEvent = getLastStatusBefore(seriesName, today);
             return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона');
@@ -880,41 +1034,14 @@
             return result.sort((a, b) => a.date - b.date);
         }
 
-        // 🔥 ИСПРАВЛЕНА логика: ищем последний финал сезона ДО сегодня + следующую запись после него
         function getNewSeasonList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
-                const lastEventBeforeToday = getLastStatusBefore(seriesName, today);
-                if (!lastEventBeforeToday) return;
-                const lastStatus = String(lastEventBeforeToday[CONFIG.colStatus] || '').toLowerCase();
-                if (!lastStatus.includes('финал сезона')) return;
-                
-                const lastFinal = lastEventBeforeToday;
-                
-                const nextNew = allEvents.filter(e => {
-                    if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                    if (!e._parsedDate || e._parsedDate <= lastFinal._parsedDate) return false;
-                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
-                    if (status.includes('перенос') || status.includes('перенес')) return false;
-                    return true;
-                }).sort((a, b) => a._parsedDate - b._parsedDate)[0];
-                
-                if (nextNew && nextNew._parsedDate <= today) return;
-                
-                result.push({
-                    series: seriesName,
-                    lastFinalEvent: lastFinal,
-                    lastFinalDate: lastFinal._parsedDate,
-                    nextNewEvent: nextNew || null,
-                    nextNewDate: nextNew ? nextNew._parsedDate : null
-                });
+                if (!isWaitingNewSeason(seriesName)) return;
+                const lastEvent = getLastStatusBefore(seriesName, today);
+                result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
             });
-            return result.sort((a, b) => {
-                const dateA = a.nextNewDate || a.lastFinalDate;
-                const dateB = b.nextNewDate || b.lastFinalDate;
-                return dateB - dateA;
-            });
+            return result.sort((a, b) => b.date - a.date);
         }
 
         function getEndedSeriesList() {
@@ -969,31 +1096,13 @@
                 if (newSeasonItems.length > 0) {
                     newSeasonList.innerHTML = `<div><div class="filter-list">${newSeasonItems.map(item => {
                         const borders = multipleFilters ? 'border-new-season' : '';
-                        const isSelected = selectedNewSeasonSeries === item.series ? 'selected-new-season' : '';
-                        
-                        let html = '';
-                        if (item.nextNewEvent) {
-                            const season = item.nextNewEvent[CONFIG.colSeason] ? item.nextNewEvent[CONFIG.colSeason].trim() : '';
-                            const episode = item.nextNewEvent[CONFIG.colEpisode] ? item.nextNewEvent[CONFIG.colEpisode].trim() : '';
-                            let metaText = `Сезон ${season} Серия ${episode}`;
-                            html += `<div class="filter-list-item ${borders} ${isSelected}" data-date="${formatDateForCell(item.nextNewDate)}" data-series="${escapeHtml(item.series)}">
-                                <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Новый сезон • ${metaText}</div></div>
-                                <div class="filter-list-date">${formatDateDMY(item.nextNewDate)}</div>
-                            </div>`;
-                        }
-                        
-                        const lastSeason = item.lastFinalEvent[CONFIG.colSeason] ? item.lastFinalEvent[CONFIG.colSeason].trim() : '';
-                        const lastEpisode = item.lastFinalEvent[CONFIG.colEpisode] ? item.lastFinalEvent[CONFIG.colEpisode].trim() : '';
-                        let lastMetaText = `Финал сезона • Сезон ${lastSeason} Серия ${lastEpisode}`;
-                        html += `<div class="filter-list-item ${borders} ${isSelected}" data-date="${formatDateForCell(item.lastFinalDate)}" data-series="${escapeHtml(item.series)}">
-                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${lastMetaText}</div></div>
-                            <div class="filter-list-date">${formatDateDMY(item.lastFinalDate)}</div>
+                        return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сезона ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.date)}</div>
                         </div>`;
-                        
-                        return html;
                     }).join('')}</div></div>`;
                     newSeasonList.classList.add('active');
-                    attachNewSeasonClickHandlers(newSeasonList);
+                    attachListClickHandlers(newSeasonList);
                     newSeasonEmptyMsg.classList.remove('visible');
                 } else {
                     newSeasonList.innerHTML = '';
@@ -1052,26 +1161,6 @@
         function attachListClickHandlers(container) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
                 item.addEventListener('click', () => scrollToCell(item.dataset.date, item.dataset.series));
-            });
-        }
-
-        function attachNewSeasonClickHandlers(container) {
-            container.querySelectorAll('.filter-list-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const seriesName = item.dataset.series;
-                    const dateStr = item.dataset.date;
-                    
-                    if (selectedNewSeasonSeries === seriesName) {
-                        selectedNewSeasonSeries = null;
-                    } else {
-                        selectedNewSeasonSeries = seriesName;
-                    }
-                    
-                    updateFilterLists();
-                    renderView();
-                    setTimeout(() => scrollToCell(dateStr, seriesName), 100);
-                });
             });
         }
 
@@ -1152,6 +1241,96 @@
             return true;
         }
 
+        function getTodayUpdates() {
+            const updates = [];
+            
+            allEvents.forEach(event => {
+                const updatedStr = event[CONFIG.colUpdated] ? String(event[CONFIG.colUpdated]).trim() : '';
+                if (!updatedStr) return;
+                
+                const updatedDate = parseDate(updatedStr);
+                if (!updatedDate || updatedDate.getTime() !== today.getTime()) return;
+                
+                const series = event[CONFIG.colSeries].trim();
+                const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+                const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+                const voice = event[CONFIG.colVoice] ? String(event[CONFIG.colVoice]).trim() : '';
+                const dub = event[CONFIG.colDub] ? String(event[CONFIG.colDub]).trim() : '';
+                const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
+                const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
+                
+                if (voice && voice !== 'ожидаем' && voice !== '') {
+                    updates.push({
+                        type: 'voice',
+                        series: series,
+                        detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
+                    updates.push({
+                        type: 'dub',
+                        series: series,
+                        detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
+                    updates.push({
+                        type: 'status',
+                        series: series,
+                        detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                if (translator && translator !== 'Не назначен' && translator !== '') {
+                    updates.push({
+                        type: 'translator',
+                        series: series,
+                        detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+            });
+            
+            return updates;
+        }
+
+        function renderUpdates() {
+            todayUpdates = getTodayUpdates();
+            
+            if (todayUpdates.length > 0) {
+                updatesBadge.textContent = todayUpdates.length;
+                updatesBadge.style.display = 'block';
+            } else {
+                updatesBadge.style.display = 'none';
+            }
+            
+            if (todayUpdates.length === 0) {
+                updatesList.innerHTML = '<div class="updates-dropdown-empty">Сегодня обновлений не было</div>';
+                return;
+            }
+            
+            const typeLabels = {
+                voice: 'Озвучка',
+                dub: 'Дубляж',
+                status: 'Статус',
+                translator: 'Переводчик'
+            };
+            
+            updatesList.innerHTML = todayUpdates.map(update => `
+                <div class="update-item">
+                    <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
+                    <div class="update-series">${escapeHtml(update.series)}</div>
+                    <div class="update-detail">${escapeHtml(update.detail)}</div>
+                </div>
+            `).join('');
+        }
+
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -1169,6 +1348,7 @@
                 availableYears = Array.from(yearsSet).sort();
                 
                 populateMonthFilter();
+                renderUpdates();
                 renderView();
                 setTimeout(() => scrollToToday(), 300);
             },
@@ -1761,10 +1941,10 @@
         function parseDate(dateStr) {
             if (!dateStr) return null;
             const parts = dateStr.toString().trim().split(/[\.\/\-]/);
-            if (parts.length >= 2) {
+            if (parts.length >= 3) {
                 const day = parseInt(parts[0], 10);
                 const month = parseInt(parts[1], 10) - 1;
-                const year = parts.length >= 3 ? parseInt(parts[2], 10) : currentYear;
+                const year = parseInt(parts[2], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
