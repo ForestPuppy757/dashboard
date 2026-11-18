@@ -395,10 +395,6 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
-        #filter-lists { display: flex; flex-direction: column; min-height: 0; }
-        .filter-list-container { margin-top: 0; padding-top: 4px; }
-        .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
-        
         .filter-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding-top: 4px; }
         .filter-list-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -497,7 +493,6 @@
 
     <div class="max-w-7xl mx-auto">
         <header class="mb-6">
-            <!-- Строка 1: Заголовок + (Месяц | ⚡) -->
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                 <div>
                     <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text mb-2">🎬 Дашборд трансляций</h1>
@@ -529,7 +524,6 @@
                 </div>
             </div>
             
-            <!-- Строка 2: Поиск + Фильтры -->
             <div class="flex flex-col md:flex-row md:items-center gap-3">
                 <div class="search-container flex-1">
                     <div class="search-input-wrapper">
@@ -549,21 +543,26 @@
             </div>
         </header>
 
-        <div id="search-info-block" class="glass-card rounded-2xl p-4 mb-6">
-            <div class="search-info-grid" id="search-info-grid"></div>
-        </div>
-        
-        <div id="search-dropdown" class="search-dropdown">
-            <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
-        </div>
-        
-        <div id="filter-lists" class="mb-6">
-            <div id="airing-list" class="filter-list-container"></div>
-            <div id="new-season-list" class="filter-list-container"></div>
-            <div id="ended-list" class="filter-list-container"></div>
-        </div>
-        <div id="new-season-empty-msg" class="new-season-empty-msg">
-            <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
+        <!-- Единый контейнер для динамического контента -->
+        <div id="dynamic-content" class="mb-6" style="display: none;">
+            <div class="glass-card rounded-2xl p-4">
+                <div id="search-info-block" class="search-info-block">
+                    <div class="search-info-grid" id="search-info-grid"></div>
+                </div>
+                
+                <div id="search-dropdown" class="search-dropdown">
+                    <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+                </div>
+                
+                <div id="filter-lists">
+                    <div id="airing-list" class="filter-list-container"></div>
+                    <div id="new-season-list" class="filter-list-container"></div>
+                    <div id="ended-list" class="filter-list-container"></div>
+                </div>
+                <div id="new-season-empty-msg" class="new-season-empty-msg">
+                    <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
+                </div>
+            </div>
         </div>
 
         <div id="schedule-section" class="glass-card rounded-3xl overflow-hidden p-4 md:p-6">
@@ -642,6 +641,7 @@
         const updatesBadge = document.getElementById('updates-badge');
         const updatesDropdown = document.getElementById('updates-dropdown');
         const updatesList = document.getElementById('updates-list');
+        const dynamicContent = document.getElementById('dynamic-content');
 
         const layoutMap = {
             'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
@@ -656,7 +656,6 @@
             return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
         }
 
-        // 🔥 Формат сегодняшней даты дд.мм.гггг (с ведущими нулями)
         function getTodayFormatted() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
@@ -794,6 +793,7 @@
                 closeDropdown(); 
                 activeFilters.search = '';
                 searchInfoBlock.classList.remove('visible');
+                updateDynamicContentVisibility();
                 renderView(); 
                 return; 
             }
@@ -811,6 +811,7 @@
             if (matches.length === 0) {
                 searchDropdownInner.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
                 openDropdown();
+                updateDynamicContentVisibility();
                 return;
             }
             
@@ -818,6 +819,7 @@
                 `<div class="search-dropdown-item" data-series="${escapeHtml(s)}">${escapeHtml(s)}</div>`
             ).join('');
             openDropdown();
+            updateDynamicContentVisibility();
             
             searchDropdownInner.querySelectorAll('.search-dropdown-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -839,6 +841,7 @@
             activeFilters.search = '';
             searchInfoBlock.classList.remove('visible');
             closeDropdown();
+            updateDynamicContentVisibility();
             renderView();
         });
 
@@ -872,6 +875,7 @@
             
             if (!pastEvent && !nextEvent) {
                 searchInfoBlock.classList.remove('visible');
+                updateDynamicContentVisibility();
                 return;
             }
             
@@ -933,6 +937,7 @@
             
             searchInfoGrid.innerHTML = html;
             searchInfoBlock.classList.add('visible');
+            updateDynamicContentVisibility();
             
             searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
                 card.addEventListener('click', () => {
@@ -951,9 +956,22 @@
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
                 updateFilterLists();
+                updateDynamicContentVisibility();
                 renderView();
             });
         });
+
+        // 🔥 Функция управления видимостью динамического контента
+        function updateDynamicContentVisibility() {
+            const hasSearchInfo = searchInfoBlock.classList.contains('visible');
+            const hasActiveFilters = activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
+            
+            if (hasSearchInfo || hasActiveFilters) {
+                dynamicContent.style.display = 'block';
+            } else {
+                dynamicContent.style.display = 'none';
+            }
+        }
 
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
@@ -1121,6 +1139,7 @@
                         e.stopPropagation();
                         selectedEndedSeries = null;
                         updateFilterLists();
+                        updateDynamicContentVisibility();
                         renderView();
                     });
                 }
@@ -1147,13 +1166,13 @@
                     else selectedEndedSeries = seriesName;
                     
                     updateFilterLists();
+                    updateDynamicContentVisibility();
                     renderView();
                     setTimeout(() => scrollToCell(dateStr, seriesName), 100);
                 });
             });
         }
 
-        // 🔥 Формат для ФИЛЬТРОВ и поиска: дд.мм.гггг (полностью, с ведущими нулями)
         function formatDateDMY(date) {
             if (!date) return '';
             return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
@@ -1831,7 +1850,6 @@
         const flipCard = document.getElementById('flip-card');
         const flipContainer = document.querySelector('.flip-container');
 
-        // 🔥 Формат для ДОПОЛНИТЕЛЬНОЙ ИНФОРМАЦИИ (модалка): дд.мм + день недели
         function formatDateWithDay(dateStr) {
             if (!dateStr) return '—';
             const d = parseDate(dateStr.toString().trim());
