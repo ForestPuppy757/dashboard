@@ -47,8 +47,11 @@
             50% { opacity: 0.8; transform: scale(1.1); }
         }
         
-        .faded-event { opacity: 0.4; }
-        .faded-event:hover { opacity: 0.7; }
+        /* 🔥 Два уровня тусклости */
+        .faded-event { opacity: 0.35; }
+        .faded-event:hover { opacity: 0.55; }
+        .past-event { opacity: 0.7; }
+        .past-event:hover { opacity: 0.85; }
         
         .glass-card {
             background: rgba(15, 23, 42, 0.8);
@@ -538,6 +541,7 @@
 
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false };
         let selectedEndedSeries = null;
+        let currentRenderContext = { mode: 'month', year: null, month: null };
 
         const seriesSearch = document.getElementById('series-search');
         const searchClear = document.getElementById('search-clear');
@@ -1114,6 +1118,8 @@
             const filter = parseFilterValue(monthFilterInput.value);
             
             if (filter.mode === 'all') {
+                currentRenderContext = { mode: 'year', year: null, month: null };
+                
                 const monthsWithEvents = new Set();
                 allEvents.forEach(event => {
                     if (!event._parsedDate || !matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
@@ -1134,6 +1140,7 @@
                     wrapper.appendChild(createMonthBlock(year, month));
                 });
             } else {
+                currentRenderContext = { mode: 'month', year: filter.year, month: filter.month };
                 wrapper.appendChild(createMonthBlock(filter.year, filter.month));
             }
         }
@@ -1198,6 +1205,7 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
+            // 🔥 Ячейки предыдущего месяца — всегда тусклые (isFaded=true)
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
@@ -1231,6 +1239,7 @@
                 }
             }
 
+            // 🔥 Ячейки текущего месяца — прошедшие тусклее (past-event), будущие яркие
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const isToday = isCurrentMonth && day === todayDate;
@@ -1266,6 +1275,7 @@
                 grid.appendChild(cell);
             }
 
+            // 🔥 Ячейки следующего месяца — всегда тусклые (isFaded=true)
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
@@ -1414,58 +1424,48 @@
 
         const noveltyFirstClick = new Set();
 
+        // 🔥 Новая логика тусклости:
+        // - isFaded (prev/next month) → faded-event (opacity 0.35) + тусклые точки
+        // - isPast в month/year режиме → past-event (opacity 0.7) + тусклые точки
+        // - isFuture → яркая карточка + яркие точки
         function createEventElement(event, isFaded, isEndedHighlight, isSearchHighlight) {
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
             let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
 
+            const eventDate = event._parsedDate;
+            const isPast = eventDate && eventDate < today;
+            
+            // 🔥 Определяем уровень тусклости
+            const isDeepFaded = isFaded; // prev/next month
+            const isLightFaded = isPast && !isFaded; // прошедшие в текущем/годовом режиме
+            
             if (statusRaw.includes('финал сезона') || statusRaw.includes('финал сериала') || statusRaw.includes('новинка')) {
                 isSpecial = true;
                 specialText = statusRaw;
                 bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
-                
-                const eventDate = event._parsedDate;
-                const isPast = eventDate && eventDate < today;
-                dotClass = isPast ? 'dot-special-past' : 'dot-special';
+                if (isDeepFaded) dotClass = 'dot-special-past';
+                else if (isLightFaded) dotClass = 'dot-special-past';
+                else dotClass = 'dot-special';
             } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
                 isMoved = true;
                 bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
-                
-                const eventDate = event._parsedDate;
-                const isPast = eventDate && eventDate < today;
-                dotClass = isPast ? 'dot-moved-past' : 'dot-moved';
-            }
-
-            const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
-            const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
-            let seasonEpisodeDisplay = '';
-            if (season && episode) seasonEpisodeDisplay = `Сезон ${season} Серия ${episode}`;
-            else if (season) seasonEpisodeDisplay = `Сезон ${season}`;
-            else if (episode) seasonEpisodeDisplay = `Серия ${episode}`;
-            
-            const mod = event[CONFIG.colModerator] ? event[CONFIG.colModerator].trim() : 'Не назначен';
-            const banText = event[CONFIG.colBan] ? event[CONFIG.colBan].trim() : '';
-            const hasBan = banText && banText !== '-';
-
-            const eventDate = event._parsedDate;
-            const isPast = eventDate && eventDate < today;
-            
-            if (dotClass === 'dot-active' && isPast) {
-                dotClass = 'dot-past';
+                if (isDeepFaded) dotClass = 'dot-moved-past';
+                else if (isLightFaded) dotClass = 'dot-moved-past';
+                else dotClass = 'dot-moved';
+            } else {
+                // Обычный "В эфире"
+                if (isDeepFaded) dotClass = 'dot-past';
+                else if (isLightFaded) dotClass = 'dot-past';
+                else dotClass = 'dot-active';
             }
 
             const eventEl = document.createElement('div');
-            let extraClasses = isFaded ? 'faded-event' : '';
+            let extraClasses = '';
+            if (isDeepFaded) extraClasses += ' faded-event';
+            else if (isLightFaded) extraClasses += ' past-event';
             if (isEndedHighlight) extraClasses += ' highlighted-event';
             if (isSearchHighlight) extraClasses += ' search-nearest-event';
-            
-            if (isSpecial && isPast && !isFaded) {
-                extraClasses += ' faded-event';
-            }
-            
-            if (isMoved && isPast && !isFaded) {
-                extraClasses += ' faded-event';
-            }
             
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${extraClasses}`;
             
@@ -1485,6 +1485,17 @@
             }
             html += `</div>`;
             
+            const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+            const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+            let seasonEpisodeDisplay = '';
+            if (season && episode) seasonEpisodeDisplay = `Сезон ${season} Серия ${episode}`;
+            else if (season) seasonEpisodeDisplay = `Сезон ${season}`;
+            else if (episode) seasonEpisodeDisplay = `Серия ${episode}`;
+            
+            const mod = event[CONFIG.colModerator] ? event[CONFIG.colModerator].trim() : 'Не назначен';
+            const banText = event[CONFIG.colBan] ? event[CONFIG.colBan].trim() : '';
+            const hasBan = banText && banText !== '-';
+
             if (seasonEpisodeDisplay) html += `<div class="text-[10px] text-slate-500 mb-0.5 font-medium event-info">${seasonEpisodeDisplay}</div>`;
             html += `<div class="text-[10px] text-slate-400 event-info" style="word-wrap: break-word;">Модератор: ${mod}</div>`;
             if (isMoved) html += `<div class="text-[10px] text-red-400 font-bold mt-0.5">Перенос</div>`;
