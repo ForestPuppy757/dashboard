@@ -329,6 +329,11 @@
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
             background: rgba(168, 85, 247, 0.15);
         }
+        .filter-list-item.selected-new-season {
+            border-color: rgba(59, 130, 246, 0.9) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.15);
+        }
         
         .filter-list-name { font-weight: 600; font-size: 14px; color: #e2e8f0; }
         .filter-list-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
@@ -341,9 +346,17 @@
             border-color: rgba(168, 85, 247, 0.6) !important;
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
         }
+        .highlighted-new-season-cell {
+            border-color: rgba(59, 130, 246, 0.6) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
         .highlighted-event {
             border-color: rgba(168, 85, 247, 0.8) !important;
             background: rgba(168, 85, 247, 0.15) !important;
+        }
+        .highlighted-new-season-event {
+            border-color: rgba(59, 130, 246, 0.8) !important;
+            background: rgba(59, 130, 246, 0.15) !important;
         }
         .search-nearest-cell {
             border-color: rgba(16, 185, 129, 0.7) !important;
@@ -481,7 +494,7 @@
                 <div id="new-season-list" class="filter-list-container"></div>
                 <div id="ended-list" class="filter-list-container"></div>
                 <div id="new-season-empty-msg" class="new-season-empty-msg">
-                    <p class="text-lg text-slate-300 font-medium">Уже дождались! Заваривай чай и смотри новые серии ♡</p>
+                    <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
                 </div>
             </div>
         </div>
@@ -540,6 +553,7 @@
 
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false };
         let selectedEndedSeries = null;
+        let selectedNewSeasonSeries = null;
         let currentRenderContext = { mode: 'month', year: null, month: null };
 
         const seriesSearch = document.getElementById('series-search');
@@ -807,6 +821,7 @@
                 this.classList.toggle('active');
                 activeFilters[filter] = this.classList.contains('active');
                 if (!activeFilters.ended) selectedEndedSeries = null;
+                if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
                 updateFilterLists();
                 renderView();
             });
@@ -814,6 +829,11 @@
 
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
+            return relevant.length > 0 ? relevant[relevant.length - 1] : null;
+        }
+
+        function getLastStatusOverall(seriesName) {
+            const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate).sort((a, b) => a._parsedDate - b._parsedDate);
             return relevant.length > 0 ? relevant[relevant.length - 1] : null;
         }
 
@@ -833,12 +853,35 @@
         }
 
         function isWaitingNewSeason(seriesName) {
-            const lastEvent = getLastStatusBefore(seriesName, today);
-            return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона');
+            const lastEvent = getLastStatusOverall(seriesName);
+            if (!lastEvent) return false;
+            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
+            return status.includes('финал сезона');
+        }
+
+        function getNextSeasonAfterFinal(seriesName) {
+            const lastFinal = allEvents.filter(e => {
+                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                return status.includes('финал сезона');
+            }).sort((a, b) => b._parsedDate - a._parsedDate)[0];
+            
+            if (!lastFinal) return null;
+            
+            const nextNew = allEvents.filter(e => {
+                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                if (!e._parsedDate || e._parsedDate <= lastFinal._parsedDate) return false;
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
+                if (status.includes('перенос') || status.includes('перенес')) return false;
+                return true;
+            }).sort((a, b) => a._parsedDate - b._parsedDate)[0];
+            
+            return nextNew || null;
         }
 
         function isSeriesEnded(seriesName) {
-            const lastEvent = getLastStatusBefore(seriesName, today);
+            const lastEvent = getLastStatusOverall(seriesName);
             return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала');
         }
 
@@ -863,21 +906,45 @@
             return result.sort((a, b) => a.date - b.date);
         }
 
+        // 🔥 Новая логика для "Ждём новый сезон"
         function getNewSeasonList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
                 if (!isWaitingNewSeason(seriesName)) return;
-                const lastEvent = getLastStatusBefore(seriesName, today);
-                result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
+                
+                const lastFinal = allEvents.filter(e => {
+                    if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                    return status.includes('финал сезона');
+                }).sort((a, b) => b._parsedDate - a._parsedDate)[0];
+                
+                if (!lastFinal) return;
+                
+                const nextNew = getNextSeasonAfterFinal(seriesName);
+                
+                // Если есть новая серия и она уже прошла (дата < today) — не показываем
+                if (nextNew && nextNew._parsedDate < today) return;
+                
+                result.push({
+                    series: seriesName,
+                    lastFinalEvent: lastFinal,
+                    lastFinalDate: lastFinal._parsedDate,
+                    nextNewEvent: nextNew || null,
+                    nextNewDate: nextNew ? nextNew._parsedDate : null
+                });
             });
-            return result.sort((a, b) => b.date - a.date);
+            return result.sort((a, b) => {
+                const dateA = a.nextNewDate || a.lastFinalDate;
+                const dateB = b.nextNewDate || b.lastFinalDate;
+                return dateB - dateA;
+            });
         }
 
         function getEndedSeriesList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
                 if (!isSeriesEnded(seriesName)) return;
-                const lastEvent = getLastStatusBefore(seriesName, today);
+                const lastEvent = getLastStatusOverall(seriesName);
                 result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
             });
             return result.sort((a, b) => b.date - a.date);
@@ -920,18 +987,37 @@
                 setTimeout(() => { if (!activeFilters.airing) airingList.innerHTML = ''; }, 400);
             }
             
+            // 🔥 Обновлённая логика "Ждём новый сезон"
             const newSeasonItems = getNewSeasonList();
             if (activeFilters.newSeason) {
                 if (newSeasonItems.length > 0) {
                     newSeasonList.innerHTML = `<div><div class="filter-list">${newSeasonItems.map(item => {
                         const borders = multipleFilters ? 'border-new-season' : '';
-                        return `<div class="filter-list-item ${borders}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
-                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Финал сезона ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}</div></div>
-                            <div class="filter-list-date">${formatDateDMY(item.date)}</div>
+                        const isSelected = selectedNewSeasonSeries === item.series ? 'selected-new-season' : '';
+                        
+                        let html = '';
+                        if (item.nextNewEvent) {
+                            const season = item.nextNewEvent[CONFIG.colSeason] ? item.nextNewEvent[CONFIG.colSeason].trim() : '';
+                            const episode = item.nextNewEvent[CONFIG.colEpisode] ? item.nextNewEvent[CONFIG.colEpisode].trim() : '';
+                            let metaText = `Сезон ${season} Серия ${episode}`;
+                            html += `<div class="filter-list-item ${borders} ${isSelected}" data-date="${formatDateForCell(item.nextNewDate)}" data-series="${escapeHtml(item.series)}">
+                                <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">Новый сезон • ${metaText}</div></div>
+                                <div class="filter-list-date">${formatDateDMY(item.nextNewDate)}</div>
+                            </div>`;
+                        }
+                        
+                        const lastSeason = item.lastFinalEvent[CONFIG.colSeason] ? item.lastFinalEvent[CONFIG.colSeason].trim() : '';
+                        const lastEpisode = item.lastFinalEvent[CONFIG.colEpisode] ? item.lastFinalEvent[CONFIG.colEpisode].trim() : '';
+                        let lastMetaText = `Финал сезона • Сезон ${lastSeason} Серия ${lastEpisode}`;
+                        html += `<div class="filter-list-item ${borders} ${isSelected}" data-date="${formatDateForCell(item.lastFinalDate)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${lastMetaText}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.lastFinalDate)}</div>
                         </div>`;
+                        
+                        return html;
                     }).join('')}</div></div>`;
                     newSeasonList.classList.add('active');
-                    attachListClickHandlers(newSeasonList);
+                    attachNewSeasonClickHandlers(newSeasonList);
                     newSeasonEmptyMsg.classList.remove('visible');
                 } else {
                     newSeasonList.innerHTML = '';
@@ -990,6 +1076,26 @@
         function attachListClickHandlers(container) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
                 item.addEventListener('click', () => scrollToCell(item.dataset.date, item.dataset.series));
+            });
+        }
+
+        function attachNewSeasonClickHandlers(container) {
+            container.querySelectorAll('.filter-list-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const seriesName = item.dataset.series;
+                    const dateStr = item.dataset.date;
+                    
+                    if (selectedNewSeasonSeries === seriesName) {
+                        selectedNewSeasonSeries = null;
+                    } else {
+                        selectedNewSeasonSeries = seriesName;
+                    }
+                    
+                    updateFilterLists();
+                    renderView();
+                    setTimeout(() => scrollToCell(dateStr, seriesName), 100);
+                });
             });
         }
 
@@ -1057,6 +1163,7 @@
             if (!hasAnyFilter) return true;
             
             if (activeFilters.ended && !activeFilters.search) return true;
+            if (activeFilters.newSeason && !activeFilters.search) return true;
             
             if (activeFilters.search && seriesName !== activeFilters.search) return false;
             if (activeFilters.airing || activeFilters.newSeason || activeFilters.ended) {
@@ -1187,7 +1294,7 @@
             let startDayOfWeek = firstDay.getDay();
             startDayOfWeek = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
 
-            const useAllEvents = activeFilters.ended;
+            const useAllEvents = activeFilters.ended || activeFilters.newSeason;
             const eventsByMonthDay = {};
             
             allEvents.forEach(event => {
@@ -1204,7 +1311,6 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
-            // 🔥 Ячейки предыдущего месяца — тусклые, кружочки тоже тусклые (isFaded=true)
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
@@ -1233,13 +1339,11 @@
                         cell.classList.add('dimmed-cell');
                     }
                     
-                    // 🔥 isPrevMonth=true → кружочки тусклые
                     applyCellHighlighting(cell, dayEvents, dateObj, true);
                     grid.appendChild(cell);
                 }
             }
 
-            // 🔥 Ячейки текущего месяца — прошедшие тусклее (past-event), будущие яркие
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const isToday = isCurrentMonth && day === todayDate;
@@ -1275,7 +1379,6 @@
                 grid.appendChild(cell);
             }
 
-            // 🔥 Ячейки следующего месяца — тусклые, но кружочки яркие (isFaded=false)
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
@@ -1301,7 +1404,6 @@
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    // 🔥 isPrevMonth=false → кружочки яркие
                     applyCellHighlighting(cell, dayEvents, dateObj, false);
                     grid.appendChild(cell);
                 }
@@ -1350,6 +1452,37 @@
                         cell.appendChild(emptyBlock);
                     }
                 }
+            } else if (activeFilters.newSeason && selectedNewSeasonSeries) {
+                // 🔥 Логика для "Ждём новый сезон" с выбранным сериалом
+                const hasSelectedNewSeason = dayEvents.some(e => {
+                    if (e[CONFIG.colSeries].trim() !== selectedNewSeasonSeries) return false;
+                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                    return status.includes('финал сезона') || (status.includes('в эфире') && !status.includes('финал'));
+                });
+                
+                if (hasSelectedNewSeason) {
+                    cell.classList.add('highlighted-new-season-cell');
+                    cell.classList.remove('hover:bg-slate-800/60');
+                    dayEvents.forEach(event => {
+                        const status = String(event[CONFIG.colStatus] || '').toLowerCase();
+                        if (event[CONFIG.colSeries].trim() === selectedNewSeasonSeries && 
+                            (status.includes('финал сезона') || status.includes('в эфире'))) {
+                            cell.appendChild(createEventElement(event, false, false, false, true));
+                        } else {
+                            cell.appendChild(createEventElement(event, true, false, false, false));
+                        }
+                    });
+                } else {
+                    cell.classList.add('dimmed-cell');
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
+                    } else if (!isPrevMonth) {
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
+                    }
+                }
             } else if (activeFilters.ended) {
                 const hasEndedSeries = dayEvents.some(e => {
                     const status = String(e[CONFIG.colStatus] || '').toLowerCase();
@@ -1368,15 +1501,15 @@
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (event[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала')) {
-                                cell.appendChild(createEventElement(event, false, true, false));
+                                cell.appendChild(createEventElement(event, false, true, false, false));
                             } else {
-                                cell.appendChild(createEventElement(event, true, false, false));
+                                cell.appendChild(createEventElement(event, true, false, false, false));
                             }
                         });
                     } else {
                         cell.classList.add('dimmed-cell');
                         if (dayEvents.length > 0) {
-                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                         } else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
                             emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
@@ -1391,15 +1524,15 @@
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (status.includes('финал сериала')) {
-                                cell.appendChild(createEventElement(event, false, true, false));
+                                cell.appendChild(createEventElement(event, false, true, false, false));
                             } else {
-                                cell.appendChild(createEventElement(event, true, false, false));
+                                cell.appendChild(createEventElement(event, true, false, false, false));
                             }
                         });
                     } else {
                         cell.classList.add('dimmed-cell');
                         if (dayEvents.length > 0) {
-                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false)));
+                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                         } else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
                             emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
@@ -1412,7 +1545,7 @@
                 if (dayEvents.length > 0) {
                     dayEvents.forEach(event => {
                         const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
-                        cell.appendChild(createEventElement(event, false, isEndedHighlight, false));
+                        cell.appendChild(createEventElement(event, false, isEndedHighlight, false, false));
                     });
                 } else {
                     const emptyBlock = document.createElement('div');
@@ -1425,7 +1558,7 @@
 
         const noveltyFirstClick = new Set();
 
-        function createEventElement(event, isFaded, isEndedHighlight, isSearchHighlight) {
+        function createEventElement(event, isFaded, isEndedHighlight, isSearchHighlight, isNewSeasonHighlight) {
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
             let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
@@ -1458,6 +1591,7 @@
             else if (isLightFaded) extraClasses += ' past-event';
             if (isEndedHighlight) extraClasses += ' highlighted-event';
             if (isSearchHighlight) extraClasses += ' search-nearest-event';
+            if (isNewSeasonHighlight) extraClasses += ' highlighted-new-season-event';
             
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${extraClasses}`;
             
