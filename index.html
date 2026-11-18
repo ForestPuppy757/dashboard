@@ -129,6 +129,132 @@
         .custom-select-dropdown::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
         .custom-select-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
 
+        /* 🔥 КНОПКА ОБНОВЛЕНИЙ */
+        .updates-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .updates-btn:hover {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: rgba(148, 163, 184, 0.4);
+            transform: translateY(-1px);
+        }
+        .updates-btn.active {
+            border-color: #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+        }
+        .updates-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        }
+
+        /* 🔥 DROPDOWN ОБНОВЛЕНИЙ */
+        .updates-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 380px;
+            max-width: 90vw;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .updates-dropdown.open {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+        .updates-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-weight: 700;
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+        .updates-dropdown-empty {
+            padding: 24px 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .update-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            transition: background 0.15s;
+        }
+        .update-item:last-child {
+            border-bottom: none;
+        }
+        .update-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+        }
+        .update-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 6px;
+        }
+        .update-type.voice {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .update-type.dub {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .update-type.status {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .update-type.translator {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .update-series {
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .update-detail {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
             margin-bottom: 1rem; padding-left: 0.5rem; border-left: 4px solid #667eea;
@@ -460,6 +586,18 @@
                     <div class="custom-select-dropdown" id="month-dropdown"></div>
                     <input type="hidden" id="month-filter" value="all">
                 </div>
+                
+                <!-- 🔥 КНОПКА ОБНОВЛЕНИЙ -->
+                <div style="position: relative;">
+                    <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
+                        ⚡
+                        <span class="updates-badge" id="updates-badge" style="display: none;">0</span>
+                    </button>
+                    <div class="updates-dropdown" id="updates-dropdown">
+                        <div class="updates-dropdown-header">📋 Обновления сегодня</div>
+                        <div id="updates-list"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -538,12 +676,14 @@
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
             colTranslator: 'Переводчик',
             colVoice: 'Озвучка от AlisaDirilis', colDub: 'Дубляж',
-            colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей'
+            colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей',
+            colUpdated: 'Обновлено' // 🔥 НОВЫЙ СТОЛБЕЦ
         };
 
         let allEvents = [];
         let uniqueSeries = [];
         let availableYears = [];
+        let todayUpdates = []; // 🔥 Список обновлений за сегодня
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         const dayNamesFull = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
         const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -568,6 +708,10 @@
         const monthTrigger = document.getElementById('month-trigger');
         const monthTriggerText = document.getElementById('month-trigger-text');
         const monthDropdown = document.getElementById('month-dropdown');
+        const updatesBtn = document.getElementById('updates-btn');
+        const updatesBadge = document.getElementById('updates-badge');
+        const updatesDropdown = document.getElementById('updates-dropdown');
+        const updatesList = document.getElementById('updates-list');
 
         const layoutMap = {
             'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
@@ -643,9 +787,20 @@
             else openMonthDropdown();
         });
 
+        // 🔥 Обработчик кнопки обновлений
+        updatesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            updatesDropdown.classList.toggle('open');
+            updatesBtn.classList.toggle('active');
+        });
+
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.custom-select-wrapper')) closeMonthDropdown();
             if (!e.target.closest('.search-container') && !e.target.closest('.search-dropdown')) closeDropdown();
+            if (!e.target.closest('.updates-btn') && !e.target.closest('.updates-dropdown')) {
+                updatesDropdown.classList.remove('open');
+                updatesBtn.classList.remove('active');
+            }
         });
 
         function openDropdown() { searchDropdown.classList.add('active'); }
@@ -848,7 +1003,6 @@
             });
         }
 
-        // 🔥 ИСПРАВЛЕНО: теперь используем getLastStatusBefore(today), а не getLastStatusOverall
         function isWaitingNewSeason(seriesName) {
             const lastEvent = getLastStatusBefore(seriesName, today);
             return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона');
@@ -880,7 +1034,6 @@
             return result.sort((a, b) => a.date - b.date);
         }
 
-        // 🔥 ИСПРАВЛЕНА логика: ищем последний финал сезона ДО сегодня + следующую запись после него
         function getNewSeasonList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
@@ -1152,6 +1305,101 @@
             return true;
         }
 
+        // 🔥 Функция для получения обновлений за сегодня
+        function getTodayUpdates() {
+            const updates = [];
+            const todayStr = formatDateDMY(today);
+            
+            allEvents.forEach(event => {
+                const updatedStr = event[CONFIG.colUpdated] ? event[CONFIG.colUpdated].trim() : '';
+                if (!updatedStr) return;
+                
+                // Проверяем, что дата обновления = сегодня
+                const updatedDate = parseDate(updatedStr);
+                if (!updatedDate || updatedDate.getTime() !== today.getTime()) return;
+                
+                const series = event[CONFIG.colSeries].trim();
+                const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
+                const episode = event[CONFIG.colEpisode] ? event[CONFIG.colEpisode].trim() : '';
+                const voice = event[CONFIG.colVoice] ? event[CONFIG.colVoice].trim() : '';
+                const dub = event[CONFIG.colDub] ? event[CONFIG.colDub].trim() : '';
+                const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
+                const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
+                
+                // Определяем тип обновления
+                if (voice && voice !== 'ожидаем') {
+                    updates.push({
+                        type: 'voice',
+                        series: series,
+                        detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет') {
+                    updates.push({
+                        type: 'dub',
+                        series: series,
+                        detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
+                    updates.push({
+                        type: 'status',
+                        series: series,
+                        detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+                
+                if (translator && translator !== 'Не назначен') {
+                    updates.push({
+                        type: 'translator',
+                        series: series,
+                        detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`,
+                        date: updatedStr
+                    });
+                }
+            });
+            
+            return updates;
+        }
+
+        // 🔥 Отображение обновлений
+        function renderUpdates() {
+            todayUpdates = getTodayUpdates();
+            
+            if (todayUpdates.length > 0) {
+                updatesBadge.textContent = todayUpdates.length;
+                updatesBadge.style.display = 'block';
+            } else {
+                updatesBadge.style.display = 'none';
+            }
+            
+            if (todayUpdates.length === 0) {
+                updatesList.innerHTML = '<div class="updates-dropdown-empty">Сегодня обновлений не было</div>';
+                return;
+            }
+            
+            const typeLabels = {
+                voice: 'Озвучка',
+                dub: 'Дубляж',
+                status: 'Статус',
+                translator: 'Переводчик'
+            };
+            
+            updatesList.innerHTML = todayUpdates.map(update => `
+                <div class="update-item">
+                    <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
+                    <div class="update-series">${escapeHtml(update.series)}</div>
+                    <div class="update-detail">${escapeHtml(update.detail)}</div>
+                </div>
+            `).join('');
+        }
+
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
@@ -1169,6 +1417,7 @@
                 availableYears = Array.from(yearsSet).sort();
                 
                 populateMonthFilter();
+                renderUpdates(); // 🔥 Загружаем обновления
                 renderView();
                 setTimeout(() => scrollToToday(), 300);
             },
