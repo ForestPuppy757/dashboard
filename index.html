@@ -970,7 +970,7 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
-            // 🔥 Все дни месяца всегда отображаются в своих колонках
+            // 🔥 Все дни месяца отображаются в своих колонках
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const isToday = isCurrentMonth && day === todayDate;
@@ -1017,19 +1017,19 @@
                 }
 
                 if (dayEvents.length > 0) {
+                    // Показываем события (даже в прошедших днях — они будут затемнены вместе с ячейкой)
                     dayEvents.forEach(event => {
                         const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
                         cell.appendChild(createEventElement(event, false, isEndedHighlight));
                     });
                 } else if (!isPastDay) {
-                    // Показываем иконку чашки только для будущих/сегодняшних дней без событий
+                    // Будущие/сегодняшние дни без событий — показываем иконку чашки
                     const emptyBlock = document.createElement('div');
                     emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
                     emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                     cell.appendChild(emptyBlock);
                 } else if (activeFilters.airing) {
-                    // 🔥 При фильтре "В эфире" скрываем прошедшие дни без событий
-                    // visibility: hidden сохраняет место в сетке, чтобы дни не съезжали
+                    // 🔥 Прошедшие дни без событий при фильтре "В эфире" — скрыты, но место сохранено
                     cell.style.visibility = 'hidden';
                 }
                 grid.appendChild(cell);
@@ -1290,5 +1290,7 @@
             return null;
         }
     </script>
+</body>
+</html>
 </body>
 </html>
