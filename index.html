@@ -477,7 +477,7 @@
                 
                 <div class="flex flex-wrap gap-2">
                     <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
-                    <button class="filter-btn new-season" data-filter="new-season"><span class="filter-dot"></span>Ждём новый сезон</button>
+                    <button class="filter-btn new-season" data-filter="newSeason"><span class="filter-dot"></span>Ждём новый сезон</button>
                     <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
                 </div>
             </div>
@@ -495,7 +495,6 @@
                 <div id="new-season-list" class="filter-list-container"></div>
                 <div id="ended-list" class="filter-list-container"></div>
             </div>
-            <!-- 🔥 Сообщение вынесено ВНЕ #filter-lists -->
             <div id="new-season-empty-msg" class="new-season-empty-msg">
                 <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
             </div>
@@ -834,11 +833,6 @@
             return relevant.length > 0 ? relevant[relevant.length - 1] : null;
         }
 
-        function getLastStatusOverall(seriesName) {
-            const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate).sort((a, b) => a._parsedDate - b._parsedDate);
-            return relevant.length > 0 ? relevant[relevant.length - 1] : null;
-        }
-
         function isAiringInCurrentMonth(seriesName) {
             const monthStart = new Date(currentYear, currentMonthIndex, 1);
             const monthEnd = new Date(currentYear, currentMonthIndex + 1, 0);
@@ -854,36 +848,14 @@
             });
         }
 
+        // 🔥 ИСПРАВЛЕНО: теперь используем getLastStatusBefore(today), а не getLastStatusOverall
         function isWaitingNewSeason(seriesName) {
-            const lastEvent = getLastStatusOverall(seriesName);
-            if (!lastEvent) return false;
-            const status = String(lastEvent[CONFIG.colStatus] || '').toLowerCase();
-            return status.includes('финал сезона');
-        }
-
-        function getNextSeasonAfterFinal(seriesName) {
-            const lastFinal = allEvents.filter(e => {
-                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                return status.includes('финал сезона');
-            }).sort((a, b) => b._parsedDate - a._parsedDate)[0];
-            
-            if (!lastFinal) return null;
-            
-            const nextNew = allEvents.filter(e => {
-                if (e[CONFIG.colSeries].trim() !== seriesName) return false;
-                if (!e._parsedDate || e._parsedDate <= lastFinal._parsedDate) return false;
-                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
-                if (status.includes('перенос') || status.includes('перенес')) return false;
-                return true;
-            }).sort((a, b) => a._parsedDate - b._parsedDate)[0];
-            
-            return nextNew || null;
+            const lastEvent = getLastStatusBefore(seriesName, today);
+            return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона');
         }
 
         function isSeriesEnded(seriesName) {
-            const lastEvent = getLastStatusOverall(seriesName);
+            const lastEvent = getLastStatusBefore(seriesName, today);
             return lastEvent && String(lastEvent[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала');
         }
 
@@ -908,22 +880,27 @@
             return result.sort((a, b) => a.date - b.date);
         }
 
+        // 🔥 ИСПРАВЛЕНА логика: ищем последний финал сезона ДО сегодня + следующую запись после него
         function getNewSeasonList() {
             const result = [];
             uniqueSeries.forEach(seriesName => {
-                if (!isWaitingNewSeason(seriesName)) return;
+                const lastEventBeforeToday = getLastStatusBefore(seriesName, today);
+                if (!lastEventBeforeToday) return;
+                const lastStatus = String(lastEventBeforeToday[CONFIG.colStatus] || '').toLowerCase();
+                if (!lastStatus.includes('финал сезона')) return;
                 
-                const lastFinal = allEvents.filter(e => {
+                const lastFinal = lastEventBeforeToday;
+                
+                const nextNew = allEvents.filter(e => {
                     if (e[CONFIG.colSeries].trim() !== seriesName) return false;
+                    if (!e._parsedDate || e._parsedDate <= lastFinal._parsedDate) return false;
                     const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    return status.includes('финал сезона');
-                }).sort((a, b) => b._parsedDate - a._parsedDate)[0];
+                    if (status.includes('финал сезона') || status.includes('финал сериала')) return false;
+                    if (status.includes('перенос') || status.includes('перенес')) return false;
+                    return true;
+                }).sort((a, b) => a._parsedDate - b._parsedDate)[0];
                 
-                if (!lastFinal) return;
-                
-                const nextNew = getNextSeasonAfterFinal(seriesName);
-                
-                if (nextNew && nextNew._parsedDate < today) return;
+                if (nextNew && nextNew._parsedDate <= today) return;
                 
                 result.push({
                     series: seriesName,
@@ -944,7 +921,7 @@
             const result = [];
             uniqueSeries.forEach(seriesName => {
                 if (!isSeriesEnded(seriesName)) return;
-                const lastEvent = getLastStatusOverall(seriesName);
+                const lastEvent = getLastStatusBefore(seriesName, today);
                 result.push({ series: seriesName, date: lastEvent._parsedDate, event: lastEvent });
             });
             return result.sort((a, b) => b.date - a.date);
