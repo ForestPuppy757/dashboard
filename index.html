@@ -862,7 +862,6 @@
                 const monthsWithEvents = new Set();
                 allEvents.forEach(event => {
                     if (!event._parsedDate || !matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
-                    if (activeFilters.airing && event._parsedDate < today) return;
                     monthsWithEvents.add(`${event._parsedDate.getFullYear()}-${event._parsedDate.getMonth()}`);
                 });
                 
@@ -941,6 +940,7 @@
                 }
             });
 
+            // Ячейки предыдущего месяца
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
@@ -970,6 +970,7 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
+            // 🔥 Все дни месяца всегда отображаются в своих колонках
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
                 const isToday = isCurrentMonth && day === todayDate;
@@ -977,19 +978,6 @@
                 const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
                 const isWeekend = dayIndex >= 5;
 
-                if (activeFilters.airing && dateObj < today) {
-                    const cell = document.createElement('div');
-                    cell.className = 'day-cell bg-slate-900/20 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/10 opacity-30';
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'flex items-baseline justify-between mb-2';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold text-slate-600">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
-                    cell.appendChild(dayHeader);
-                    grid.appendChild(cell);
-                    continue;
-                }
-                
                 const isTodayHighlight = isToday && !activeFilters.ended;
                 
                 let cellClasses = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 hover:bg-slate-800/60`;
@@ -1008,17 +996,22 @@
 
                 let dayEvents = eventsByMonthDay[day] || [];
                 
-                if (activeFilters.airing) {
-                    dayEvents = dayEvents.filter(e => e._parsedDate >= today);
+                // Определяем, является ли день прошедшим
+                const isPastDay = dateObj < today;
+                
+                // Для фильтра "В эфире" затемняем прошедшие дни
+                if (activeFilters.airing && isPastDay) {
+                    cell.classList.add('dimmed-cell');
                 }
-
+                
+                // Для фильтра "Сериал завершён" — своя логика
                 if (activeFilters.ended) {
                     const hasEndedSeries = dayEvents.some(e => isSeriesEnded(e[CONFIG.colSeries].trim()));
                     
                     if (hasEndedSeries) {
                         cell.classList.add('highlighted-cell');
                         cell.classList.remove('hover:bg-slate-800/60');
-                    } else {
+                    } else if (dayEvents.length > 0 && !isPastDay) {
                         cell.classList.add('dimmed-cell');
                     }
                 }
@@ -1028,15 +1021,21 @@
                         const isEndedHighlight = activeFilters.ended && isSeriesEnded(event[CONFIG.colSeries].trim());
                         cell.appendChild(createEventElement(event, false, isEndedHighlight));
                     });
-                } else {
+                } else if (!isPastDay) {
+                    // Показываем иконку чашки только для будущих/сегодняшних дней без событий
                     const emptyBlock = document.createElement('div');
                     emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
                     emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                     cell.appendChild(emptyBlock);
+                } else if (activeFilters.airing) {
+                    // 🔥 При фильтре "В эфире" скрываем прошедшие дни без событий
+                    // visibility: hidden сохраняет место в сетке, чтобы дни не съезжали
+                    cell.style.visibility = 'hidden';
                 }
                 grid.appendChild(cell);
             }
 
+            // Ячейки следующего месяца
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
