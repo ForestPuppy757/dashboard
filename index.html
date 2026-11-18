@@ -722,58 +722,57 @@
             return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
         }
 
-        // 🔥 НОВЫЙ ПАРСЕР ДАТ для формата Д.ММ.ГГГГ (5.11.2026)
+        // 🔥 ПАРСЕР ДАТ для форматов Д.М.ГГГГ, ДД.ММ.ГГГГ, ДД.ММ.ГГ
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            
-            // Если уже объект Date
             if (dateStr instanceof Date) {
                 return isNaN(dateStr.getTime()) ? null : dateStr;
             }
-            
             const str = String(dateStr).trim();
             if (!str) return null;
             
-            // Формат: Д.ММ.ГГГГ или ДД.ММ.ГГГГ (1 или 2 цифры дня, 2 цифры месяца, 4 цифры года)
-            const match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            // Д.М.ГГГГ или ДД.ММ.ГГГГ
+            let match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
             if (match) {
                 const day = parseInt(match[1], 10);
                 const month = parseInt(match[2], 10) - 1;
                 const year = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-                    return d;
-                }
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
             
-            // Формат: ДД/ММ/ГГГГ
-            const match2 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-            if (match2) {
-                const day = parseInt(match2[1], 10);
-                const month = parseInt(match2[2], 10) - 1;
-                const year = parseInt(match2[3], 10);
+            // ДД/ММ/ГГГГ
+            match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (match) {
+                const day = parseInt(match[1], 10);
+                const month = parseInt(match[2], 10) - 1;
+                const year = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-                    return d;
-                }
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
             
-            // Формат: ГГГГ-ММ-ДД (ISO)
-            const match3 = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-            if (match3) {
-                const year = parseInt(match3[1], 10);
-                const month = parseInt(match3[2], 10) - 1;
-                const day = parseInt(match3[3], 10);
+            // ГГГГ-ММ-ДД (ISO)
+            match = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (match) {
+                const year = parseInt(match[1], 10);
+                const month = parseInt(match[2], 10) - 1;
+                const day = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
-                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-                    return d;
-                }
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
             
-            // Fallback
+            // Д.М.ГГ (короткий год)
+            match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
+            if (match) {
+                const day = parseInt(match[1], 10);
+                const month = parseInt(match[2], 10) - 1;
+                const year = 2000 + parseInt(match[3], 10);
+                const d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
+            }
+            
             const d = new Date(str);
             if (!isNaN(d.getTime())) return d;
-            
             return null;
         }
 
@@ -1236,7 +1235,7 @@
 
         function formatDateDMY(date) {
             if (!date) return '';
-            return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}.${date.getFullYear()}`;
+            return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
         }
         function formatDateForCell(date) { return formatDateDMY(date); }
 
@@ -1511,7 +1510,10 @@
             const grid = document.createElement('div');
             grid.className = 'calendar-grid';
             wrapper.appendChild(grid);
-            renderMonthGrid(grid, year, monthIndex);
+            
+            // 🔥 Используем новую функцию с подъёмом строк
+            renderMonthGridWithLift(grid, year, monthIndex);
+            
             return wrapper;
         }
 
@@ -1526,7 +1528,8 @@
             </svg>`;
         }
 
-        function renderMonthGrid(grid, year, monthIndex) {
+        // 🔥 НОВАЯ ФУНКЦИЯ С ПОДЪЁМОМ СТРОК ПРИ ФИЛЬТРЕ "В ЭФИРЕ"
+        function renderMonthGridWithLift(grid, year, monthIndex) {
             grid.innerHTML = '';
             const firstDay = new Date(year, monthIndex, 1);
             const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -1550,74 +1553,60 @@
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
             const todayDate = today.getDate();
 
+            // Собираем все ячейки с их позициями
+            const allCells = [];
+
+            // Ячейки предыдущего месяца
             if (startDayOfWeek > 0) {
                 const prevMonth = monthIndex === 0 ? 11 : monthIndex - 1;
                 const prevYear = monthIndex === 0 ? year - 1 : year;
                 const daysInPrevMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
                 for (let i = startDayOfWeek - 1; i >= 0; i--) {
                     const day = daysInPrevMonth - i;
-                    const cell = document.createElement('div');
-                    cell.className = 'day-cell prev-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20 dimmed-cell';
+                    const absolutePosition = i;
+                    const row = Math.floor(absolutePosition / 7) + 1;
+                    const col = (absolutePosition % 7) + 1;
+                    
                     const dateObj = new Date(prevYear, prevMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                    const isWeekend = dayIndex >= 5;
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'flex items-baseline justify-between mb-2';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
-                    cell.appendChild(dayHeader);
                     
                     const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    if (activeFilters.airing) {
-                        cell.classList.add('dimmed-cell');
-                    }
-                    
-                    applyCellHighlighting(cell, dayEvents, dateObj, true);
-                    grid.appendChild(cell);
+                    allCells.push({
+                        type: 'prev-month',
+                        day, dayIndex, dateObj, dayEvents,
+                        row, col,
+                        isPastDay: true
+                    });
                 }
             }
 
+            // Ячейки текущего месяца
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, monthIndex, day);
-                const isToday = isCurrentMonth && day === todayDate;
                 const dayOfWeek = dateObj.getDay();
                 const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                const isWeekend = dayIndex >= 5;
-
-                const isTodayHighlight = isToday && !activeFilters.ended;
                 
-                let cellClasses = `day-cell bg-slate-800/40 min-h-[120px] p-2 flex flex-col relative transition-all rounded-xl border border-slate-700/30 hover:bg-slate-800/60`;
-                if (isTodayHighlight) cellClasses += ' neon-border border-purple-500/50';
-                
-                const cell = document.createElement('div');
-                cell.className = cellClasses;
-                if (isToday && !activeFilters.ended) cell.id = 'today-cell';
-                
-                const dayHeader = document.createElement('div');
-                dayHeader.className = 'flex items-baseline justify-between mb-2';
-                const isMobile = window.innerWidth < 768;
-                const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isTodayHighlight ? 'text-purple-400' : (isWeekend ? 'text-purple-400/70' : 'text-slate-500')}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold ${isTodayHighlight ? 'text-purple-400' : 'text-slate-300'}">${day}</span>`;
-                cell.appendChild(dayHeader);
-
-                let dayEvents = eventsByMonthDay[day] || [];
+                const absolutePosition = startDayOfWeek + (day - 1);
+                const row = Math.floor(absolutePosition / 7) + 1;
+                const col = (absolutePosition % 7) + 1;
                 
                 const isPastDay = dateObj < today;
+                const dayEvents = eventsByMonthDay[day] || [];
                 
-                if (activeFilters.airing && isPastDay) {
-                    cell.classList.add('dimmed-cell');
-                }
-                
-                applyCellHighlighting(cell, dayEvents, dateObj, false);
-                grid.appendChild(cell);
+                allCells.push({
+                    type: 'current-month',
+                    day, dayIndex, dateObj, dayEvents,
+                    row, col,
+                    isPastDay
+                });
             }
 
+            // Ячейки следующего месяца
             const totalCells = startDayOfWeek + daysInMonth;
             const remainingCells = 7 - (totalCells % 7);
             if (remainingCells < 7) {
@@ -1625,28 +1614,124 @@
                 const nextYear = monthIndex === 11 ? year + 1 : year;
                 for (let i = 0; i < remainingCells; i++) {
                     const day = i + 1;
-                    const cell = document.createElement('div');
-                    cell.className = 'day-cell next-month-day bg-slate-900/30 min-h-[120px] p-2 flex flex-col rounded-xl border border-slate-700/20 dimmed-cell';
                     const dateObj = new Date(nextYear, nextMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                    const isWeekend = dayIndex >= 5;
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'flex items-baseline justify-between mb-2';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                    dayHeader.innerHTML = `${dayName ? `<span class="text-xs font-bold ${isWeekend ? 'text-purple-400/70' : 'text-slate-500'}">${dayName}</span>` : '<span></span>'}<span class="text-sm font-bold text-slate-600">${day}</span>`;
-                    cell.appendChild(dayHeader);
+                    
+                    const absolutePosition = totalCells + i;
+                    const row = Math.floor(absolutePosition / 7) + 1;
+                    const col = (absolutePosition % 7) + 1;
                     
                     const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    applyCellHighlighting(cell, dayEvents, dateObj, false);
-                    grid.appendChild(cell);
+                    allCells.push({
+                        type: 'next-month',
+                        day, dayIndex, dateObj, dayEvents,
+                        row, col,
+                        isPastDay: false
+                    });
                 }
             }
+
+            // 🔥 Если активен фильтр "В эфире" — находим стартовую строку
+            let minRow = 1;
+            if (activeFilters.airing) {
+                // Ищем первую строку, где есть хотя бы один будущий день
+                for (const cell of allCells) {
+                    if (!cell.isPastDay || cell.dayEvents.length > 0) {
+                        minRow = cell.row;
+                        break;
+                    }
+                }
+            }
+
+            // Фильтруем и пересчитываем строки
+            const visibleCells = allCells
+                .filter(cell => cell.row >= minRow)
+                .map(cell => ({
+                    ...cell,
+                    displayRow: cell.row - minRow + 1
+                }));
+
+            // Рендерим ячейки
+            visibleCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay } = cell;
+                
+                let cellEl;
+                
+                if (type === 'prev-month') {
+                    cellEl = document.createElement('div');
+                    cellEl.className = 'day-cell prev-month-day';
+                    cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.2; filter: grayscale(0.6);';
+                    cellEl.style.gridColumn = col;
+                    cellEl.style.gridRow = displayRow;
+                    
+                    const isWeekend = dayIndex >= 5;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
+                    cellEl.appendChild(dayHeader);
+                    
+                    applyCellHighlighting(cellEl, dayEvents, dateObj, true);
+                    grid.appendChild(cellEl);
+                } else if (type === 'next-month') {
+                    cellEl = document.createElement('div');
+                    cellEl.className = 'day-cell next-month-day';
+                    cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.2; filter: grayscale(0.6);';
+                    cellEl.style.gridColumn = col;
+                    cellEl.style.gridRow = displayRow;
+                    
+                    const isWeekend = dayIndex >= 5;
+                    const dayHeader = document.createElement('div');
+                    dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
+                    cellEl.appendChild(dayHeader);
+                    
+                    applyCellHighlighting(cellEl, dayEvents, dateObj, false);
+                    grid.appendChild(cellEl);
+                } else {
+                    // Текущий месяц
+                    const isToday = isCurrentMonth && day === todayDate;
+                    const isWeekend = dayIndex >= 5;
+                    const isTodayHighlight = isToday && !activeFilters.ended;
+                    
+                    let cellClasses = 'day-cell';
+                    let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
+                    cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
+                    
+                    if (isTodayHighlight) {
+                        cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
+                    }
+                    
+                    cellEl = document.createElement('div');
+                    cellEl.className = cellClasses;
+                    cellEl.style.cssText = cellStyle;
+                    if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
+                    
+                    const dayHeader = document.createElement('div');
+                    dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
+                    const isMobile = window.innerWidth < 768;
+                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : (isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b')}">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : '#cbd5e1'};">${day}</span>`;
+                    cellEl.appendChild(dayHeader);
+
+                    // Затемнение прошедших дней при фильтре "В эфире"
+                    if (activeFilters.airing && isPastDay) {
+                        cellEl.style.opacity = '0.2';
+                        cellEl.style.filter = 'grayscale(0.6)';
+                    }
+                    
+                    applyCellHighlighting(cellEl, dayEvents, dateObj, false);
+                    grid.appendChild(cellEl);
+                }
+            });
         }
 
         function applyCellHighlighting(cell, dayEvents, dateObj, isPrevMonth) {
@@ -1662,8 +1747,8 @@
                     nearestEvent._parsedDate.getFullYear() === dateObj.getFullYear();
                 
                 if (isNearestCell) {
-                    cell.classList.add('search-nearest-cell');
-                    cell.classList.remove('hover:bg-slate-800/60');
+                    cell.style.borderColor = 'rgba(16, 185, 129, 0.7)';
+                    cell.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1)';
                     dayEvents.forEach(event => {
                         if (event[CONFIG.colSeries].trim() === searchSeries) {
                             cell.appendChild(createEventElement(event, false, false, true, false));
@@ -1680,13 +1765,15 @@
                         }
                     });
                 } else if (dayEvents.length > 0) {
-                    cell.classList.add('dimmed-cell');
+                    cell.style.opacity = '0.2';
+                    cell.style.filter = 'grayscale(0.6)';
                     dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                 } else {
-                    cell.classList.add('dimmed-cell');
+                    cell.style.opacity = '0.2';
+                    cell.style.filter = 'grayscale(0.6)';
                     if (!isPrevMonth) {
                         const emptyBlock = document.createElement('div');
-                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                         emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                         cell.appendChild(emptyBlock);
                     }
@@ -1699,8 +1786,8 @@
                 });
                 
                 if (hasSelectedNewSeason) {
-                    cell.classList.add('highlighted-new-season-cell');
-                    cell.classList.remove('hover:bg-slate-800/60');
+                    cell.style.borderColor = 'rgba(59, 130, 246, 0.6)';
+                    cell.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.3)';
                     dayEvents.forEach(event => {
                         const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                         if (event[CONFIG.colSeries].trim() === selectedNewSeasonSeries && 
@@ -1711,12 +1798,13 @@
                         }
                     });
                 } else {
-                    cell.classList.add('dimmed-cell');
+                    cell.style.opacity = '0.2';
+                    cell.style.filter = 'grayscale(0.6)';
                     if (dayEvents.length > 0) {
                         dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                     } else if (!isPrevMonth) {
                         const emptyBlock = document.createElement('div');
-                        emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                        emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                         emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                         cell.appendChild(emptyBlock);
                     }
@@ -1734,8 +1822,8 @@
                     });
                     
                     if (hasSelectedEnded) {
-                        cell.classList.add('highlighted-cell');
-                        cell.classList.remove('hover:bg-slate-800/60');
+                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)';
+                        cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (event[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала')) {
@@ -1745,20 +1833,21 @@
                             }
                         });
                     } else {
-                        cell.classList.add('dimmed-cell');
+                        cell.style.opacity = '0.2';
+                        cell.style.filter = 'grayscale(0.6)';
                         if (dayEvents.length > 0) {
                             dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                         } else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
-                            emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                            emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                             emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                             cell.appendChild(emptyBlock);
                         }
                     }
                 } else {
                     if (hasEndedSeries) {
-                        cell.classList.add('highlighted-cell');
-                        cell.classList.remove('hover:bg-slate-800/60');
+                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)';
+                        cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (status.includes('финал сериала')) {
@@ -1768,12 +1857,13 @@
                             }
                         });
                     } else {
-                        cell.classList.add('dimmed-cell');
+                        cell.style.opacity = '0.2';
+                        cell.style.filter = 'grayscale(0.6)';
                         if (dayEvents.length > 0) {
                             dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false)));
                         } else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
-                            emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                            emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                             emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                             cell.appendChild(emptyBlock);
                         }
@@ -1787,7 +1877,7 @@
                     });
                 } else {
                     const emptyBlock = document.createElement('div');
-                    emptyBlock.className = 'empty-day-icon flex flex-col items-center justify-center flex-1 mt-1';
+                    emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                     emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
                     cell.appendChild(emptyBlock);
                 }
@@ -1909,7 +1999,7 @@
             if (!dateStr) return '—';
             const d = parseDate(dateStr.toString().trim());
             if (!d) return dateStr;
-            return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')} (${d.toLocaleDateString('ru-RU', { weekday: 'long' })})`;
+            return `${d.getDate()}.${d.getMonth() + 1} (${d.toLocaleDateString('ru-RU', { weekday: 'long' })})`;
         }
 
         function openModal(event) {
