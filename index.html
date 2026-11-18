@@ -16,9 +16,10 @@
                 radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.08) 0%, transparent 50%);
             min-height: 100vh;
             color: #e2e8f0;
+            margin: 0;
+            padding: 16px;
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @media (min-width: 768px) { body { padding: 32px; } }
         
         .event-card { 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -246,12 +247,8 @@
             border-bottom: 1px solid rgba(148, 163, 184, 0.08);
             transition: background 0.15s;
         }
-        .update-item:last-child {
-            border-bottom: none;
-        }
-        .update-item:hover {
-            background: rgba(102, 126, 234, 0.08);
-        }
+        .update-item:last-child { border-bottom: none; }
+        .update-item:hover { background: rgba(102, 126, 234, 0.08); }
         .update-type {
             display: inline-block;
             padding: 3px 8px;
@@ -261,84 +258,33 @@
             margin-right: 8px;
             margin-bottom: 6px;
         }
-        .update-type.voice {
-            background: rgba(16, 185, 129, 0.15);
-            color: #6ee7b7;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .update-type.dub {
-            background: rgba(59, 130, 246, 0.15);
-            color: #93c5fd;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-        .update-type.status {
-            background: rgba(239, 68, 68, 0.15);
-            color: #fca5a5;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-        .update-type.translator {
-            background: rgba(168, 85, 247, 0.15);
-            color: #d8b4fe;
-            border: 1px solid rgba(168, 85, 247, 0.3);
-        }
-        .update-series {
-            font-weight: 600;
-            color: #e2e8f0;
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .update-detail {
-            font-size: 13px;
-            color: #94a3b8;
-            line-height: 1.4;
-        }
-        .update-date-label {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-            font-style: italic;
-        }
+        .update-type.voice { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .update-type.dub { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .update-type.status { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .update-type.translator { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .update-series { font-weight: 600; color: #e2e8f0; font-size: 14px; margin-bottom: 4px; }
+        .update-detail { font-size: 13px; color: #94a3b8; line-height: 1.4; }
+        .update-date-label { font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic; }
 
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
             margin-bottom: 1rem; padding-left: 0.5rem; border-left: 4px solid #667eea;
         }
 
-        /* АДАПТИВНАЯ СЕТКА КАЛЕНДАРЯ */
-        .calendar-grid { 
-            display: grid; 
-            gap: 0.5rem; 
-            grid-template-columns: repeat(7, 1fr); 
-        }
-        
-        /* Планшеты */
-        @media (max-width: 1024px) { 
-            .calendar-grid { grid-template-columns: repeat(4, 1fr); } 
-        }
-        
-        /* Мобильные (iPhone 17 Pro и подобные) */
-        @media (max-width: 768px) { 
-            .calendar-grid { grid-template-columns: repeat(2, 1fr); } 
-        }
-        
-        /* Очень маленькие экраны */
-        @media (max-width: 380px) { 
-            .calendar-grid { grid-template-columns: 1fr; } 
-        }
+        .calendar-grid { display: grid !important; gap: 0.5rem; grid-template-columns: repeat(7, 1fr) !important; }
+        @media (max-width: 1024px) { .calendar-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+        @media (max-width: 768px) { .calendar-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+        @media (max-width: 380px) { .calendar-grid { grid-template-columns: 1fr !important; } }
 
         .calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 0.5rem; }
-        @media (max-width: 768px) { .calendar-header { display: none; } }
-
+        @media (max-width: 768px) { .calendar-header { display: none !important; } }
+        @media (max-width: 768px) { .prev-month-day, .next-month-day { display: none !important; } }
         @media (max-width: 768px) {
-            .prev-month-day, .next-month-day { display: none !important; }
-        }
-
-        @media (max-width: 768px) {
-            .day-cell { min-height: 100px; padding: 0.5rem; }
-            .event-card { padding: 0.5rem; }
-            .event-title { font-size: 0.75rem; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; }
-            .event-info { font-size: 0.65rem; }
-            .empty-day-text { font-size: 0.6rem; }
+            .day-cell { min-height: 100px !important; padding: 0.5rem !important; }
+            .event-card { padding: 0.5rem !important; }
+            .event-title { font-size: 0.75rem !important; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; }
+            .event-info { font-size: 0.65rem !important; }
+            .empty-day-text { font-size: 0.6rem !important; }
         }
 
         .empty-day-icon { opacity: 0.25; transition: opacity 0.3s ease; }
@@ -369,13 +315,8 @@
             grid-template-rows: 0fr;
             transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .search-dropdown.active, .filter-list-container.active {
-            grid-template-rows: 1fr;
-        }
-        .search-dropdown > div, .filter-list-container > div {
-            overflow: hidden;
-            min-height: 0;
-        }
+        .search-dropdown.active, .filter-list-container.active { grid-template-rows: 1fr; }
+        .search-dropdown > div, .filter-list-container > div { overflow: hidden; min-height: 0; }
 
         .search-dropdown-inner {
             position: relative;
@@ -405,14 +346,8 @@
             animation: fadeIn 0.3s ease;
         }
         .search-info-block.visible { display: block; }
-        .search-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        @media (max-width: 640px) {
-            .search-info-grid { grid-template-columns: 1fr; }
-        }
+        .search-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 640px) { .search-info-grid { grid-template-columns: 1fr; } }
         .search-info-card {
             padding: 12px 14px;
             background: rgba(30, 41, 59, 0.6);
@@ -432,38 +367,11 @@
         }
         .search-info-card.past { border-left: 3px solid rgba(148, 163, 184, 0.4); }
         .search-info-card.next { border-left: 3px solid #10b981; }
-        .search-info-card-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #94a3b8;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-        .search-info-card-series {
-            font-size: 14px;
-            font-weight: 700;
-            color: #e2e8f0;
-            margin-bottom: 2px;
-        }
-        .search-info-card-meta {
-            font-size: 12px;
-            color: #94a3b8;
-        }
-        .search-info-card-date {
-            font-size: 12px;
-            color: #cbd5e1;
-            font-weight: 600;
-            padding: 4px 10px;
-            background: rgba(102, 126, 234, 0.15);
-            border-radius: 6px;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-        .search-info-card.next .search-info-card-date {
-            background: rgba(16, 185, 129, 0.15);
-            color: #6ee7b7;
-        }
+        .search-info-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
+        .search-info-card-series { font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px; }
+        .search-info-card-meta { font-size: 12px; color: #94a3b8; }
+        .search-info-card-date { font-size: 12px; color: #cbd5e1; font-weight: 600; padding: 4px 10px; background: rgba(102, 126, 234, 0.15); border-radius: 6px; flex-shrink: 0; white-space: nowrap; }
+        .search-info-card.next .search-info-card-date { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 
         .filter-btn {
             position: relative; display: flex; align-items: center; gap: 8px;
@@ -487,20 +395,11 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
-        #filter-lists {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
+        #filter-lists { display: flex; flex-direction: column; min-height: 0; }
         .filter-list-container { margin-top: 0; padding-top: 4px; }
         .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
         
-        .filter-list { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 10px; 
-            padding-top: 4px;
-        }
+        .filter-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding-top: 4px; }
         .filter-list-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 10px 14px; background: rgba(30, 41, 59, 0.5);
@@ -512,16 +411,8 @@
         .filter-list-item.border-airing { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
         .filter-list-item.border-new-season { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 8px rgba(59, 130, 246, 0.2); }
         .filter-list-item.border-ended { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
-        .filter-list-item.selected-ended {
-            border-color: rgba(168, 85, 247, 0.9) !important;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
-            background: rgba(168, 85, 247, 0.15);
-        }
-        .filter-list-item.selected-new-season {
-            border-color: rgba(59, 130, 246, 0.9) !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            background: rgba(59, 130, 246, 0.15);
-        }
+        .filter-list-item.selected-ended { border-color: rgba(168, 85, 247, 0.9) !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); background: rgba(168, 85, 247, 0.15); }
+        .filter-list-item.selected-new-season { border-color: rgba(59, 130, 246, 0.9) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.15); }
         
         .filter-list-name { font-weight: 600; font-size: 14px; color: #e2e8f0; }
         .filter-list-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
@@ -530,44 +421,19 @@
         .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
 
         .dimmed-cell { opacity: 0.2; filter: grayscale(0.6); }
-        .highlighted-cell {
-            border-color: rgba(168, 85, 247, 0.6) !important;
-            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
-        }
-        .highlighted-new-season-cell {
-            border-color: rgba(59, 130, 246, 0.6) !important;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }
-        .highlighted-event {
-            border-color: rgba(168, 85, 247, 0.8) !important;
-            background: rgba(168, 85, 247, 0.15) !important;
-        }
-        .highlighted-new-season-event {
-            border-color: rgba(59, 130, 246, 0.8) !important;
-            background: rgba(59, 130, 246, 0.15) !important;
-        }
-        .search-nearest-cell {
-            border-color: rgba(16, 185, 129, 0.7) !important;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1);
-        }
-        .search-nearest-event {
-            border-color: rgba(16, 185, 129, 0.8) !important;
-            background: rgba(16, 185, 129, 0.15) !important;
-        }
+        .highlighted-cell { border-color: rgba(168, 85, 247, 0.6) !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
+        .highlighted-new-season-cell { border-color: rgba(59, 130, 246, 0.6) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .highlighted-event { border-color: rgba(168, 85, 247, 0.8) !important; background: rgba(168, 85, 247, 0.15) !important; }
+        .highlighted-new-season-event { border-color: rgba(59, 130, 246, 0.8) !important; background: rgba(59, 130, 246, 0.15) !important; }
+        .search-nearest-cell { border-color: rgba(16, 185, 129, 0.7) !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1); }
+        .search-nearest-event { border-color: rgba(16, 185, 129, 0.8) !important; background: rgba(16, 185, 129, 0.15) !important; }
 
         .new-season-empty-msg {
-            text-align: center;
-            padding: 20px;
-            margin-top: 16px;
-            border-radius: 12px;
-            border: 1px dashed rgba(59, 130, 246, 0.4);
-            background: rgba(59, 130, 246, 0.08);
-            display: none;
-            animation: fadeIn 0.4s ease;
+            text-align: center; padding: 20px; margin-top: 16px; border-radius: 12px;
+            border: 1px dashed rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.08);
+            display: none; animation: fadeIn 0.4s ease;
         }
-        .new-season-empty-msg.visible { 
-            display: block; 
-        }
+        .new-season-empty-msg.visible { display: block; }
 
         .novelty-wrapper { position: relative; display: inline-flex; align-items: center; }
         .novelty-tooltip {
@@ -625,100 +491,81 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 640px) { .flip-back { padding: 1.25rem 1.25rem 2rem; } }
-        
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ HEADER */
-        @media (max-width: 768px) {
-            .header-controls {
-                flex-direction: column !important;
-                align-items: stretch !important;
-            }
-            .header-controls > div {
-                width: 100% !important;
-                justify-content: center !important;
-            }
-            .custom-select-wrapper {
-                width: 100% !important;
-                min-width: 100% !important;
-            }
-            .custom-select-trigger {
-                width: 100% !important;
-            }
-            .filter-buttons-row {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <header style="margin-bottom: 1.5rem;">
-            <div style="margin-bottom: 1rem;">
-                <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text" style="margin-bottom: 0.5rem;">🎬 Дашборд трансляций</h1>
+        <header class="mb-6">
+            <!-- Заголовок -->
+            <div class="mb-4">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white glow-text mb-2">🎬 Дашборд трансляций</h1>
                 <p class="text-slate-400 text-lg">Мераба, дорогой друг</p>
             </div>
             
-            <!-- Фильтр периода и молния в одной строке -->
-            <div class="header-controls" style="display: flex; flex-direction: row; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
-                <div class="custom-select-wrapper">
-                    <div class="custom-select-trigger" id="month-trigger">
-                        <span class="trigger-text" id="month-trigger-text">Загрузка...</span>
-                        <svg class="trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
+            <!-- Строка: Поиск | Месяц+⚡ | Фильтры -->
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+                
+                <!-- Поиск (десктоп: 1-й, мобильный: 2-й) -->
+                <div class="search-container flex-1 order-2 lg:order-1">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
+                        <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
+                        <span class="search-clear" id="search-clear" title="Очистить">✕ Очистить</span>
                     </div>
-                    <div class="custom-select-dropdown" id="month-dropdown"></div>
-                    <input type="hidden" id="month-filter" value="all">
                 </div>
                 
-                <div style="position: relative;">
-                    <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
-                        ⚡
-                        <span class="updates-badge" id="updates-badge" style="display: none;">0</span>
-                    </button>
-                    <div class="updates-dropdown" id="updates-dropdown">
-                        <div class="updates-dropdown-header">🫖 Стамбульский вестник</div>
-                        <div id="updates-list"></div>
+                <!-- Месяц + молния (десктоп: 2-й, мобильный: 1-й) -->
+                <div class="flex flex-row items-center gap-3 order-1 lg:order-2">
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select-trigger" id="month-trigger">
+                            <span class="trigger-text" id="month-trigger-text">Загрузка...</span>
+                            <svg class="trigger-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="custom-select-dropdown" id="month-dropdown"></div>
+                        <input type="hidden" id="month-filter" value="all">
+                    </div>
+                    
+                    <div style="position: relative;">
+                        <button class="updates-btn" id="updates-btn" title="Обновления сегодня">
+                            ⚡
+                            <span class="updates-badge" id="updates-badge" style="display: none;">0</span>
+                        </button>
+                        <div class="updates-dropdown" id="updates-dropdown">
+                            <div class="updates-dropdown-header">🫖 Стамбульский вестник</div>
+                            <div id="updates-list"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Фильтры статусов под ними -->
-            <div class="filter-buttons-row" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
-                <button class="filter-btn new-season" data-filter="newSeason"><span class="filter-dot"></span>Ждём новый сезон</button>
-                <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
+                
+                <!-- Фильтры (десктоп: 3-й, мобильный: 3-й) -->
+                <div class="flex flex-wrap gap-2 order-3 justify-center lg:justify-end">
+                    <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
+                    <button class="filter-btn new-season" data-filter="newSeason"><span class="filter-dot"></span>Ждём новый сезон</button>
+                    <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
+                </div>
             </div>
         </header>
 
-        <div class="glass-card rounded-2xl p-4 mb-6">
-            <div class="search-container">
-                <div class="search-input-wrapper">
-                    <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
-                    <span class="search-clear" id="search-clear" title="Очистить">✕ Очистить</span>
-                </div>
-            </div>
-            
-            <div id="search-info-block" class="search-info-block">
-                <div class="search-info-grid" id="search-info-grid"></div>
-            </div>
-            
-            <div id="search-dropdown" class="search-dropdown">
-                <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
-            </div>
-            
-            <div id="filter-lists">
-                <div id="airing-list" class="filter-list-container"></div>
-                <div id="new-season-list" class="filter-list-container"></div>
-                <div id="ended-list" class="filter-list-container"></div>
-            </div>
-            <div id="new-season-empty-msg" class="new-season-empty-msg">
-                <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
-            </div>
+        <div id="search-info-block" class="glass-card rounded-2xl p-4 mb-6">
+            <div class="search-info-grid" id="search-info-grid"></div>
+        </div>
+        
+        <div id="search-dropdown" class="search-dropdown">
+            <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+        </div>
+        
+        <div id="filter-lists" class="mb-6">
+            <div id="airing-list" class="filter-list-container"></div>
+            <div id="new-season-list" class="filter-list-container"></div>
+            <div id="ended-list" class="filter-list-container"></div>
+        </div>
+        <div id="new-season-empty-msg" class="new-season-empty-msg">
+            <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
         </div>
 
         <div id="schedule-section" class="glass-card rounded-3xl overflow-hidden p-4 md:p-6">
@@ -774,8 +621,6 @@
         const currentYear = new Date().getFullYear();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        // 🔥 Добавляем вчерашнюю дату
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
@@ -907,15 +752,8 @@
             });
         }
 
-        function openMonthDropdown() {
-            monthTrigger.classList.add('open');
-            monthDropdown.classList.add('open');
-        }
-
-        function closeMonthDropdown() {
-            monthTrigger.classList.remove('open');
-            monthDropdown.classList.remove('open');
-        }
+        function openMonthDropdown() { monthTrigger.classList.add('open'); monthDropdown.classList.add('open'); }
+        function closeMonthDropdown() { monthTrigger.classList.remove('open'); monthDropdown.classList.remove('open'); }
 
         monthTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -960,10 +798,7 @@
                 const converted = convertLayout(query);
                 const convertedLower = converted.toLowerCase();
                 matches = uniqueSeries.filter(s => s.toLowerCase().includes(convertedLower));
-                
-                if (matches.length > 0) {
-                    this.value = converted;
-                }
+                if (matches.length > 0) this.value = converted;
             }
             
             if (matches.length === 0) {
@@ -1012,9 +847,7 @@
                 if (status.includes('перенос') || status.includes('перенес')) return false;
                 return true;
             }).sort((a, b) => a._parsedDate - b._parsedDate);
-            
-            if (upcoming.length > 0) return upcoming[0];
-            return null;
+            return upcoming.length > 0 ? upcoming[0] : null;
         }
 
         function findLastPastEvent(seriesName) {
@@ -1023,7 +856,6 @@
                 if (!e._parsedDate || e._parsedDate >= today) return false;
                 return true;
             }).sort((a, b) => b._parsedDate - a._parsedDate);
-            
             return past.length > 0 ? past[0] : null;
         }
 
@@ -1099,9 +931,7 @@
                 card.addEventListener('click', () => {
                     const dateStr = card.dataset.date;
                     const series = card.dataset.series;
-                    if (dateStr && series && dateStr !== 'undefined') {
-                        scrollToCell(dateStr, series);
-                    }
+                    if (dateStr && series && dateStr !== 'undefined') scrollToCell(dateStr, series);
                 });
             });
         }
@@ -1306,11 +1136,8 @@
                     const seriesName = item.dataset.series;
                     const dateStr = item.dataset.date;
                     
-                    if (selectedEndedSeries === seriesName) {
-                        selectedEndedSeries = null;
-                    } else {
-                        selectedEndedSeries = seriesName;
-                    }
+                    if (selectedEndedSeries === seriesName) selectedEndedSeries = null;
+                    else selectedEndedSeries = seriesName;
                     
                     updateFilterLists();
                     renderView();
@@ -1376,7 +1203,6 @@
             return true;
         }
 
-        // 🔥 ИЗМЕНЕНО: показываем обновления за сегодня и вчера
         function getTodayUpdates() {
             const updates = [];
             
@@ -1387,7 +1213,6 @@
                 const updatedDate = parseDate(updatedStr);
                 if (!updatedDate) return;
                 
-                // Проверяем, что дата обновления = сегодня или вчера
                 const isToday = updatedDate.getTime() === today.getTime();
                 const isYesterday = updatedDate.getTime() === yesterday.getTime();
                 
@@ -1404,44 +1229,17 @@
                 const dateLabel = isToday ? 'Сегодня' : 'Вчера';
                 
                 if (voice && voice !== 'ожидаем' && voice !== '') {
-                    updates.push({
-                        type: 'voice',
-                        series: series,
-                        detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`,
-                        date: updatedStr,
-                        dateLabel: dateLabel
-                    });
+                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
-                
                 if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
-                    updates.push({
-                        type: 'dub',
-                        series: series,
-                        detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`,
-                        date: updatedStr,
-                        dateLabel: dateLabel
-                    });
+                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
-                
                 const statusLower = status.toLowerCase();
                 if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
-                    updates.push({
-                        type: 'status',
-                        series: series,
-                        detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`,
-                        date: updatedStr,
-                        dateLabel: dateLabel
-                    });
+                    updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
-                
                 if (translator && translator !== 'Не назначен' && translator !== '') {
-                    updates.push({
-                        type: 'translator',
-                        series: series,
-                        detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`,
-                        date: updatedStr,
-                        dateLabel: dateLabel
-                    });
+                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
             });
             
@@ -1459,17 +1257,11 @@
             }
             
             if (todayUpdates.length === 0) {
-                // 🔥 ИЗМЕНЕНО: новый текст
                 updatesList.innerHTML = '<div class="updates-dropdown-empty">Здоровья твоим рукам! Пока нет новостей для тебя</div>';
                 return;
             }
             
-            const typeLabels = {
-                voice: 'Озвучка',
-                dub: 'Дубляж',
-                status: 'Статус',
-                translator: 'Переводчик'
-            };
+            const typeLabels = { voice: 'Озвучка', dub: 'Дубляж', status: 'Статус', translator: 'Переводчик' };
             
             updatesList.innerHTML = todayUpdates.map(update => `
                 <div class="update-item">
@@ -1491,9 +1283,7 @@
                 console.log('Строк:', results.data.length);
                 console.log('Заголовки:', results.meta.fields);
                 
-                if (results.data.length > 0) {
-                    console.log('Первая строка:', results.data[0]);
-                }
+                if (results.data.length > 0) console.log('Первая строка:', results.data[0]);
                 
                 let parsedCount = 0;
                 let failedCount = 0;
@@ -1502,13 +1292,10 @@
                     .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
                     .map(row => {
                         const d = parseDate(row[CONFIG.colDate]);
-                        if (d) {
-                            parsedCount++;
-                        } else {
+                        if (d) parsedCount++;
+                        else {
                             failedCount++;
-                            if (failedCount <= 5) {
-                                console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для:', row[CONFIG.colSeries]);
-                            }
+                            if (failedCount <= 5) console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для:', row[CONFIG.colSeries]);
                         }
                         return { ...row, _parsedDate: d };
                     })
@@ -1611,9 +1398,7 @@
             const grid = document.createElement('div');
             grid.className = 'calendar-grid';
             wrapper.appendChild(grid);
-            
             renderMonthGridWithLift(grid, year, monthIndex);
-            
             return wrapper;
         }
 
@@ -1650,7 +1435,6 @@
             });
 
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
-            const todayDate = today.getDate();
 
             const allCells = [];
 
@@ -1673,13 +1457,7 @@
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    allCells.push({
-                        type: 'prev-month',
-                        day, dayIndex, dateObj, dayEvents,
-                        row, col,
-                        isPastDay: true,
-                        isToday: false
-                    });
+                    allCells.push({ type: 'prev-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay: true, isToday: false });
                 }
             }
 
@@ -1693,16 +1471,10 @@
                 const col = (absolutePosition % 7) + 1;
                 
                 const isPastDay = dateObj < today;
-                const isToday = isCurrentMonth && day === todayDate;
+                const isToday = isCurrentMonth && day === today.getDate();
                 const dayEvents = eventsByMonthDay[day] || [];
                 
-                allCells.push({
-                    type: 'current-month',
-                    day, dayIndex, dateObj, dayEvents,
-                    row, col,
-                    isPastDay,
-                    isToday
-                });
+                allCells.push({ type: 'current-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay, isToday });
             }
 
             const totalCells = startDayOfWeek + daysInMonth;
@@ -1725,13 +1497,7 @@
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
-                    allCells.push({
-                        type: 'next-month',
-                        day, dayIndex, dateObj, dayEvents,
-                        row, col,
-                        isPastDay: false,
-                        isToday: false
-                    });
+                    allCells.push({ type: 'next-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay: false, isToday: false });
                 }
             }
 
@@ -1747,10 +1513,7 @@
 
             const visibleCells = allCells
                 .filter(cell => cell.row >= minRow)
-                .map(cell => ({
-                    ...cell,
-                    displayRow: cell.row - minRow + 1
-                }));
+                .map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
 
             visibleCells.forEach(cell => {
                 const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
@@ -1771,7 +1534,6 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-                    
                     applyCellHighlighting(cellEl, dayEvents, dateObj, true, false);
                     grid.appendChild(cellEl);
                 } else if (type === 'next-month') {
@@ -1788,7 +1550,6 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-                    
                     applyCellHighlighting(cellEl, dayEvents, dateObj, false, false);
                     grid.appendChild(cellEl);
                 } else {
@@ -1842,19 +1603,13 @@
                     cell.style.borderColor = 'rgba(16, 185, 129, 0.7)';
                     cell.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1)';
                     dayEvents.forEach(event => {
-                        if (event[CONFIG.colSeries].trim() === searchSeries) {
-                            cell.appendChild(createEventElement(event, false, false, true, false, isToday));
-                        } else {
-                            cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        }
+                        if (event[CONFIG.colSeries].trim() === searchSeries) cell.appendChild(createEventElement(event, false, false, true, false, isToday));
+                        else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                     });
                 } else if (hasSearchSeries) {
                     dayEvents.forEach(event => {
-                        if (event[CONFIG.colSeries].trim() === searchSeries) {
-                            cell.appendChild(createEventElement(event, false, false, false, false, isToday));
-                        } else {
-                            cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        }
+                        if (event[CONFIG.colSeries].trim() === searchSeries) cell.appendChild(createEventElement(event, false, false, false, false, isToday));
+                        else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                     });
                 } else if (dayEvents.length > 0) {
                     cell.style.opacity = '0.2';
@@ -1882,19 +1637,15 @@
                     cell.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.3)';
                     dayEvents.forEach(event => {
                         const status = String(event[CONFIG.colStatus] || '').toLowerCase();
-                        if (event[CONFIG.colSeries].trim() === selectedNewSeasonSeries && 
-                            (status.includes('финал сезона') || status.includes('в эфире'))) {
+                        if (event[CONFIG.colSeries].trim() === selectedNewSeasonSeries && (status.includes('финал сезона') || status.includes('в эфире')))
                             cell.appendChild(createEventElement(event, false, false, false, true, isToday));
-                        } else {
-                            cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        }
+                        else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                     });
                 } else {
                     cell.style.opacity = '0.2';
                     cell.style.filter = 'grayscale(0.6)';
-                    if (dayEvents.length > 0) {
-                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                    } else if (!isPrevMonth) {
+                    if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
+                    else if (!isPrevMonth) {
                         const emptyBlock = document.createElement('div');
                         emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                         emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
@@ -1902,34 +1653,25 @@
                     }
                 }
             } else if (activeFilters.ended) {
-                const hasEndedSeries = dayEvents.some(e => {
-                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    return status.includes('финал сериала');
-                });
+                const hasEndedSeries = dayEvents.some(e => String(e[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала'));
                 
                 if (selectedEndedSeries) {
-                    const hasSelectedEnded = dayEvents.some(e => {
-                        const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                        return e[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала');
-                    });
+                    const hasSelectedEnded = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedEndedSeries && String(e[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала'));
                     
                     if (hasSelectedEnded) {
                         cell.style.borderColor = 'rgba(168, 85, 247, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
-                            if (event[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала')) {
+                            if (event[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала'))
                                 cell.appendChild(createEventElement(event, false, true, false, false, isToday));
-                            } else {
-                                cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                            }
+                            else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
                     } else {
                         cell.style.opacity = '0.2';
                         cell.style.filter = 'grayscale(0.6)';
-                        if (dayEvents.length > 0) {
-                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                        } else if (!isPrevMonth) {
+                        if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
+                        else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
                             emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                             emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
@@ -1942,18 +1684,14 @@
                         cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
-                            if (status.includes('финал сериала')) {
-                                cell.appendChild(createEventElement(event, false, true, false, false, isToday));
-                            } else {
-                                cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                            }
+                            if (status.includes('финал сериала')) cell.appendChild(createEventElement(event, false, true, false, false, isToday));
+                            else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
                     } else {
                         cell.style.opacity = '0.2';
                         cell.style.filter = 'grayscale(0.6)';
-                        if (dayEvents.length > 0) {
-                            dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                        } else if (!isPrevMonth) {
+                        if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
+                        else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
                             emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
                             emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
@@ -1993,34 +1731,19 @@
                 isSpecial = true;
                 specialText = statusRaw;
                 bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
-                if (isToday) {
-                    dotClass = 'dot-special-today';
-                    bgClass = 'today-bg-special';
-                } else if (isDeepFaded || isLightFaded) {
-                    dotClass = 'dot-special-past';
-                } else {
-                    dotClass = 'dot-special';
-                }
+                if (isToday) { dotClass = 'dot-special-today'; bgClass = 'today-bg-special'; }
+                else if (isDeepFaded || isLightFaded) dotClass = 'dot-special-past';
+                else dotClass = 'dot-special';
             } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
                 isMoved = true;
                 bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
-                if (isToday) {
-                    dotClass = 'dot-moved-today';
-                    bgClass = 'today-bg-moved';
-                } else if (isDeepFaded || isLightFaded) {
-                    dotClass = 'dot-moved-past';
-                } else {
-                    dotClass = 'dot-moved';
-                }
+                if (isToday) { dotClass = 'dot-moved-today'; bgClass = 'today-bg-moved'; }
+                else if (isDeepFaded || isLightFaded) dotClass = 'dot-moved-past';
+                else dotClass = 'dot-moved';
             } else {
-                if (isToday) {
-                    dotClass = 'dot-active-today';
-                    bgClass = 'today-bg-active';
-                } else if (isDeepFaded || isLightFaded) {
-                    dotClass = 'dot-past';
-                } else {
-                    dotClass = 'dot-active';
-                }
+                if (isToday) { dotClass = 'dot-active-today'; bgClass = 'today-bg-active'; }
+                else if (isDeepFaded || isLightFaded) dotClass = 'dot-past';
+                else dotClass = 'dot-active';
             }
 
             const eventEl = document.createElement('div');
@@ -2078,10 +1801,7 @@
                             if (wrapper) {
                                 wrapper.classList.add('show-tooltip');
                                 noveltyFirstClick.add(noveltyKey);
-                                setTimeout(() => {
-                                    wrapper.classList.remove('show-tooltip');
-                                    noveltyFirstClick.delete(noveltyKey);
-                                }, 2000);
+                                setTimeout(() => { wrapper.classList.remove('show-tooltip'); noveltyFirstClick.delete(noveltyKey); }, 2000);
                             }
                         } else {
                             noveltyFirstClick.delete(noveltyKey);
@@ -2092,10 +1812,7 @@
                     }
                 });
             } else {
-                eventEl.addEventListener('click', (e) => { 
-                    e.stopPropagation(); 
-                    openModal(event); 
-                });
+                eventEl.addEventListener('click', (e) => { e.stopPropagation(); openModal(event); });
             }
             
             return eventEl;
