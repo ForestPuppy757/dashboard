@@ -614,15 +614,13 @@
 <body>
 
     <div style="max-width: 1280px; margin: 0 auto;">
-        <!-- ИСПРАВЛЕННЫЙ HEADER -->
         <header style="margin-bottom: 24px;">
             <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div>
-                    <h1 class="glow-text" style="font-size: 28px; font-weight: 800; color: white; margin-bottom: 8px;">🎬 Дашборд трансляций</h1>
-                    <p style="color: #94a3b8; font-size: 16px;">Мераба, дорогой друг</p>
+                    <h1 class="glow-text" style="font-size: 36px; font-weight: 800; color: white; margin-bottom: 8px;">🎬 Дашборд трансляций</h1>
+                    <p style="color: #94a3b8; font-size: 18px;">Мераба, дорогой друг</p>
                 </div>
                 
-                <!-- Кнопки справа на десктопе, в колонку на мобильном -->
                 <div style="display: flex; flex-direction: row; align-items: center; gap: 12px; justify-content: flex-end; width: 100%;">
                     <div class="custom-select-wrapper">
                         <div class="custom-select-trigger" id="month-trigger">
@@ -1339,16 +1337,13 @@
             const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
             if (!hasAnyFilter) return true;
             
-            if (activeFilters.ended && !activeFilters.search) return true;
-            if (activeFilters.newSeason && !activeFilters.search) return true;
-            
             if (activeFilters.search && seriesName !== activeFilters.search) return false;
+            
             if (activeFilters.airing || activeFilters.newSeason || activeFilters.ended) {
-                let matches = false;
-                if (activeFilters.airing && isAiringInCurrentMonth(seriesName)) matches = true;
-                if (activeFilters.newSeason && isWaitingNewSeason(seriesName)) matches = true;
-                if (activeFilters.ended && isSeriesEnded(seriesName)) matches = true;
-                if (!matches) return false;
+                if (activeFilters.airing && isAiringInCurrentMonth(seriesName)) return true;
+                if (activeFilters.newSeason && isWaitingNewSeason(seriesName)) return true;
+                if (activeFilters.ended && isSeriesEnded(seriesName)) return true;
+                return false;
             }
             return true;
         }
@@ -1443,7 +1438,6 @@
             `).join('');
         }
 
-        // ЗАГРУЗКА ДАННЫХ С ОТЛАДКОЙ
         Papa.parse(CONFIG.csvUrl, {
             download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
