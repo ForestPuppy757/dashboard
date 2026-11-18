@@ -38,7 +38,9 @@
         .dot-active { background-color: #10b981; box-shadow: 0 0 12px #10b981, 0 0 20px rgba(16, 185, 129, 0.5); }
         .dot-past { background-color: #065f46; box-shadow: 0 0 8px #065f46, 0 0 14px rgba(6, 95, 70, 0.4); }
         .dot-moved { background-color: #ef4444; box-shadow: 0 0 12px #ef4444, 0 0 20px rgba(239, 68, 68, 0.5); }
+        .dot-moved-past { background-color: #7f1d1d; box-shadow: 0 0 8px #7f1d1d, 0 0 14px rgba(127, 29, 29, 0.4); }
         .dot-special { background-color: #fbbf24; box-shadow: 0 0 15px #fbbf24, 0 0 25px rgba(251, 191, 36, 0.6); animation: pulse 2s infinite; }
+        .dot-special-past { background-color: #92400e; box-shadow: 0 0 8px #92400e, 0 0 14px rgba(146, 64, 14, 0.4); }
         
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
@@ -58,13 +60,14 @@
         .glow-text { text-shadow: 0 0 30px rgba(102, 126, 234, 0.8), 0 0 60px rgba(102, 126, 234, 0.4); }
         .neon-border { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); }
 
-        .custom-select-wrapper { position: relative; width: 100%; max-width: 240px; }
+        .custom-select-wrapper { position: relative; width: 240px; min-width: 240px; }
         .custom-select-trigger {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 16px; background: rgba(30, 41, 59, 0.8);
             border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 12px;
             color: #e2e8f0; font-size: 14px; font-weight: 600; cursor: pointer;
             transition: all 0.2s; user-select: none;
+            width: 240px; min-width: 240px;
         }
         .custom-select-trigger:hover { border-color: rgba(148, 163, 184, 0.4); background: rgba(30, 41, 59, 0.9); }
         .custom-select-trigger.open {
@@ -80,7 +83,7 @@
 
         .custom-select-dropdown {
             position: absolute; top: 100%; left: 0;
-            width: 100%;
+            width: 240px; min-width: 240px;
             background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2); border-top: none;
             border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
@@ -203,7 +206,6 @@
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
 
-        /* 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК ИНФОРМАЦИИ О ТРАНСЛЯЦИЯХ */
         .search-info-block {
             margin-top: 12px;
             padding: 14px 16px;
@@ -464,7 +466,6 @@
                 </div>
             </div>
             
-            <!-- 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК С ПРОШЕДШЕЙ И БЛИЖАЙШЕЙ ТРАНСЛЯЦИЕЙ -->
             <div id="search-info-block" class="search-info-block">
                 <div class="search-info-grid" id="search-info-grid"></div>
             </div>
@@ -550,7 +551,6 @@
         const monthTriggerText = document.getElementById('month-trigger-text');
         const monthDropdown = document.getElementById('month-dropdown');
 
-        // ===== ТАБЛИЦА РАСКЛАДКИ QWERTY → ЙЦУКЕН =====
         const layoutMap = {
             'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
             'a': 'ф', 's': 'ы', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о', 'k': 'л', 'l': 'д', ';': 'ж', "'": 'э',
@@ -633,7 +633,6 @@
         function openDropdown() { searchDropdown.classList.add('active'); }
         function closeDropdown() { searchDropdown.classList.remove('active'); }
 
-        // 🔥 ПОИСК С АВТОПЕРЕВОДОМ РАСКЛАДКИ
         seriesSearch.addEventListener('input', function() {
             let query = this.value.trim();
             searchClear.classList.toggle('visible', this.value.length > 0);
@@ -647,23 +646,17 @@
             }
             
             const queryLower = query.toLowerCase();
-            
-            // Сначала ищем по прямому вводу
             let matches = uniqueSeries.filter(s => s.toLowerCase().includes(queryLower));
             
-            // 🔥 Если ничего не найдено — пробуем перевести раскладку
             if (matches.length === 0) {
                 const converted = convertLayout(query);
                 const convertedLower = converted.toLowerCase();
                 matches = uniqueSeries.filter(s => s.toLowerCase().includes(convertedLower));
                 
-                // Если нашли по переведённой раскладке — подставляем в поле
                 if (matches.length > 0) {
                     this.value = converted;
                 }
             }
-            
-            const finalQuery = this.value.trim().toLowerCase();
             
             if (matches.length === 0) {
                 searchDropdownInner.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
@@ -726,7 +719,6 @@
             return past.length > 0 ? past[0] : null;
         }
 
-        // 🔥 ДВУХКОЛОНОЧНЫЙ БЛОК С ПРОШЕДШЕЙ И БЛИЖАЙШЕЙ ТРАНСЛЯЦИЕЙ
         function updateSearchInfo(seriesName) {
             const pastEvent = findLastPastEvent(seriesName);
             const nextEvent = findNearestEvent(seriesName);
@@ -738,7 +730,6 @@
             
             let html = '';
             
-            // Левая колонка — прошедшая трансляция
             if (pastEvent) {
                 const season = pastEvent[CONFIG.colSeason] ? pastEvent[CONFIG.colSeason].trim() : '';
                 const episode = pastEvent[CONFIG.colEpisode] ? pastEvent[CONFIG.colEpisode].trim() : '';
@@ -766,7 +757,6 @@
                 </div>`;
             }
             
-            // Правая колонка — ближайшая трансляция
             if (nextEvent) {
                 const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
                 const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
@@ -797,7 +787,6 @@
             searchInfoGrid.innerHTML = html;
             searchInfoBlock.classList.add('visible');
             
-            // 🔥 Обработчики клика на карточки
             searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const dateStr = card.dataset.date;
@@ -1233,6 +1222,10 @@
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
                     
+                    if (activeFilters.airing) {
+                        cell.classList.add('dimmed-cell');
+                    }
+                    
                     applyCellHighlighting(cell, dayEvents, dateObj, true);
                     grid.appendChild(cell);
                 }
@@ -1427,11 +1420,20 @@
             let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
 
             if (statusRaw.includes('финал сезона') || statusRaw.includes('финал сериала') || statusRaw.includes('новинка')) {
-                isSpecial = true; dotClass = 'dot-special'; specialText = statusRaw;
+                isSpecial = true;
+                specialText = statusRaw;
                 bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
+                
+                const eventDate = event._parsedDate;
+                const isPast = eventDate && eventDate < today;
+                dotClass = isPast ? 'dot-special-past' : 'dot-special';
             } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
-                dotClass = 'dot-moved'; isMoved = true;
+                isMoved = true;
                 bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
+                
+                const eventDate = event._parsedDate;
+                const isPast = eventDate && eventDate < today;
+                dotClass = isPast ? 'dot-moved-past' : 'dot-moved';
             }
 
             const season = event[CONFIG.colSeason] ? event[CONFIG.colSeason].trim() : '';
@@ -1447,12 +1449,23 @@
 
             const eventDate = event._parsedDate;
             const isPast = eventDate && eventDate < today;
-            const effectiveDotClass = (dotClass === 'dot-active' && isPast) ? 'dot-past' : dotClass;
+            
+            if (dotClass === 'dot-active' && isPast) {
+                dotClass = 'dot-past';
+            }
 
             const eventEl = document.createElement('div');
             let extraClasses = isFaded ? 'faded-event' : '';
             if (isEndedHighlight) extraClasses += ' highlighted-event';
             if (isSearchHighlight) extraClasses += ' search-nearest-event';
+            
+            if (isSpecial && isPast && !isFaded) {
+                extraClasses += ' faded-event';
+            }
+            
+            if (isMoved && isPast && !isFaded) {
+                extraClasses += ' faded-event';
+            }
             
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${extraClasses}`;
             
@@ -1462,12 +1475,12 @@
             let html = `<div class="flex items-center mb-1 gap-1">`;
             if (isNovelty) {
                 html += `<div class="novelty-wrapper" data-novelty-key="${noveltyKey}">
-                    <span class="status-dot ${effectiveDotClass}"></span>
+                    <span class="status-dot ${dotClass}"></span>
                     <div class="novelty-tooltip">Смотрим без подписки</div>
                     <span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span>
                 </div>`;
             } else {
-                html += `<span class="status-dot ${effectiveDotClass}"></span>
+                html += `<span class="status-dot ${dotClass}"></span>
                     <span class="font-bold text-slate-200 event-title flex-1" style="word-wrap: break-word; overflow-wrap: break-word;" title="${escapeHtml(event[CONFIG.colSeries])}">${escapeHtml(event[CONFIG.colSeries])}</span>`;
             }
             html += `</div>`;
