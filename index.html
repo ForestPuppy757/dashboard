@@ -667,7 +667,6 @@
 
     <script>
         const CONFIG = {
-            // 🔥 ПРАВИЛЬНАЯ CSV-ССЫЛКА (pub?output=csv, а не pubhtml)
             csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSCGpum3bqWe33FPYcvCEnBkTF6m0v-6A7Hz2zRX91h0xWFUkgA8Kwse7f6X3tMoB3lLQh0tGVahZ1V/pub?output=csv',
             colDate: 'Дата', colSeries: 'Сериал', colSeason: 'Сезон', colEpisode: 'Серия',
             colModerator: 'Модератор', colStatus: 'Статус', colBan: 'Запрет',
@@ -1327,41 +1326,28 @@
             `).join('');
         }
 
+        // 🔥 НАДЁЖНЫЙ ПАРСИНГ ДАТ (исправлена ошибка с 2001 годом)
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            const str = String(dateStr).trim();
-            
-            const formats = [
-                /^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})$/,
-                /^(\d{4})[\.\/\-](\d{1,2})[\.\/\-](\d{1,2})$/,
-                /^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{2})$/
-            ];
-            
-            for (const fmt of formats) {
-                const match = str.match(fmt);
-                if (match) {
-                    let a = parseInt(match[1], 10);
-                    let b = parseInt(match[2], 10);
-                    let c = parseInt(match[3], 10);
-                    
-                    let day, month, year;
-                    
-                    if (fmt === formats[0]) {
-                        day = a; month = b - 1; year = c;
-                    } else if (fmt === formats[1]) {
-                        year = a; month = b - 1; day = c;
-                    } else {
-                        day = a; month = b - 1; year = c + (c < 50 ? 2000 : 1900);
-                    }
-                    
-                    const d = new Date(year, month, day);
-                    if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
-                        return d;
-                    }
+            const parts = String(dateStr).trim().split(/[\.\/\-]/);
+            if (parts.length >= 3) {
+                const day = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1;
+                let year = parseInt(parts[2], 10);
+                
+                // Если год задан двумя цифрами, добавляем 2000 (например, 26 -> 2026)
+                if (year < 100) {
+                    year += 2000;
+                }
+                
+                const d = new Date(year, month, day);
+                if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) {
+                    return d;
                 }
             }
             
-            const d = new Date(str);
+            // Fallback на стандартный парсинг
+            const d = new Date(dateStr);
             if (!isNaN(d.getTime())) return d;
             
             return null;
