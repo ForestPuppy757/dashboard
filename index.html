@@ -365,6 +365,15 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
+        /* 🔥 НОВЫЕ ФИЛЬТРЫ: AlisaDirilis (оранжевый) и Дубляж (розовый) */
+        .filter-btn.voice { border-color: rgba(249, 115, 22, 0.3); }
+        .filter-btn.voice .filter-dot { background: #f97316; box-shadow: 0 0 10px #f97316, 0 0 18px rgba(249, 115, 22, 0.5); }
+        .filter-btn.voice.active { background: rgba(249, 115, 22, 0.15); border-color: rgba(249, 115, 22, 0.6); box-shadow: 0 0 15px rgba(249, 115, 22, 0.3); color: #fdba74; }
+        
+        .filter-btn.dub { border-color: rgba(236, 72, 153, 0.3); }
+        .filter-btn.dub .filter-dot { background: #ec4899; box-shadow: 0 0 10px #ec4899, 0 0 18px rgba(236, 72, 153, 0.5); }
+        .filter-btn.dub.active { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.6); box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); color: #f9a8d4; }
+
         #filter-lists { display: flex; flex-direction: column; min-height: 0; }
         .filter-list-container { margin-top: 0; padding-top: 4px; }
         .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
@@ -381,6 +390,10 @@
         .filter-list-item.border-airing { border-color: rgba(16, 185, 129, 0.6); box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
         .filter-list-item.border-new-season { border-color: rgba(59, 130, 246, 0.6); box-shadow: 0 0 8px rgba(59, 130, 246, 0.2); }
         .filter-list-item.border-ended { border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 8px rgba(168, 85, 247, 0.2); }
+        .filter-list-item.border-voice { border-color: rgba(249, 115, 22, 0.5); box-shadow: 0 0 8px rgba(249, 115, 22, 0.15); }
+        .filter-list-item.border-voice:hover { border-color: rgba(249, 115, 22, 0.8); }
+        .filter-list-item.border-dub { border-color: rgba(236, 72, 153, 0.5); box-shadow: 0 0 8px rgba(236, 72, 153, 0.15); }
+        .filter-list-item.border-dub:hover { border-color: rgba(236, 72, 153, 0.8); }
         .filter-list-item.selected-ended { border-color: rgba(168, 85, 247, 0.9) !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); background: rgba(168, 85, 247, 0.15); }
         .filter-list-item.selected-new-season { border-color: rgba(59, 130, 246, 0.9) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.15); }
         
@@ -389,6 +402,20 @@
         .filter-list-date { font-size: 13px; color: #cbd5e1; font-weight: 500; padding: 4px 10px; background: rgba(102, 126, 234, 0.15); border-radius: 6px; flex-shrink: 0; }
         .filter-list-item:hover .filter-list-date { background: rgba(102, 126, 234, 0.3); }
         .filter-list-empty { text-align: center; padding: 20px; color: #64748b; font-size: 13px; grid-column: 1 / -1; }
+
+        /* 🔥 Подблоки внутри фильтров озвучки/дубляжа */
+        .filter-subblock { padding-top: 4px; }
+        .filter-subblock + .filter-subblock { margin-top: 18px; }
+        .filter-subblock-title {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 8px; padding-left: 2px;
+        }
+        .filter-subblock-title.voice { color: #fdba74; }
+        .filter-subblock-title.dub { color: #f9a8d4; }
+        .filter-subblock-empty {
+            text-align: center; padding: 14px; color: #64748b; font-size: 13px;
+            border: 1px dashed rgba(148, 163, 184, 0.2); border-radius: 10px;
+        }
 
         .dimmed-cell { opacity: 0.2; filter: grayscale(0.6); }
         .highlighted-cell { border-color: rgba(168, 85, 247, 0.6) !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); }
@@ -529,6 +556,8 @@
                     <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
                     <button class="filter-btn new-season" data-filter="newSeason"><span class="filter-dot"></span>Ждём новый сезон</button>
                     <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
+                    <button class="filter-btn voice" data-filter="voice"><span class="filter-dot"></span>AlisaDirilis</button>
+                    <button class="filter-btn dub" data-filter="dub"><span class="filter-dot"></span>Дубляж</button>
                 </div>
             </div>
             
@@ -544,6 +573,8 @@
                 <div id="airing-list" class="filter-list-container"></div>
                 <div id="new-season-list" class="filter-list-container"></div>
                 <div id="ended-list" class="filter-list-container"></div>
+                <div id="voice-list" class="filter-list-container"></div>
+                <div id="dub-list" class="filter-list-container"></div>
             </div>
             <div id="new-season-empty-msg" class="new-season-empty-msg">
                 <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
@@ -592,7 +623,10 @@
             colUpdated: 'Обновлено'
         };
 
-        // 🔥 ЦЕПОЧКА РЕЗЕРВНЫХ КАНАЛОВ: прямая ссылка + CORS-прокси (обходят блокировку домена Google)
+        // 🔥 Список сериалов, для которых ДУБЛЯЖ ДОЛЖЕН БЫТЬ (обновляйте при необходимости)
+        const DUB_SERIES = ['Далёкий город', 'Розы и грехи', 'Клюквенный щербет'];
+
+        // 🔥 ЦЕПОЧКА РЕЗЕРВНЫХ КАНАЛОВ: прямая ссылка + CORS-прокси
         const CSV_SOURCES = [
             CONFIG.csvUrl,
             'https://corsproxy.io/?url=' + encodeURIComponent(CONFIG.csvUrl),
@@ -615,7 +649,7 @@
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
-        let activeFilters = { search: '', airing: false, newSeason: false, ended: false };
+        let activeFilters = { search: '', airing: false, newSeason: false, ended: false, voice: false, dub: false };
         let selectedEndedSeries = null;
         let selectedNewSeasonSeries = null;
         let currentRenderContext = { mode: 'month', year: null, month: null };
@@ -691,6 +725,84 @@
             return !isNaN(d.getTime()) ? d : null;
         }
 
+        // 🔥 Диапазон текущей недели: понедельник 00:00 — воскресенье 23:59
+        function getWeekRange() {
+            const d = new Date(today);
+            const day = d.getDay(); // 0 = Вс, 1 = Пн ... 6 = Сб
+            const diff = (day === 0 ? -6 : 1) - day;
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() + diff);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+            return { weekStart, weekEnd };
+        }
+
+        // 🔥 Ожидаем озвучку: эфир прошёл (дата < сегодня), но ячейка AlisaDirilis пуста
+        function getVoiceWaitingList() {
+            const result = [];
+            allEvents.forEach(e => {
+                if (!e._parsedDate || e._parsedDate >= today) return;
+                const voice = e[CONFIG.colVoice] ? String(e[CONFIG.colVoice]).trim() : '';
+                if (voice) return; // заполнено — ждём только пустые
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                if (status.includes('перенос') || status.includes('перенес')) return;
+                result.push({ series: e[CONFIG.colSeries].trim(), event: e, date: e._parsedDate });
+            });
+            return result.sort((a, b) => a.date - b.date);
+        }
+
+        // 🔥 Озвучки этой недели: дата в ячейке AlisaDirilis попадает в текущую неделю
+        function getVoiceReleasedList() {
+            const { weekStart, weekEnd } = getWeekRange();
+            const result = [];
+            allEvents.forEach(e => {
+                const voice = e[CONFIG.colVoice] ? String(e[CONFIG.colVoice]).trim() : '';
+                if (!voice) return;
+                const vd = parseDate(voice);
+                if (!vd) return;
+                if (vd < weekStart || vd > weekEnd) return;
+                result.push({ series: e[CONFIG.colSeries].trim(), event: e, date: e._parsedDate, releaseDate: vd });
+            });
+            return result.sort((a, b) => a.releaseDate - b.releaseDate);
+        }
+
+        function isDubExpectedSeries(name) {
+            return DUB_SERIES.some(s => s.toLowerCase() === name.toLowerCase());
+        }
+
+        // 🔥 Ожидаем дубляж: эфир прошёл, дубляж должен быть (сериал в списке), но ячейка пуста
+        function getDubWaitingList() {
+            const result = [];
+            allEvents.forEach(e => {
+                if (!e._parsedDate || e._parsedDate >= today) return;
+                const name = e[CONFIG.colSeries].trim();
+                if (!isDubExpectedSeries(name)) return;
+                const dub = e[CONFIG.colDub] ? String(e[CONFIG.colDub]).trim() : '';
+                if (dub) return;
+                const status = String(e[CONFIG.colStatus] || '').toLowerCase();
+                if (status.includes('перенос') || status.includes('перенес')) return;
+                result.push({ series: name, event: e, date: e._parsedDate });
+            });
+            return result.sort((a, b) => a.date - b.date);
+        }
+
+        // 🔥 Дубляжи этой недели: дата в ячейке Дубляж попадает в текущую неделю
+        function getDubReleasedList() {
+            const { weekStart, weekEnd } = getWeekRange();
+            const result = [];
+            allEvents.forEach(e => {
+                const dub = e[CONFIG.colDub] ? String(e[CONFIG.colDub]).trim() : '';
+                if (!dub) return;
+                const dd = parseDate(dub);
+                if (!dd) return;
+                if (dd < weekStart || dd > weekEnd) return;
+                result.push({ series: e[CONFIG.colSeries].trim(), event: e, date: e._parsedDate, releaseDate: dd });
+            });
+            return result.sort((a, b) => a.releaseDate - b.releaseDate);
+        }
+
         // 🔥 ЗАГРУЗКА CSV С ТАЙМАУТОМ И ПЕРЕБОРОМ РЕЗЕРВНЫХ КАНАЛОВ
         function fetchWithTimeout(url, ms) {
             return new Promise((resolve, reject) => {
@@ -704,7 +816,6 @@
                     })
                     .then(text => {
                         clearTimeout(timer);
-                        // Отсекаем HTML-страницы ошибок прокси
                         if (!text || text.length < 10) return reject(new Error('Пустой ответ'));
                         if (text.trim().startsWith('<')) return reject(new Error('Получен HTML вместо CSV'));
                         resolve(text);
@@ -719,7 +830,7 @@
         async function loadCSV() {
             for (let i = 0; i < CSV_SOURCES.length; i++) {
                 const src = CSV_SOURCES[i];
-                const timeout = i === 0 ? 6000 : 15000; // прямую ссылку ждём недолго
+                const timeout = i === 0 ? 6000 : 15000;
                 try {
                     console.log(`🔄 Канал #${i + 1}: ${src.slice(0, 80)}...`);
                     const text = await fetchWithTimeout(src, timeout);
@@ -787,7 +898,6 @@
             });
         }
 
-        // Запуск загрузки
         loadCSV().catch(showLoadError);
 
         function populateMonthFilter() {
@@ -1113,6 +1223,8 @@
             const airingList = document.getElementById('airing-list');
             const newSeasonList = document.getElementById('new-season-list');
             const endedList = document.getElementById('ended-list');
+            const voiceList = document.getElementById('voice-list');
+            const dubList = document.getElementById('dub-list');
             
             const activeFilterNames = [];
             if (activeFilters.airing) activeFilterNames.push('airing');
@@ -1211,6 +1323,90 @@
                 endedList.classList.remove('active'); 
                 setTimeout(() => { if (!activeFilters.ended) endedList.innerHTML = ''; }, 400);
             }
+
+            // 🔥 ФИЛЬТР ALISADIRILIS: два подблока (ожидаем + вышли на этой неделе)
+            if (activeFilters.voice) {
+                const waiting = getVoiceWaitingList();
+                const released = getVoiceReleasedList();
+                let html = '<div>';
+                
+                html += `<div class="filter-subblock"><div class="filter-subblock-title voice">🎙️ Ожидаем озвучку</div>`;
+                if (waiting.length > 0) {
+                    html += `<div class="filter-list">${waiting.map(item => {
+                        const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
+                        return `<div class="filter-list-item border-voice" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.date)}</div>
+                        </div>`;
+                    }).join('')}</div>`;
+                } else {
+                    html += `<div class="filter-subblock-empty">Все озвучки вышли! 🎉</div>`;
+                }
+                html += `</div>`;
+                
+                html += `<div class="filter-subblock"><div class="filter-subblock-title voice">✅ Озвучки этой недели</div>`;
+                if (released.length > 0) {
+                    html += `<div class="filter-list">${released.map(item => {
+                        const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''} • эфир ${formatDateDMY(item.date)}`;
+                        return `<div class="filter-list-item border-voice" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.releaseDate)}</div>
+                        </div>`;
+                    }).join('')}</div>`;
+                } else {
+                    html += `<div class="filter-subblock-empty">На этой неделе озвучек не выходило</div>`;
+                }
+                html += `</div></div>`;
+                
+                voiceList.innerHTML = html;
+                voiceList.classList.add('active');
+                attachListClickHandlers(voiceList);
+            } else { 
+                voiceList.classList.remove('active'); 
+                setTimeout(() => { if (!activeFilters.voice) voiceList.innerHTML = ''; }, 400);
+            }
+
+            // 🔥 ФИЛЬТР ДУБЛЯЖ: два подблока (ожидаем + вышли на этой неделе)
+            if (activeFilters.dub) {
+                const waiting = getDubWaitingList();
+                const released = getDubReleasedList();
+                let html = '<div>';
+                
+                html += `<div class="filter-subblock"><div class="filter-subblock-title dub">🎧 Ожидаем дубляж</div>`;
+                if (waiting.length > 0) {
+                    html += `<div class="filter-list">${waiting.map(item => {
+                        const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
+                        return `<div class="filter-list-item border-dub" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.date)}</div>
+                        </div>`;
+                    }).join('')}</div>`;
+                } else {
+                    html += `<div class="filter-subblock-empty">Все ожидаемые дубляжи вышли! 🎉</div>`;
+                }
+                html += `</div>`;
+                
+                html += `<div class="filter-subblock"><div class="filter-subblock-title dub">✅ Дубляж этой недели</div>`;
+                if (released.length > 0) {
+                    html += `<div class="filter-list">${released.map(item => {
+                        const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''} • эфир ${formatDateDMY(item.date)}`;
+                        return `<div class="filter-list-item border-dub" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
+                            <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
+                            <div class="filter-list-date">${formatDateDMY(item.releaseDate)}</div>
+                        </div>`;
+                    }).join('')}</div>`;
+                } else {
+                    html += `<div class="filter-subblock-empty">На этой неделе дубляжа не выходило</div>`;
+                }
+                html += `</div></div>`;
+                
+                dubList.innerHTML = html;
+                dubList.classList.add('active');
+                attachListClickHandlers(dubList);
+            } else { 
+                dubList.classList.remove('active'); 
+                setTimeout(() => { if (!activeFilters.dub) dubList.innerHTML = ''; }, 400);
+            }
         }
 
         function attachListClickHandlers(container) {
@@ -1274,10 +1470,15 @@
         }
 
         function matchesActiveFilters(seriesName) {
-            const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
+            const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended || activeFilters.voice || activeFilters.dub;
             if (!hasAnyFilter) return true;
+            
             if (activeFilters.ended && !activeFilters.search) return true;
             if (activeFilters.newSeason && !activeFilters.search) return true;
+            // 🔥 Фильтры озвучки/дубляжа — информационные списки, календарь не затемняем
+            if (activeFilters.voice && !activeFilters.search) return true;
+            if (activeFilters.dub && !activeFilters.search) return true;
+            
             if (activeFilters.search && seriesName !== activeFilters.search) return false;
             if (activeFilters.airing || activeFilters.newSeason || activeFilters.ended) {
                 let matches = false;
