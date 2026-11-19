@@ -516,7 +516,6 @@
         .search-nearest-cell { border-color: rgba(16, 185, 129, 0.7) !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1); }
         .search-nearest-event { border-color: rgba(16, 185, 129, 0.8) !important; background: rgba(16, 185, 129, 0.15) !important; }
 
-        /* 🔥 Подсветка для поиска: финал сериала (фиолетовая) и финал сезона (синяя) */
         .search-highlight-ended {
             border-color: rgba(168, 85, 247, 0.8) !important;
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.4) !important;
@@ -1344,42 +1343,8 @@
                 card.addEventListener('click', () => {
                     const dateStr = card.dataset.date;
                     const series = card.dataset.series;
-                    if (dateStr && series && dateStr !== 'undefined') {
-                        scrollToCell(dateStr, series);
-                        // 🔥 Подсветка рамки для "Последняя трансляция"
-                        setTimeout(() => highlightCellWithBorder(dayFromDate(dateStr), series, card.classList.contains('ended') || card.classList.contains('season-end')), 200);
-                    }
+                    if (dateStr && series && dateStr !== 'undefined') scrollToCell(dateStr, series);
                 });
-            });
-        }
-
-        function dayFromDate(dateStr) {
-            const parts = dateStr.split('.');
-            if (parts.length !== 3) return null;
-            return parseInt(parts[0]);
-        }
-
-        function highlightCellWithBorder(day, seriesName, isEndedOrSeasonEnd) {
-            document.querySelectorAll('.day-cell').forEach(cell => {
-                const dayNum = cell.querySelector('.text-sm.font-bold');
-                if (dayNum && parseInt(dayNum.textContent) === day) {
-                    cell.querySelectorAll('.event-card').forEach(card => {
-                        const title = card.querySelector('.event-title');
-                        if (title && title.textContent.trim() === seriesName) {
-                            cell.style.transition = 'all 0.5s ease';
-                            if (isEndedOrSeasonEnd) {
-                                cell.style.borderColor = isEndedOrSeasonEnd ? 'rgba(168, 85, 247, 0.8)' : 'rgba(59, 130, 246, 0.8)';
-                                cell.style.boxShadow = isEndedOrSeasonEnd ? '0 0 20px rgba(168, 85, 247, 0.6)' : '0 0 20px rgba(59, 130, 246, 0.6)';
-                            } else {
-                                cell.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.8)';
-                            }
-                            setTimeout(() => { 
-                                cell.style.borderColor = ''; 
-                                cell.style.boxShadow = ''; 
-                            }, 3000);
-                        }
-                    });
-                }
             });
         }
 
@@ -1707,26 +1672,42 @@
         }
         function formatDateForCell(date) { return formatDateDMY(date); }
 
+        // 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ scrollToCell
         function scrollToCell(dateStr, seriesName) {
             const parts = dateStr.split('.');
             if (parts.length !== 3) return;
-            const day = parseInt(parts[0]), month = parseInt(parts[1]) - 1, year = parseInt(parts[2]);
-            const filterValue = `${year}-${month}`;
-            if (monthFilterInput.value !== filterValue) {
-                monthFilterInput.value = filterValue;
-                const option = monthDropdown.querySelector(`[data-value="${filterValue}"]`);
-                if (option) monthTriggerText.textContent = option.textContent;
+            
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const year = parseInt(parts[2]);
+            
+            const targetMonthValue = `${year}-${month}`;
+            const currentMonthValue = monthFilterInput.value;
+
+            // 1. Если целевой месяц отличается от текущего — переключаем его
+            if (currentMonthValue !== targetMonthValue) {
+                monthFilterInput.value = targetMonthValue;
+                const option = monthDropdown.querySelector(`[data-value="${targetMonthValue}"]`);
+                if (option) {
+                    monthTriggerText.textContent = option.textContent;
+                    monthDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                }
                 renderView();
-                setTimeout(() => highlightCell(day, seriesName), 150);
+                setTimeout(() => highlightCell(day, seriesName), 200);
             } else {
                 highlightCell(day, seriesName);
             }
         }
 
+        // 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ highlightCell
         function highlightCell(day, seriesName) {
+            let cellFound = false;
+            
             document.querySelectorAll('.day-cell').forEach(cell => {
-                const dayNum = cell.querySelector('.text-sm.font-bold');
-                if (dayNum && parseInt(dayNum.textContent) === day) {
+                const cellDay = parseInt(cell.dataset.day);
+                
+                if (cellDay === day) {
                     cell.querySelectorAll('.event-card').forEach(card => {
                         const title = card.querySelector('.event-title');
                         if (title && title.textContent.trim() === seriesName) {
@@ -1734,10 +1715,15 @@
                             cell.style.transition = 'all 0.5s ease';
                             cell.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.8)';
                             setTimeout(() => { cell.style.boxShadow = ''; }, 2500);
+                            cellFound = true;
                         }
                     });
                 }
             });
+            
+            if (!cellFound) {
+                console.warn(`Не удалось найти трансляцию "${seriesName}" на ${day} число`);
+            }
         }
 
         function matchesActiveFilters(seriesName) {
@@ -2045,7 +2031,6 @@
             const currentWeek = getWeekRange(0);
             const lastWeek = getWeekRange(-1);
 
-            // 🔥 Определяем начало диапазона для скрытия
             let rangeStart = null;
             if (calendarViewFilter === 'week') {
                 rangeStart = currentWeek.weekStart;
@@ -2053,33 +2038,28 @@
                 rangeStart = lastWeek.weekStart;
             }
 
-            // 🔥 Фильтруем ячейки: скрываем только те, что ДО начала диапазона
-            const filteredCells = visibleCells.filter(cell => {
-                if (!rangeStart) return true;
-                return cell.dateObj >= rangeStart;
-            });
-
-            // 🔥 Пересчитываем позиции для подъёма строк
-            const finalCells = filteredCells.map((cell, index) => ({
-                ...cell,
-                displayRow: Math.floor(index / 7) + 1,
-                displayCol: (index % 7) + 1
-            }));
-
-            finalCells.forEach(cell => {
-                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday, displayCol } = cell;
+            visibleCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
                 let cellEl;
                 
                 if (isMobileView && (type === 'prev-month' || type === 'next-month')) return;
                 
+                let shouldHide = false;
+                if (rangeStart && dateObj < rangeStart) {
+                    shouldHide = true;
+                }
+                
                 if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
                     cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
+                    cellEl.dataset.day = day;
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.35; filter: grayscale(0.6);';
                     if (!isMobileView) {
-                        cellEl.style.gridColumn = displayCol;
+                        cellEl.style.gridColumn = col;
                         cellEl.style.gridRow = displayRow;
                     }
+                    if (shouldHide) cellEl.style.visibility = 'hidden';
+                    
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
@@ -2093,13 +2073,15 @@
                     const isTodayHighlight = isToday && !activeFilters.ended;
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
                     if (!isMobileView) {
-                        cellStyle += ` grid-column: ${displayCol}; grid-row: ${displayRow};`;
+                        cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
                     }
                     if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
                     cellEl.className = 'day-cell';
+                    cellEl.dataset.day = day;
                     cellEl.style.cssText = cellStyle;
+                    if (shouldHide) cellEl.style.visibility = 'hidden';
                     if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
                     
                     const dayHeader = document.createElement('div');
