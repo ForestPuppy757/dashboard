@@ -42,7 +42,6 @@
         .dot-moved-past { background-color: #7f1d1d; box-shadow: 0 0 8px #7f1d1d, 0 0 14px rgba(127, 29, 29, 0.4); }
         .dot-special { background-color: #fbbf24; box-shadow: 0 0 15px #fbbf24, 0 0 25px rgba(251, 191, 36, 0.6); animation: pulse 2s infinite; }
         .dot-special-past { background-color: #92400e; box-shadow: 0 0 8px #92400e, 0 0 14px rgba(146, 64, 14, 0.4); }
-        .dot-ended { background-color: #a855f7; box-shadow: 0 0 15px #a855f7, 0 0 25px rgba(168, 85, 247, 0.6); }
         
         .dot-active-today { 
             background-color: #10b981; 
@@ -188,51 +187,31 @@
             position: relative;
             flex-shrink: 0;
         }
-        .updates-btn:hover {
-            background: rgba(30, 41, 59, 0.9);
-            border-color: rgba(148, 163, 184, 0.4);
-        }
-        .updates-btn.active {
-            border-color: #fbbf24;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
-        }
+        .updates-btn:hover { background: rgba(30, 41, 59, 0.9); border-color: rgba(148, 163, 184, 0.4); }
+        .updates-btn.active { border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
         .updates-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: #ef4444;
-            color: white;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
+            position: absolute; top: -6px; right: -6px;
+            background: #ef4444; color: white;
+            font-size: 11px; font-weight: 700;
+            padding: 2px 6px; border-radius: 10px;
+            min-width: 18px; text-align: center;
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
         }
 
         .updates-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            width: 380px;
-            max-width: 90vw;
+            position: absolute; top: calc(100% + 8px); right: 0;
+            width: 380px; max-width: 90vw;
             background: rgba(15, 23, 42, 0.98);
             border: 1px solid rgba(148, 163, 184, 0.2);
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 1000;
-            display: none;
-            max-height: 500px;
-            overflow-y: auto;
+            z-index: 1000; display: none;
+            max-height: 500px; overflow-y: auto;
         }
         .updates-dropdown.open { display: block; animation: slideDown 0.25s ease; }
         .updates-dropdown-header {
-            padding: 16px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-            font-weight: 700;
-            font-size: 15px;
-            color: #e2e8f0;
+            padding: 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            font-weight: 700; font-size: 15px; color: #e2e8f0;
         }
         .updates-dropdown-empty { padding: 24px 16px; text-align: center; color: #64748b; font-size: 14px; }
         .update-item { padding: 12px 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.08); transition: background 0.15s; }
@@ -294,7 +273,7 @@
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
 
-        /* 🔥 Плавное раскрытие dropdown поиска и фильтров */
+        /* 🔥 ПЛАВНОЕ РАСКРЫТИЕ ЧЕРЕЗ GRID */
         .search-dropdown, .filter-list-container {
             display: grid;
             grid-template-rows: 0fr;
@@ -387,6 +366,10 @@
         .filter-btn.ended .filter-dot { background: #a855f7; box-shadow: 0 0 10px #a855f7, 0 0 18px rgba(168, 85, 247, 0.5); }
         .filter-btn.ended.active { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.6); box-shadow: 0 0 15px rgba(168, 85, 247, 0.3); color: #d8b4fe; }
 
+        #filter-lists { display: flex; flex-direction: column; min-height: 0; }
+        .filter-list-container { margin-top: 0; padding-top: 4px; }
+        .filter-list-container.active { margin-top: 20px; overflow-y: auto; }
+        
         .filter-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; padding-top: 4px; }
         .filter-list-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -535,28 +518,41 @@
             </div>
         </header>
 
-        <!-- 🔥 ЕДИНЫЙ КОНТЕЙНЕР: поиск + фильтры + инфо (всё в одном glass-card) -->
-        <div id="dynamic-content" class="mb-6" style="display: none;">
-            <div class="glass-card rounded-2xl p-4">
-                <!-- Dropdown поиска (плавное раскрытие внутри контейнера) -->
-                <div id="search-dropdown" class="search-dropdown">
-                    <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+        <!-- 🔥 ЕДИНЫЙ GLASS-CARD: поиск + фильтры + результаты -->
+        <div class="glass-card rounded-2xl p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-3">
+                <div class="search-container flex-1">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" id="series-search" class="search-input" placeholder="Поиск сериала...">
+                        <span class="search-clear" id="search-clear" title="Очистить">✕ Очистить</span>
+                    </div>
                 </div>
                 
-                <!-- Инфо о поиске (прошедшая/последняя/ближайшая трансляция) -->
-                <div id="search-info-block" class="search-info-block">
-                    <div class="search-info-grid" id="search-info-grid"></div>
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-btn airing" data-filter="airing"><span class="filter-dot"></span>В эфире</button>
+                    <button class="filter-btn new-season" data-filter="newSeason"><span class="filter-dot"></span>Ждём новый сезон</button>
+                    <button class="filter-btn ended" data-filter="ended"><span class="filter-dot"></span>Сериал завершён</button>
                 </div>
-                
-                <!-- Результаты фильтров -->
-                <div id="filter-lists">
-                    <div id="airing-list" class="filter-list-container"></div>
-                    <div id="new-season-list" class="filter-list-container"></div>
-                    <div id="ended-list" class="filter-list-container"></div>
-                </div>
-                <div id="new-season-empty-msg" class="new-season-empty-msg">
-                    <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
-                </div>
+            </div>
+            
+            <div id="search-info-block" class="search-info-block">
+                <div class="search-info-grid" id="search-info-grid"></div>
+            </div>
+            
+            <div id="search-dropdown" class="search-dropdown">
+                <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+            </div>
+            
+            <div id="filter-lists">
+                <div id="airing-list" class="filter-list-container"></div>
+                <div id="new-season-list" class="filter-list-container"></div>
+                <div id="ended-list" class="filter-list-container"></div>
+            </div>
+            <div id="new-season-empty-msg" class="new-season-empty-msg">
+                <p class="text-lg text-slate-300 font-medium">Уже ничего не ждём! Заваривай чай и смотри новые серии ♡</p>
             </div>
         </div>
 
@@ -636,7 +632,6 @@
         const updatesBadge = document.getElementById('updates-badge');
         const updatesDropdown = document.getElementById('updates-dropdown');
         const updatesList = document.getElementById('updates-list');
-        const dynamicContent = document.getElementById('dynamic-content');
 
         const layoutMap = {
             'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з', '[': 'х', ']': 'ъ',
@@ -768,7 +763,6 @@
                 closeDropdown(); 
                 activeFilters.search = '';
                 searchInfoBlock.classList.remove('visible');
-                updateDynamicContentVisibility();
                 renderView(); 
                 return; 
             }
@@ -785,7 +779,6 @@
             if (matches.length === 0) {
                 searchDropdownInner.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
                 openDropdown();
-                updateDynamicContentVisibility();
                 return;
             }
             
@@ -793,7 +786,6 @@
                 `<div class="search-dropdown-item" data-series="${escapeHtml(s)}">${escapeHtml(s)}</div>`
             ).join('');
             openDropdown();
-            updateDynamicContentVisibility();
             
             searchDropdownInner.querySelectorAll('.search-dropdown-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -814,7 +806,6 @@
             activeFilters.search = '';
             searchInfoBlock.classList.remove('visible');
             closeDropdown();
-            updateDynamicContentVisibility();
             renderView();
         });
 
@@ -842,16 +833,13 @@
             return past.length > 0 ? past[0] : null;
         }
 
-        // 🔥 ОБНОВЛЁННАЯ ЛОГИКА: для завершённых сериалов не показываем ближайшую трансляцию
         function updateSearchInfo(seriesName) {
             const pastEvent = findLastPastEvent(seriesName);
             const nextEvent = findNearestEvent(seriesName);
             const isEnded = isSeriesEnded(seriesName);
             
-            // Если ничего нет — скрываем блок
             if (!pastEvent && !nextEvent && !isEnded) {
                 searchInfoBlock.classList.remove('visible');
-                updateDynamicContentVisibility();
                 return;
             }
             
@@ -865,7 +853,6 @@
                 else if (season) metaText = `Сезон ${season}`;
                 else if (episode) metaText = `Серия ${episode}`;
                 
-                // Для завершённых сериалов — особая карточка "Последняя трансляция • Финал сериала"
                 if (isEnded) {
                     html += `<div class="search-info-card ended" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
                         <div>
@@ -886,7 +873,6 @@
                     </div>`;
                 }
             } else if (isEnded) {
-                // Сериал завершён, но прошедших событий нет (странно, но обработаем)
                 html += `<div class="search-info-card ended" style="opacity: 0.7;">
                     <div>
                         <div class="search-info-card-label">Сериал завершён</div>
@@ -897,7 +883,6 @@
                 </div>`;
             }
             
-            // Ближайшую трансляцию показываем ТОЛЬКО если сериал НЕ завершён
             if (!isEnded) {
                 if (nextEvent) {
                     const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
@@ -929,7 +914,6 @@
             
             searchInfoGrid.innerHTML = html;
             searchInfoBlock.classList.add('visible');
-            updateDynamicContentVisibility();
             
             searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
                 card.addEventListener('click', () => {
@@ -948,7 +932,6 @@
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
                 updateFilterLists();
-                updateDynamicContentVisibility();
                 renderView();
             });
         });
@@ -1119,7 +1102,6 @@
                         e.stopPropagation();
                         selectedEndedSeries = null;
                         updateFilterLists();
-                        updateDynamicContentVisibility();
                         renderView();
                     });
                 }
@@ -1144,7 +1126,6 @@
                     if (selectedEndedSeries === seriesName) selectedEndedSeries = null;
                     else selectedEndedSeries = seriesName;
                     updateFilterLists();
-                    updateDynamicContentVisibility();
                     renderView();
                     setTimeout(() => scrollToCell(dateStr, seriesName), 100);
                 });
