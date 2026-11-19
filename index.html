@@ -1207,7 +1207,6 @@
             });
         });
 
-        // 🔥 Обработчик "Очистить" — возврат к текущему месяцу
         searchClear.addEventListener('click', function(e) {
             e.stopPropagation();
             seriesSearch.value = '';
@@ -1215,7 +1214,6 @@
             activeFilters.search = '';
             searchInfoBlock.classList.remove('visible');
             closeDropdown();
-            // Возврат к текущему месяцу
             const currentMonthValue = `${currentYear}-${currentMonthIndex}`;
             if (monthFilterInput.value !== currentMonthValue) {
                 switchMonthTo(currentMonthValue);
@@ -1284,7 +1282,6 @@
                     statusLabel = 'Прошедшая трансляция';
                 }
                 
-                // 🔥 Добавляем data-атрибуты для кликабельности
                 html += `<div class="search-info-card ${cardClass}" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}" style="cursor: pointer;">
                     <div>
                         <div class="search-info-card-label">${statusLabel}</div>
@@ -1313,7 +1310,6 @@
                 </div>`;
             }
             
-            // 🔥 Не показываем ближайшую трансляцию для завершённых сериалов
             if (!isEnded && nextEvent) {
                 const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
                 const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
@@ -1344,13 +1340,46 @@
             searchInfoGrid.innerHTML = html;
             searchInfoBlock.classList.add('visible');
             
-            // 🔥 Обработчики клика для карточек
             searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const dateStr = card.dataset.date;
                     const series = card.dataset.series;
-                    if (dateStr && series && dateStr !== 'undefined') scrollToCell(dateStr, series);
+                    if (dateStr && series && dateStr !== 'undefined') {
+                        scrollToCell(dateStr, series);
+                        // 🔥 Подсветка рамки для "Последняя трансляция"
+                        setTimeout(() => highlightCellWithBorder(dayFromDate(dateStr), series, card.classList.contains('ended') || card.classList.contains('season-end')), 200);
+                    }
                 });
+            });
+        }
+
+        function dayFromDate(dateStr) {
+            const parts = dateStr.split('.');
+            if (parts.length !== 3) return null;
+            return parseInt(parts[0]);
+        }
+
+        function highlightCellWithBorder(day, seriesName, isEndedOrSeasonEnd) {
+            document.querySelectorAll('.day-cell').forEach(cell => {
+                const dayNum = cell.querySelector('.text-sm.font-bold');
+                if (dayNum && parseInt(dayNum.textContent) === day) {
+                    cell.querySelectorAll('.event-card').forEach(card => {
+                        const title = card.querySelector('.event-title');
+                        if (title && title.textContent.trim() === seriesName) {
+                            cell.style.transition = 'all 0.5s ease';
+                            if (isEndedOrSeasonEnd) {
+                                cell.style.borderColor = isEndedOrSeasonEnd ? 'rgba(168, 85, 247, 0.8)' : 'rgba(59, 130, 246, 0.8)';
+                                cell.style.boxShadow = isEndedOrSeasonEnd ? '0 0 20px rgba(168, 85, 247, 0.6)' : '0 0 20px rgba(59, 130, 246, 0.6)';
+                            } else {
+                                cell.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.8)';
+                            }
+                            setTimeout(() => { 
+                                cell.style.borderColor = ''; 
+                                cell.style.boxShadow = ''; 
+                            }, 3000);
+                        }
+                    });
+                }
             });
         }
 
@@ -2016,6 +2045,7 @@
             const currentWeek = getWeekRange(0);
             const lastWeek = getWeekRange(-1);
 
+            // 🔥 Определяем начало диапазона для скрытия
             let rangeStart = null;
             if (calendarViewFilter === 'week') {
                 rangeStart = currentWeek.weekStart;
@@ -2023,27 +2053,33 @@
                 rangeStart = lastWeek.weekStart;
             }
 
-            visibleCells.forEach(cell => {
-                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
+            // 🔥 Фильтруем ячейки: скрываем только те, что ДО начала диапазона
+            const filteredCells = visibleCells.filter(cell => {
+                if (!rangeStart) return true;
+                return cell.dateObj >= rangeStart;
+            });
+
+            // 🔥 Пересчитываем позиции для подъёма строк
+            const finalCells = filteredCells.map((cell, index) => ({
+                ...cell,
+                displayRow: Math.floor(index / 7) + 1,
+                displayCol: (index % 7) + 1
+            }));
+
+            finalCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday, displayCol } = cell;
                 let cellEl;
                 
                 if (isMobileView && (type === 'prev-month' || type === 'next-month')) return;
-                
-                let shouldHide = false;
-                if (rangeStart && dateObj < rangeStart) {
-                    shouldHide = true;
-                }
                 
                 if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
                     cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.35; filter: grayscale(0.6);';
                     if (!isMobileView) {
-                        cellEl.style.gridColumn = col;
+                        cellEl.style.gridColumn = displayCol;
                         cellEl.style.gridRow = displayRow;
                     }
-                    if (shouldHide) cellEl.style.visibility = 'hidden';
-                    
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
@@ -2057,14 +2093,13 @@
                     const isTodayHighlight = isToday && !activeFilters.ended;
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
                     if (!isMobileView) {
-                        cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
+                        cellStyle += ` grid-column: ${displayCol}; grid-row: ${displayRow};`;
                     }
                     if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
                     cellEl.className = 'day-cell';
                     cellEl.style.cssText = cellStyle;
-                    if (shouldHide) cellEl.style.visibility = 'hidden';
                     if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
                     
                     const dayHeader = document.createElement('div');
