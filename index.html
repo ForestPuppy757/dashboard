@@ -741,7 +741,7 @@
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false, voice: false, dub: false };
         let selectedEndedSeries = null;
         let selectedNewSeasonSeries = null;
-        // 🔥 Теперь храним ключ "серия|дата" вместо просто имени серии
+        // 🔥 Ключи "серия|дата" для трёх фильтров
         let selectedAiringKey = null;
         let selectedVoiceKey = null;
         let selectedDubKey = null;
@@ -1347,7 +1347,6 @@
                 activeFilters[filter] = this.classList.contains('active');
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
-                // 🔥 Сброс выбора при выключении фильтра
                 if (!activeFilters.airing) selectedAiringKey = null;
                 if (!activeFilters.voice) selectedVoiceKey = null;
                 if (!activeFilters.dub) selectedDubKey = null;
@@ -1452,7 +1451,6 @@
             return result.sort((a, b) => b.date - a.date);
         }
 
-        // 🔥 Вспомогательная: из ключа "series|dateStr" получаем имя серии
         function getSeriesFromKey(key) {
             if (!key) return null;
             return key.split('|')[0];
@@ -1471,12 +1469,12 @@
             if (activeFilters.ended) activeFilterNames.push('ended');
             const multipleFilters = activeFilterNames.length > 1;
             
+            // 🔥 В ЭФИРЕ — идентичная логика
             if (activeFilters.airing) {
                 const items = getAiringList();
                 if (items.length > 0) {
                     airingList.innerHTML = `<div><div class="filter-list">${items.map(item => {
                         const borders = multipleFilters ? 'border-airing' : '';
-                        // 🔥 Сравниваем по ключу "серия|дата"
                         const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
                         const isSelected = selectedAiringKey === itemKey ? 'selected-airing' : '';
                         const status = String(item.event[CONFIG.colStatus] || '').toLowerCase();
@@ -1576,6 +1574,7 @@
                 setTimeout(() => { if (!activeFilters.ended) endedList.innerHTML = ''; }, 400);
             }
 
+            // 🔥 ALISADIRILIS — идентичная логика "В эфире"
             if (activeFilters.voice) {
                 const waiting = getVoiceWaitingList();
                 const released = getVoiceReleasedList();
@@ -1633,6 +1632,7 @@
                 setTimeout(() => { if (!activeFilters.voice) voiceList.innerHTML = ''; }, 400);
             }
 
+            // 🔥 ДУБЛЯЖ — идентичная логика "В эфире"
             if (activeFilters.dub) {
                 const waiting = getDubWaitingList();
                 const released = getDubReleasedList();
@@ -1691,7 +1691,7 @@
             }
         }
 
-        // 🔥 Обработчик клика по элементам фильтра — сохраняет ключ "серия|дата"
+        // 🔥 Универсальный обработчик — работает одинаково для всех трёх фильтров
         function attachFilterItemClickHandlers(container, filterType) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
                 item.addEventListener('click', (e) => {
@@ -2166,10 +2166,9 @@
             });
         }
 
-        // 🔥 ИСПРАВЛЕНО: подсвечивается только конкретная карточка на конкретную дату
+        // 🔥 ИДЕНТИЧНАЯ ЛОГИКА ДЛЯ ВСЕХ ТРЁХ ФИЛЬТРОВ: подсвечивается только конкретная карточка на конкретную дату
         function applyCellHighlighting(cell, dayEvents, dateObj, isPrevMonth, isToday) {
             const isPastDay = dateObj < today;
-            const cellDateStr = formatDateDMY(dateObj);
             
             if (activeFilters.search) {
                 const searchSeries = activeFilters.search;
@@ -2266,7 +2265,7 @@
                     }
                 }
             } else if (activeFilters.airing) {
-                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                // 🔥 Идентичная логика для всех трёх фильтров
                 if (selectedAiringKey) {
                     const [selSeries, selDate] = selectedAiringKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
@@ -2300,7 +2299,7 @@
                     }
                 }
             } else if (activeFilters.voice) {
-                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                // 🔥 Идентичная логика для AlisaDirilis
                 if (selectedVoiceKey) {
                     const [selSeries, selDate] = selectedVoiceKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
@@ -2334,7 +2333,7 @@
                     }
                 }
             } else if (activeFilters.dub) {
-                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                // 🔥 Идентичная логика для Дубляж
                 if (selectedDubKey) {
                     const [selSeries, selDate] = selectedDubKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
