@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Дашборд трансляций</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -18,6 +18,7 @@
             color: #e2e8f0;
             margin: 0;
             padding: 16px;
+            overflow-x: hidden;
         }
         @media (min-width: 768px) { body { padding: 32px; } }
         
@@ -198,13 +199,13 @@
             box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
         }
 
-        /* 🔥 Единый стиль со списком месяцев */
+        /* 🔥 АДАПТИВНЫЙ DROPDOWN ОБНОВЛЕНИЙ */
         .updates-dropdown {
             position: absolute;
-            top: calc(100% + 4px);
+            top: calc(100% + 8px);
             right: 0;
             width: 380px;
-            max-width: 90vw;
+            max-width: calc(100vw - 32px);
             background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(148, 163, 184, 0.2);
@@ -215,10 +216,7 @@
             max-height: 500px;
             overflow-y: auto;
         }
-        .updates-dropdown.open {
-            display: block;
-            animation: slideDown 0.25s ease;
-        }
+        .updates-dropdown.open { display: block; animation: slideDown 0.25s ease; }
         .updates-dropdown::-webkit-scrollbar { width: 6px; }
         .updates-dropdown::-webkit-scrollbar-track { background: transparent; }
         .updates-dropdown::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 3px; }
@@ -257,7 +255,12 @@
             margin-bottom: 1rem; padding-left: 0.5rem; border-left: 4px solid #667eea;
         }
 
-        .calendar-grid { display: grid !important; gap: 0.5rem; grid-template-columns: repeat(7, 1fr) !important; }
+        /* 🔥 АДАПТИВНАЯ СЕТКА КАЛЕНДАРЯ */
+        .calendar-grid { 
+            display: grid !important; 
+            gap: 0.5rem; 
+            grid-template-columns: repeat(7, 1fr) !important; 
+        }
         @media (max-width: 1024px) { .calendar-grid { grid-template-columns: repeat(4, 1fr) !important; } }
         @media (max-width: 768px) { .calendar-grid { grid-template-columns: repeat(2, 1fr) !important; } }
         @media (max-width: 380px) { .calendar-grid { grid-template-columns: 1fr !important; } }
@@ -266,11 +269,12 @@
         @media (max-width: 768px) { .calendar-header { display: none !important; } }
         @media (max-width: 768px) { .prev-month-day, .next-month-day { display: none !important; } }
         @media (max-width: 768px) {
-            .day-cell { min-height: 100px !important; padding: 0.5rem !important; }
+            .day-cell { min-height: 140px !important; padding: 0.5rem !important; }
             .event-card { padding: 0.5rem !important; }
             .event-title { font-size: 0.75rem !important; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; }
             .event-info { font-size: 0.65rem !important; }
             .empty-day-text { font-size: 0.6rem !important; }
+            .month-title { font-size: 1.25rem !important; margin-bottom: 0.75rem !important; }
         }
 
         .empty-day-icon { opacity: 0.25; transition: opacity 0.3s ease; }
@@ -640,7 +644,7 @@
             colVoice: 'Озвучка от AlisaDirilis', colDub: 'Дубляж',
             colMoveReason: 'Причина переноса', colMoveAnswer: 'Ответ для пользователей',
             colUpdated: 'Обновлено',
-            colChangeType: 'Тип изменения' // 🔥 НОВЫЙ СТОЛБЕЦ N
+            colChangeType: 'Тип изменения'
         };
 
         const DUB_SERIES = ['Далёкий город', 'Розы и грехи', 'Клюквенный щербет'];
@@ -1497,7 +1501,6 @@
             return true;
         }
 
-        // 🔥 НОВАЯ ЛОГИКА: учитываем столбец "Тип изменения"
         function getTodayUpdates() {
             const updates = [];
             
@@ -1513,7 +1516,6 @@
                 
                 if (!isToday && !isYesterday) return;
                 
-                // 🔥 Читаем тип изменения из столбца N
                 const changeType = String(event[CONFIG.colChangeType] || '').toLowerCase().trim();
                 
                 const series = event[CONFIG.colSeries].trim();
@@ -1525,7 +1527,6 @@
                 const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
                 const dateLabel = isToday ? 'Сегодня' : 'Вчера';
                 
-                // 🔥 Показываем только то, что реально менялось сегодня
                 if (changeType.includes('voice') && voice && voice !== 'ожидаем' && voice !== '') {
                     updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
@@ -1542,7 +1543,6 @@
                     updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 }
                 
-                // Fallback для ручных изменений или старых строк без типа
                 if (changeType === 'manual' || changeType === '') {
                     if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                     if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
@@ -1658,6 +1658,7 @@
             </svg>`;
         }
 
+        // 🔥 ИСПРАВЛЕННАЯ ФУНКЦИЯ ДЛЯ МОБИЛЬНОЙ АДАПТАЦИИ
         function renderMonthGridWithLift(grid, year, monthIndex) {
             grid.innerHTML = '';
             const firstDay = new Date(year, monthIndex, 1);
@@ -1735,30 +1736,39 @@
                 }
             }
 
+            // 🔥 На мобильном не поднимаем строки
+            const isMobileView = window.innerWidth < 768;
             let minRow = 1;
-            if (activeFilters.airing) {
+            if (activeFilters.airing && !isMobileView) {
                 for (const cell of allCells) {
                     if (!cell.isPastDay || cell.dayEvents.length > 0) { minRow = cell.row; break; }
                 }
             }
 
-            const visibleCells = allCells.filter(cell => cell.row >= minRow).map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
+            const visibleCells = allCells
+                .filter(cell => cell.row >= minRow)
+                .map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
 
             visibleCells.forEach(cell => {
                 const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
                 let cellEl;
                 
+                // 🔥 На мобильном prev/next не рендерим
+                if (isMobileView && (type === 'prev-month' || type === 'next-month')) return;
+                
                 if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
                     cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.2; filter: grayscale(0.6);';
-                    cellEl.style.gridColumn = col;
-                    cellEl.style.gridRow = displayRow;
+                    // 🔥 Позиционирование только на десктопе
+                    if (!isMobileView) {
+                        cellEl.style.gridColumn = col;
+                        cellEl.style.gridRow = displayRow;
+                    }
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    const dayName = dayNamesShort[dayIndex];
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
                     cellEl.appendChild(dayHeader);
                     applyCellHighlighting(cellEl, dayEvents, dateObj, type === 'prev-month', false);
@@ -1767,7 +1777,10 @@
                     const isWeekend = dayIndex >= 5;
                     const isTodayHighlight = isToday && !activeFilters.ended;
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
-                    cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
+                    // 🔥 Позиционирование только на десктопе
+                    if (!isMobileView) {
+                        cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
+                    }
                     if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
@@ -1777,11 +1790,11 @@
                     
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
+                    const dayName = dayNamesShort[dayIndex];
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : (isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b')}">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : '#cbd5e1'};">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-                    if (activeFilters.airing && isPastDay) { cellEl.style.opacity = '0.2'; cellEl.style.filter = 'grayscale(0.6)'; }
+                    // 🔥 Затемнение только на десктопе
+                    if (activeFilters.airing && isPastDay && !isMobileView) { cellEl.style.opacity = '0.2'; cellEl.style.filter = 'grayscale(0.6)'; }
                     applyCellHighlighting(cellEl, dayEvents, dateObj, false, isToday);
                     grid.appendChild(cellEl);
                 }
@@ -2069,6 +2082,15 @@
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
 
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        // 🔥 Перерисовка календаря при изменении размера окна
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (allEvents.length > 0) renderView();
+            }, 250);
+        });
     </script>
 </body>
 </html>
