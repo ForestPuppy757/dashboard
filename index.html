@@ -310,13 +310,38 @@
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
 
-        .search-dropdown, .filter-list-container {
+        /* 🔥 ПЛАВНОЕ РАСКРЫТИЕ ФИЛЬТРОВ */
+        .filter-list-container { 
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s ease;
+            margin-top: 0;
+            padding-top: 0;
         }
-        .search-dropdown.active, .filter-list-container.active { grid-template-rows: 1fr; }
-        .search-dropdown > div, .filter-list-container > div { overflow: hidden; min-height: 0; }
+        .filter-list-container.active { 
+            grid-template-rows: 1fr;
+            margin-top: 16px;
+            overflow-y: auto; 
+        }
+        .filter-list-container > div {
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .search-dropdown {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 50;
+        }
+        .search-dropdown.active {
+            grid-template-rows: 1fr;
+        }
+        .search-dropdown > div {
+            overflow: hidden;
+            min-height: 0;
+        }
 
         .search-dropdown-inner {
             position: relative;
@@ -543,15 +568,16 @@
             </div>
         </header>
 
-        <!-- Единый контейнер для динамического контента -->
+        <!-- 🔥 Dropdown поиска вынесен ОТДЕЛЬНО (поверх всего) -->
+        <div id="search-dropdown" class="search-dropdown mb-2">
+            <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+        </div>
+
+        <!-- Единый контейнер для динамического контента (фильтры + инфо о поиске) -->
         <div id="dynamic-content" class="mb-6" style="display: none;">
             <div class="glass-card rounded-2xl p-4">
                 <div id="search-info-block" class="search-info-block">
                     <div class="search-info-grid" id="search-info-grid"></div>
-                </div>
-                
-                <div id="search-dropdown" class="search-dropdown">
-                    <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
                 </div>
                 
                 <div id="filter-lists">
@@ -961,12 +987,13 @@
             });
         });
 
-        // 🔥 Функция управления видимостью динамического контента
+        // 🔥 Управление видимостью динамического контента
         function updateDynamicContentVisibility() {
             const hasSearchInfo = searchInfoBlock.classList.contains('visible');
             const hasActiveFilters = activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
+            const hasSearchDropdown = searchDropdown.classList.contains('active');
             
-            if (hasSearchInfo || hasActiveFilters) {
+            if (hasSearchInfo || hasActiveFilters || hasSearchDropdown) {
                 dynamicContent.style.display = 'block';
             } else {
                 dynamicContent.style.display = 'none';
