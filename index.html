@@ -482,7 +482,6 @@
         .filter-list-item.border-dub:hover { border-color: rgba(236, 72, 153, 0.8); }
         .filter-list-item.selected-ended { border-color: rgba(168, 85, 247, 0.9) !important; box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); background: rgba(168, 85, 247, 0.15); }
         .filter-list-item.selected-new-season { border-color: rgba(59, 130, 246, 0.9) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.15); }
-        /* 🔥 Новые классы выделения для фильтров */
         .filter-list-item.selected-airing { border-color: rgba(16, 185, 129, 0.9) !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.15); }
         .filter-list-item.selected-voice { border-color: rgba(249, 115, 22, 0.9) !important; box-shadow: 0 0 15px rgba(249, 115, 22, 0.5); background: rgba(249, 115, 22, 0.15); }
         .filter-list-item.selected-dub { border-color: rgba(236, 72, 153, 0.9) !important; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); background: rgba(236, 72, 153, 0.15); }
@@ -511,7 +510,6 @@
         .highlighted-new-season-cell { border-color: rgba(59, 130, 246, 0.6) !important; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
         .highlighted-event { border-color: rgba(168, 85, 247, 0.8) !important; background: rgba(168, 85, 247, 0.15) !important; }
         .highlighted-new-season-event { border-color: rgba(59, 130, 246, 0.8) !important; background: rgba(59, 130, 246, 0.15) !important; }
-        /* 🔥 Подсветка в календаре для новых фильтров */
         .highlighted-airing-event { border-color: rgba(16, 185, 129, 0.8) !important; background: rgba(16, 185, 129, 0.15) !important; }
         .highlighted-voice-event { border-color: rgba(249, 115, 22, 0.8) !important; background: rgba(249, 115, 22, 0.15) !important; }
         .highlighted-dub-event { border-color: rgba(236, 72, 153, 0.8) !important; background: rgba(236, 72, 153, 0.15) !important; }
@@ -743,7 +741,6 @@
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false, voice: false, dub: false };
         let selectedEndedSeries = null;
         let selectedNewSeasonSeries = null;
-        // 🔥 Новые переменные для выделения в фильтрах
         let selectedAiringSeries = null;
         let selectedVoiceSeries = null;
         let selectedDubSeries = null;
@@ -1344,30 +1341,6 @@
             });
         }
 
-        // 🔥 Универсальный обработчик клика по элементам фильтра с выделением
-        function attachFilterItemClickHandlers(container, filterType) {
-            container.querySelectorAll('.filter-list-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const seriesName = item.dataset.series;
-                    const dateStr = item.dataset.date;
-                    
-                    // Переключаем выбранную серию
-                    if (filterType === 'airing') {
-                        selectedAiringSeries = selectedAiringSeries === seriesName ? null : seriesName;
-                    } else if (filterType === 'voice') {
-                        selectedVoiceSeries = selectedVoiceSeries === seriesName ? null : seriesName;
-                    } else if (filterType === 'dub') {
-                        selectedDubSeries = selectedDubSeries === seriesName ? null : seriesName;
-                    }
-                    
-                    updateFilterLists();
-                    renderView();
-                    setTimeout(() => scrollToCell(dateStr, seriesName), 100);
-                });
-            });
-        }
-
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const filter = this.dataset.filter;
@@ -1376,12 +1349,12 @@
                 activeFilters[filter] = this.classList.contains('active');
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
-                // 🔥 Сброс выделения при выключении фильтра
                 if (!activeFilters.airing) selectedAiringSeries = null;
                 if (!activeFilters.voice) selectedVoiceSeries = null;
                 if (!activeFilters.dub) selectedDubSeries = null;
                 
-                if (filter === 'airing' && !wasActive) {
+                // 🔥 Включение режима "Неделя" по умолчанию для airing, voice и dub
+                if ((filter === 'airing' || filter === 'voice' || filter === 'dub') && !wasActive) {
                     calendarViewFilter = 'week';
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
                     document.querySelectorAll('.view-filter-btn.week').forEach(b => b.classList.add('active'));
@@ -1703,6 +1676,28 @@
                 dubList.classList.remove('active'); 
                 setTimeout(() => { if (!activeFilters.dub) dubList.innerHTML = ''; }, 400);
             }
+        }
+
+        function attachFilterItemClickHandlers(container, filterType) {
+            container.querySelectorAll('.filter-list-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const seriesName = item.dataset.series;
+                    const dateStr = item.dataset.date;
+                    
+                    if (filterType === 'airing') {
+                        selectedAiringSeries = selectedAiringSeries === seriesName ? null : seriesName;
+                    } else if (filterType === 'voice') {
+                        selectedVoiceSeries = selectedVoiceSeries === seriesName ? null : seriesName;
+                    } else if (filterType === 'dub') {
+                        selectedDubSeries = selectedDubSeries === seriesName ? null : seriesName;
+                    }
+                    
+                    updateFilterLists();
+                    renderView();
+                    setTimeout(() => scrollToCell(dateStr, seriesName), 100);
+                });
+            });
         }
 
         function attachListClickHandlers(container) {
@@ -2077,7 +2072,7 @@
 
             const isMobileView = window.innerWidth < 768;
             let minRow = 1;
-            if (activeFilters.airing && !isMobileView) {
+            if ((activeFilters.airing || activeFilters.voice || activeFilters.dub) && !isMobileView) {
                 for (const cell of allCells) {
                     if (!cell.isPastDay || cell.dayEvents.length > 0) { minRow = cell.row; break; }
                 }
@@ -2149,13 +2144,14 @@
                     const dayName = dayNamesShort[dayIndex];
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : (isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b')}">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : '#cbd5e1'};">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-                    if (activeFilters.airing && isPastDay && !isMobileView) { cellEl.style.opacity = '0.2'; cellEl.style.filter = 'grayscale(0.6)'; }
+                    if ((activeFilters.airing || activeFilters.voice || activeFilters.dub) && isPastDay && !isMobileView) { cellEl.style.opacity = '0.2'; cellEl.style.filter = 'grayscale(0.6)'; }
                     applyCellHighlighting(cellEl, dayEvents, dateObj, false, isToday);
                     grid.appendChild(cellEl);
                 }
             });
         }
 
+        // 🔥 ИСПРАВЛЕНО: подсветка только конкретной выбранной серии, по умолчанию — без выделения
         function applyCellHighlighting(cell, dayEvents, dateObj, isPrevMonth, isToday) {
             const isPastDay = dateObj < today;
             
@@ -2254,12 +2250,7 @@
                     }
                 }
             } else if (activeFilters.airing) {
-                // 🔥 Подсветка для фильтра "В эфире"
-                const hasAiringSeries = dayEvents.some(e => {
-                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    return status.includes('в эфире') || status.includes('новинка') || 
-                           status.includes('финал сезона') || status.includes('финал сериала');
-                });
+                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
                 if (selectedAiringSeries) {
                     const hasSelectedAiring = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedAiringSeries);
                     if (hasSelectedAiring) {
@@ -2280,36 +2271,18 @@
                         }
                     }
                 } else {
-                    if (hasAiringSeries) {
-                        cell.style.borderColor = 'rgba(16, 185, 129, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
-                        dayEvents.forEach(event => {
-                            const status = String(event[CONFIG.colStatus] || '').toLowerCase();
-                            if (status.includes('в эфире') || status.includes('новинка') || 
-                                status.includes('финал сезона') || status.includes('финал сериала'))
-                                cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'airing'));
-                            else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        });
-                    } else {
-                        cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
-                        if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                        else if (!isPrevMonth) {
-                            const emptyBlock = document.createElement('div');
-                            emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
-                            emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
-                            cell.appendChild(emptyBlock);
-                        }
+                    // 🔥 По умолчанию — обычный вид без подсветки
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
+                    } else if (!isPrevMonth) {
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
                     }
                 }
             } else if (activeFilters.voice) {
-                // 🔥 Подсветка для фильтра "AlisaDirilis"
-                const { weekStart, weekEnd } = getWeekRange();
-                const hasVoiceSeries = dayEvents.some(e => {
-                    const voice = String(e[CONFIG.colVoice] || '').trim();
-                    const isWaiting = !voice && e._parsedDate < today && !String(e[CONFIG.colStatus] || '').toLowerCase().includes('перенос');
-                    const vd = parseDate(voice);
-                    const isReleased = voice && vd && vd >= weekStart && vd <= weekEnd;
-                    return isWaiting || isReleased;
-                });
+                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
                 if (selectedVoiceSeries) {
                     const hasSelectedVoice = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedVoiceSeries);
                     if (hasSelectedVoice) {
@@ -2330,40 +2303,18 @@
                         }
                     }
                 } else {
-                    if (hasVoiceSeries) {
-                        cell.style.borderColor = 'rgba(249, 115, 22, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
-                        dayEvents.forEach(event => {
-                            const voice = String(event[CONFIG.colVoice] || '').trim();
-                            const isWaiting = !voice && event._parsedDate < today && !String(event[CONFIG.colStatus] || '').toLowerCase().includes('перенос');
-                            const vd = parseDate(voice);
-                            const isReleased = voice && vd && vd >= weekStart && vd <= weekEnd;
-                            if (isWaiting || isReleased)
-                                cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'voice'));
-                            else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        });
-                    } else {
-                        cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
-                        if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                        else if (!isPrevMonth) {
-                            const emptyBlock = document.createElement('div');
-                            emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
-                            emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
-                            cell.appendChild(emptyBlock);
-                        }
+                    // 🔥 По умолчанию — обычный вид без подсветки
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
+                    } else if (!isPrevMonth) {
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
                     }
                 }
             } else if (activeFilters.dub) {
-                // 🔥 Подсветка для фильтра "Дубляж"
-                const { weekStart, weekEnd } = getWeekRange();
-                const hasDubSeries = dayEvents.some(e => {
-                    const name = e[CONFIG.colSeries].trim();
-                    if (!isDubExpectedSeries(name)) return false;
-                    const dub = String(e[CONFIG.colDub] || '').trim();
-                    const isWaiting = !dub && e._parsedDate < today && !String(e[CONFIG.colStatus] || '').toLowerCase().includes('перенос');
-                    const dd = parseDate(dub);
-                    const isReleased = dub && dd && dd >= weekStart && dd <= weekEnd;
-                    return isWaiting || isReleased;
-                });
+                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
                 if (selectedDubSeries) {
                     const hasSelectedDub = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedDubSeries);
                     if (hasSelectedDub) {
@@ -2384,31 +2335,14 @@
                         }
                     }
                 } else {
-                    if (hasDubSeries) {
-                        cell.style.borderColor = 'rgba(236, 72, 153, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
-                        dayEvents.forEach(event => {
-                            const name = event[CONFIG.colSeries].trim();
-                            if (!isDubExpectedSeries(name)) {
-                                cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                                return;
-                            }
-                            const dub = String(event[CONFIG.colDub] || '').trim();
-                            const isWaiting = !dub && event._parsedDate < today && !String(event[CONFIG.colStatus] || '').toLowerCase().includes('перенос');
-                            const dd = parseDate(dub);
-                            const isReleased = dub && dd && dd >= weekStart && dd <= weekEnd;
-                            if (isWaiting || isReleased)
-                                cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'dub'));
-                            else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
-                        });
-                    } else {
-                        cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
-                        if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
-                        else if (!isPrevMonth) {
-                            const emptyBlock = document.createElement('div');
-                            emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
-                            emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
-                            cell.appendChild(emptyBlock);
-                        }
+                    // 🔥 По умолчанию — обычный вид без подсветки
+                    if (dayEvents.length > 0) {
+                        dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
+                    } else if (!isPrevMonth) {
+                        const emptyBlock = document.createElement('div');
+                        emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
+                        emptyBlock.innerHTML = `${getEmptyDayIcon()}<div class="empty-day-text">Сегодня без<br>турецких сериалов</div>`;
+                        cell.appendChild(emptyBlock);
                     }
                 }
             } else {
@@ -2461,7 +2395,6 @@
             if (isEndedHighlight) extraClasses += ' highlighted-event';
             if (isSearchHighlight) extraClasses += ' search-nearest-event';
             if (isNewSeasonHighlight) extraClasses += ' highlighted-new-season-event';
-            // 🔥 Добавляем класс подсветки по типу фильтра
             if (highlightType === 'airing') extraClasses += ' highlighted-airing-event';
             else if (highlightType === 'voice') extraClasses += ' highlighted-voice-event';
             else if (highlightType === 'dub') extraClasses += ' highlighted-dub-event';
