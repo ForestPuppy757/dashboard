@@ -741,9 +741,10 @@
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false, voice: false, dub: false };
         let selectedEndedSeries = null;
         let selectedNewSeasonSeries = null;
-        let selectedAiringSeries = null;
-        let selectedVoiceSeries = null;
-        let selectedDubSeries = null;
+        // 🔥 Теперь храним ключ "серия|дата" вместо просто имени серии
+        let selectedAiringKey = null;
+        let selectedVoiceKey = null;
+        let selectedDubKey = null;
         let currentRenderContext = { mode: 'month', year: null, month: null };
         let savedMonthFilter = null;
         let calendarViewFilter = 'month';
@@ -1059,8 +1060,6 @@
             allOption.textContent = `${currentYear} год`;
             monthDropdown.appendChild(allOption);
             
-            let currentMonthOption = null;
-            
             availableYears.forEach(year => {
                 const yearHeader = document.createElement('div');
                 yearHeader.className = 'custom-select-option year-header';
@@ -1075,7 +1074,6 @@
                         option.classList.add('selected');
                         monthTriggerText.textContent = `${name} ${year}`;
                         monthFilterInput.value = `${year}-${index}`;
-                        currentMonthOption = option;
                     }
                     monthDropdown.appendChild(option);
                 });
@@ -1349,11 +1347,11 @@
                 activeFilters[filter] = this.classList.contains('active');
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
-                if (!activeFilters.airing) selectedAiringSeries = null;
-                if (!activeFilters.voice) selectedVoiceSeries = null;
-                if (!activeFilters.dub) selectedDubSeries = null;
+                // 🔥 Сброс выбора при выключении фильтра
+                if (!activeFilters.airing) selectedAiringKey = null;
+                if (!activeFilters.voice) selectedVoiceKey = null;
+                if (!activeFilters.dub) selectedDubKey = null;
                 
-                // 🔥 Включение режима "Неделя" по умолчанию для airing, voice и dub
                 if ((filter === 'airing' || filter === 'voice' || filter === 'dub') && !wasActive) {
                     calendarViewFilter = 'week';
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
@@ -1454,6 +1452,12 @@
             return result.sort((a, b) => b.date - a.date);
         }
 
+        // 🔥 Вспомогательная: из ключа "series|dateStr" получаем имя серии
+        function getSeriesFromKey(key) {
+            if (!key) return null;
+            return key.split('|')[0];
+        }
+
         function updateFilterLists() {
             const airingList = document.getElementById('airing-list');
             const newSeasonList = document.getElementById('new-season-list');
@@ -1472,7 +1476,9 @@
                 if (items.length > 0) {
                     airingList.innerHTML = `<div><div class="filter-list">${items.map(item => {
                         const borders = multipleFilters ? 'border-airing' : '';
-                        const isSelected = selectedAiringSeries === item.series ? 'selected-airing' : '';
+                        // 🔥 Сравниваем по ключу "серия|дата"
+                        const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
+                        const isSelected = selectedAiringKey === itemKey ? 'selected-airing' : '';
                         const status = String(item.event[CONFIG.colStatus] || '').toLowerCase();
                         let metaText = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
                         if (status.includes('финал сезона')) metaText = `Финал сезона • ${metaText}`;
@@ -1483,17 +1489,18 @@
                             <div class="filter-list-date">${formatDateDMY(item.date)}</div>
                         </div>`;
                     }).join('')}</div></div>`;
-                    if (selectedAiringSeries) {
+                    if (selectedAiringKey) {
+                        const selSeries = getSeriesFromKey(selectedAiringKey);
                         airingList.innerHTML += `<div style="text-align: center; padding: 12px; margin-top: 8px;">
                             <button class="reset-selection-btn" data-filter="airing" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">
-                                ✕ Сбросить выбор: ${escapeHtml(selectedAiringSeries)}
+                                ✕ Сбросить выбор: ${escapeHtml(selSeries)}
                             </button>
                         </div>`;
                     }
                     airingList.classList.add('active');
                     attachFilterItemClickHandlers(airingList, 'airing');
                     const resetBtn = airingList.querySelector('.reset-selection-btn[data-filter="airing"]');
-                    if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedAiringSeries = null; updateFilterLists(); renderView(); });
+                    if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedAiringKey = null; updateFilterLists(); renderView(); });
                 } else {
                     airingList.innerHTML = '<div><div class="filter-list-empty">Нет сериалов в эфире в этом месяце</div></div>';
                     airingList.classList.add('active');
@@ -1577,7 +1584,8 @@
                 html += `<div class="filter-subblock"><div class="filter-subblock-title voice">🎙️ Ожидаем озвучку</div>`;
                 if (waiting.length > 0) {
                     html += `<div class="filter-list">${waiting.map(item => {
-                        const isSelected = selectedVoiceSeries === item.series ? 'selected-voice' : '';
+                        const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
+                        const isSelected = selectedVoiceKey === itemKey ? 'selected-voice' : '';
                         const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
                         return `<div class="filter-list-item border-voice ${isSelected}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
@@ -1592,7 +1600,8 @@
                 html += `<div class="filter-subblock"><div class="filter-subblock-title voice">✨ Озвучки этой недели</div>`;
                 if (released.length > 0) {
                     html += `<div class="filter-list">${released.map(item => {
-                        const isSelected = selectedVoiceSeries === item.series ? 'selected-voice' : '';
+                        const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
+                        const isSelected = selectedVoiceKey === itemKey ? 'selected-voice' : '';
                         const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''} • эфир ${formatDateDMY(item.date)}`;
                         return `<div class="filter-list-item border-voice ${isSelected}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
@@ -1604,10 +1613,11 @@
                 }
                 html += `</div>`;
                 
-                if (selectedVoiceSeries) {
+                if (selectedVoiceKey) {
+                    const selSeries = getSeriesFromKey(selectedVoiceKey);
                     html += `<div style="text-align: center; padding: 12px; margin-top: 8px;">
                         <button class="reset-selection-btn" data-filter="voice" style="background: rgba(249, 115, 22, 0.2); border: 1px solid rgba(249, 115, 22, 0.4); color: #fdba74; padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">
-                            ✕ Сбросить выбор: ${escapeHtml(selectedVoiceSeries)}
+                            ✕ Сбросить выбор: ${escapeHtml(selSeries)}
                         </button>
                     </div>`;
                 }
@@ -1617,7 +1627,7 @@
                 voiceList.classList.add('active');
                 attachFilterItemClickHandlers(voiceList, 'voice');
                 const resetBtn = voiceList.querySelector('.reset-selection-btn[data-filter="voice"]');
-                if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedVoiceSeries = null; updateFilterLists(); renderView(); });
+                if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedVoiceKey = null; updateFilterLists(); renderView(); });
             } else { 
                 voiceList.classList.remove('active'); 
                 setTimeout(() => { if (!activeFilters.voice) voiceList.innerHTML = ''; }, 400);
@@ -1631,7 +1641,8 @@
                 html += `<div class="filter-subblock"><div class="filter-subblock-title dub">🎧 Ожидаем дубляж</div>`;
                 if (waiting.length > 0) {
                     html += `<div class="filter-list">${waiting.map(item => {
-                        const isSelected = selectedDubSeries === item.series ? 'selected-dub' : '';
+                        const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
+                        const isSelected = selectedDubKey === itemKey ? 'selected-dub' : '';
                         const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''}`;
                         return `<div class="filter-list-item border-dub ${isSelected}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
@@ -1646,7 +1657,8 @@
                 html += `<div class="filter-subblock"><div class="filter-subblock-title dub">✨ Дубляж этой недели</div>`;
                 if (released.length > 0) {
                     html += `<div class="filter-list">${released.map(item => {
-                        const isSelected = selectedDubSeries === item.series ? 'selected-dub' : '';
+                        const itemKey = `${item.series}|${formatDateForCell(item.date)}`;
+                        const isSelected = selectedDubKey === itemKey ? 'selected-dub' : '';
                         const meta = `Сезон ${item.event[CONFIG.colSeason] || ''} Серия ${item.event[CONFIG.colEpisode] || ''} • эфир ${formatDateDMY(item.date)}`;
                         return `<div class="filter-list-item border-dub ${isSelected}" data-date="${formatDateForCell(item.date)}" data-series="${escapeHtml(item.series)}">
                             <div><div class="filter-list-name">${escapeHtml(item.series)}</div><div class="filter-list-meta">${meta}</div></div>
@@ -1658,10 +1670,11 @@
                 }
                 html += `</div>`;
                 
-                if (selectedDubSeries) {
+                if (selectedDubKey) {
+                    const selSeries = getSeriesFromKey(selectedDubKey);
                     html += `<div style="text-align: center; padding: 12px; margin-top: 8px;">
                         <button class="reset-selection-btn" data-filter="dub" style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(236, 72, 153, 0.4); color: #f9a8d4; padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">
-                            ✕ Сбросить выбор: ${escapeHtml(selectedDubSeries)}
+                            ✕ Сбросить выбор: ${escapeHtml(selSeries)}
                         </button>
                     </div>`;
                 }
@@ -1671,26 +1684,28 @@
                 dubList.classList.add('active');
                 attachFilterItemClickHandlers(dubList, 'dub');
                 const resetBtn = dubList.querySelector('.reset-selection-btn[data-filter="dub"]');
-                if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedDubSeries = null; updateFilterLists(); renderView(); });
+                if (resetBtn) resetBtn.addEventListener('click', (e) => { e.stopPropagation(); selectedDubKey = null; updateFilterLists(); renderView(); });
             } else { 
                 dubList.classList.remove('active'); 
                 setTimeout(() => { if (!activeFilters.dub) dubList.innerHTML = ''; }, 400);
             }
         }
 
+        // 🔥 Обработчик клика по элементам фильтра — сохраняет ключ "серия|дата"
         function attachFilterItemClickHandlers(container, filterType) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const seriesName = item.dataset.series;
                     const dateStr = item.dataset.date;
+                    const key = `${seriesName}|${dateStr}`;
                     
                     if (filterType === 'airing') {
-                        selectedAiringSeries = selectedAiringSeries === seriesName ? null : seriesName;
+                        selectedAiringKey = selectedAiringKey === key ? null : key;
                     } else if (filterType === 'voice') {
-                        selectedVoiceSeries = selectedVoiceSeries === seriesName ? null : seriesName;
+                        selectedVoiceKey = selectedVoiceKey === key ? null : key;
                     } else if (filterType === 'dub') {
-                        selectedDubSeries = selectedDubSeries === seriesName ? null : seriesName;
+                        selectedDubKey = selectedDubKey === key ? null : key;
                     }
                     
                     updateFilterLists();
@@ -2151,9 +2166,10 @@
             });
         }
 
-        // 🔥 ИСПРАВЛЕНО: подсветка только конкретной выбранной серии, по умолчанию — без выделения
+        // 🔥 ИСПРАВЛЕНО: подсвечивается только конкретная карточка на конкретную дату
         function applyCellHighlighting(cell, dayEvents, dateObj, isPrevMonth, isToday) {
             const isPastDay = dateObj < today;
+            const cellDateStr = formatDateDMY(dateObj);
             
             if (activeFilters.search) {
                 const searchSeries = activeFilters.search;
@@ -2250,13 +2266,16 @@
                     }
                 }
             } else if (activeFilters.airing) {
-                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
-                if (selectedAiringSeries) {
-                    const hasSelectedAiring = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedAiringSeries);
-                    if (hasSelectedAiring) {
-                        cell.style.borderColor = 'rgba(16, 185, 129, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
+                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                if (selectedAiringKey) {
+                    const [selSeries, selDate] = selectedAiringKey.split('|');
+                    const hasSelectedInCell = dayEvents.some(e => 
+                        e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
+                    );
+                    if (hasSelectedInCell) {
                         dayEvents.forEach(event => {
-                            if (event[CONFIG.colSeries].trim() === selectedAiringSeries)
+                            const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
+                            if (eventKey === selectedAiringKey)
                                 cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'airing'));
                             else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
@@ -2271,7 +2290,6 @@
                         }
                     }
                 } else {
-                    // 🔥 По умолчанию — обычный вид без подсветки
                     if (dayEvents.length > 0) {
                         dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
                     } else if (!isPrevMonth) {
@@ -2282,13 +2300,16 @@
                     }
                 }
             } else if (activeFilters.voice) {
-                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
-                if (selectedVoiceSeries) {
-                    const hasSelectedVoice = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedVoiceSeries);
-                    if (hasSelectedVoice) {
-                        cell.style.borderColor = 'rgba(249, 115, 22, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
+                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                if (selectedVoiceKey) {
+                    const [selSeries, selDate] = selectedVoiceKey.split('|');
+                    const hasSelectedInCell = dayEvents.some(e => 
+                        e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
+                    );
+                    if (hasSelectedInCell) {
                         dayEvents.forEach(event => {
-                            if (event[CONFIG.colSeries].trim() === selectedVoiceSeries)
+                            const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
+                            if (eventKey === selectedVoiceKey)
                                 cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'voice'));
                             else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
@@ -2303,7 +2324,6 @@
                         }
                     }
                 } else {
-                    // 🔥 По умолчанию — обычный вид без подсветки
                     if (dayEvents.length > 0) {
                         dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
                     } else if (!isPrevMonth) {
@@ -2314,13 +2334,16 @@
                     }
                 }
             } else if (activeFilters.dub) {
-                // 🔥 Подсветка ТОЛЬКО конкретной выбранной серии; по умолчанию — ничего не выделяется
-                if (selectedDubSeries) {
-                    const hasSelectedDub = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedDubSeries);
-                    if (hasSelectedDub) {
-                        cell.style.borderColor = 'rgba(236, 72, 153, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
+                // 🔥 Подсветка ТОЛЬКО конкретной карточки на конкретную дату
+                if (selectedDubKey) {
+                    const [selSeries, selDate] = selectedDubKey.split('|');
+                    const hasSelectedInCell = dayEvents.some(e => 
+                        e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
+                    );
+                    if (hasSelectedInCell) {
                         dayEvents.forEach(event => {
-                            if (event[CONFIG.colSeries].trim() === selectedDubSeries)
+                            const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
+                            if (eventKey === selectedDubKey)
                                 cell.appendChild(createEventElement(event, false, false, false, false, isToday, 'dub'));
                             else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
@@ -2335,7 +2358,6 @@
                         }
                     }
                 } else {
-                    // 🔥 По умолчанию — обычный вид без подсветки
                     if (dayEvents.length > 0) {
                         dayEvents.forEach(event => cell.appendChild(createEventElement(event, false, false, false, false, isToday)));
                     } else if (!isPrevMonth) {
