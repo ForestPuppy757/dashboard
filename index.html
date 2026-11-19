@@ -410,7 +410,6 @@
         .filter-btn.dub .filter-dot { background: #ec4899; box-shadow: 0 0 10px #ec4899, 0 0 18px rgba(236, 72, 153, 0.5); }
         .filter-btn.dub.active { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.6); box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); color: #f9a8d4; }
 
-        /* 🔥 Фильтры отображения календаря */
         .view-filters {
             display: flex;
             gap: 8px;
@@ -516,6 +515,18 @@
         .highlighted-new-season-event { border-color: rgba(59, 130, 246, 0.8) !important; background: rgba(59, 130, 246, 0.15) !important; }
         .search-nearest-cell { border-color: rgba(16, 185, 129, 0.7) !important; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.1); }
         .search-nearest-event { border-color: rgba(16, 185, 129, 0.8) !important; background: rgba(16, 185, 129, 0.15) !important; }
+
+        /* 🔥 Подсветка для поиска: финал сериала (фиолетовая) и финал сезона (синяя) */
+        .search-highlight-ended {
+            border-color: rgba(168, 85, 247, 0.8) !important;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4) !important;
+            background: rgba(168, 85, 247, 0.1) !important;
+        }
+        .search-highlight-season-end {
+            border-color: rgba(59, 130, 246, 0.8) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+            background: rgba(59, 130, 246, 0.1) !important;
+        }
 
         .new-season-empty-msg {
             text-align: center; padding: 20px; margin-top: 16px; border-radius: 12px;
@@ -743,7 +754,7 @@
         let selectedNewSeasonSeries = null;
         let currentRenderContext = { mode: 'month', year: null, month: null };
         let savedMonthFilter = null;
-        let calendarViewFilter = 'month'; // 🔥 'month' | 'week' | 'last-week'
+        let calendarViewFilter = 'month';
 
         const seriesSearch = document.getElementById('series-search');
         const searchClear = document.getElementById('search-clear');
@@ -816,7 +827,6 @@
             return !isNaN(d.getTime()) ? d : null;
         }
 
-        // 🔥 Расширенная функция: offset=0 текущая неделя, offset=-1 прошлая
         function getWeekRange(offset = 0) {
             const d = new Date(today);
             const day = d.getDay();
@@ -1057,6 +1067,8 @@
             allOption.textContent = `${currentYear} год`;
             monthDropdown.appendChild(allOption);
             
+            let currentMonthOption = null;
+            
             availableYears.forEach(year => {
                 const yearHeader = document.createElement('div');
                 yearHeader.className = 'custom-select-option year-header';
@@ -1071,6 +1083,7 @@
                         option.classList.add('selected');
                         monthTriggerText.textContent = `${name} ${year}`;
                         monthFilterInput.value = `${year}-${index}`;
+                        currentMonthOption = option;
                     }
                     monthDropdown.appendChild(option);
                 });
@@ -1091,7 +1104,16 @@
             });
         }
 
-        function openMonthDropdown() { monthTrigger.classList.add('open'); monthDropdown.classList.add('open'); }
+        function openMonthDropdown() { 
+            monthTrigger.classList.add('open'); 
+            monthDropdown.classList.add('open');
+            const selected = monthDropdown.querySelector('.custom-select-option.selected');
+            if (selected) {
+                setTimeout(() => {
+                    selected.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 50);
+            }
+        }
         function closeMonthDropdown() { monthTrigger.classList.remove('open'); monthDropdown.classList.remove('open'); }
 
         monthTrigger.addEventListener('click', (e) => {
@@ -1185,6 +1207,7 @@
             });
         });
 
+        // 🔥 Обработчик "Очистить" — возврат к текущему месяцу
         searchClear.addEventListener('click', function(e) {
             e.stopPropagation();
             seriesSearch.value = '';
@@ -1192,6 +1215,14 @@
             activeFilters.search = '';
             searchInfoBlock.classList.remove('visible');
             closeDropdown();
+            // Возврат к текущему месяцу
+            const currentMonthValue = `${currentYear}-${currentMonthIndex}`;
+            if (monthFilterInput.value !== currentMonthValue) {
+                switchMonthTo(currentMonthValue);
+            }
+            calendarViewFilter = 'month';
+            document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view-filter-btn.month').forEach(b => b.classList.add('active'));
             renderView();
         });
 
@@ -1253,7 +1284,8 @@
                     statusLabel = 'Прошедшая трансляция';
                 }
                 
-                html += `<div class="search-info-card ${cardClass}" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                // 🔥 Добавляем data-атрибуты для кликабельности
+                html += `<div class="search-info-card ${cardClass}" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}" style="cursor: pointer;">
                     <div>
                         <div class="search-info-card-label">${statusLabel}</div>
                         <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
@@ -1281,7 +1313,8 @@
                 </div>`;
             }
             
-            if (nextEvent) {
+            // 🔥 Не показываем ближайшую трансляцию для завершённых сериалов
+            if (!isEnded && nextEvent) {
                 const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
                 const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
                 let metaText = '';
@@ -1289,7 +1322,7 @@
                 else if (season) metaText = `Сезон ${season}`;
                 else if (episode) metaText = `Серия ${episode}`;
                 
-                html += `<div class="search-info-card next" data-date="${formatDateForCell(nextEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                html += `<div class="search-info-card next" data-date="${formatDateForCell(nextEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}" style="cursor: pointer;">
                     <div>
                         <div class="search-info-card-label">Ближайшая трансляция</div>
                         <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
@@ -1297,7 +1330,7 @@
                     </div>
                     <div class="search-info-card-date">${formatDateDMY(nextEvent._parsedDate)}</div>
                 </div>`;
-            } else {
+            } else if (!isEnded) {
                 html += `<div class="search-info-card next" style="opacity: 0.4;">
                     <div>
                         <div class="search-info-card-label">Ближайшая трансляция</div>
@@ -1311,6 +1344,7 @@
             searchInfoGrid.innerHTML = html;
             searchInfoBlock.classList.add('visible');
             
+            // 🔥 Обработчики клика для карточек
             searchInfoGrid.querySelectorAll('.search-info-card').forEach(card => {
                 card.addEventListener('click', () => {
                     const dateStr = card.dataset.date;
@@ -1329,6 +1363,12 @@
                 if (!activeFilters.ended) selectedEndedSeries = null;
                 if (!activeFilters.newSeason) selectedNewSeasonSeries = null;
                 
+                if (filter === 'airing' && !wasActive) {
+                    calendarViewFilter = 'week';
+                    document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.view-filter-btn.week').forEach(b => b.classList.add('active'));
+                }
+                
                 const anyInfoFilterActive = activeFilters.ended || activeFilters.newSeason || activeFilters.voice || activeFilters.dub || activeFilters.airing;
                 
                 if (!wasActive && anyInfoFilterActive) {
@@ -1342,6 +1382,9 @@
                         switchMonthTo(savedMonthFilter);
                         savedMonthFilter = null;
                     }
+                    calendarViewFilter = 'month';
+                    document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.view-filter-btn.month').forEach(b => b.classList.add('active'));
                 }
                 
                 updateFilterLists();
@@ -1809,7 +1852,6 @@
             }
         }
 
-        // 🔥 Заголовок месяца + фильтры отображения в одной строке
         function createMonthBlock(year, monthIndex) {
             const wrapper = document.createElement('div');
             wrapper.className = 'mb-8 last:mb-0';
@@ -1836,18 +1878,15 @@
                 btn.className = `view-filter-btn ${f.cls}${calendarViewFilter === f.key ? ' active' : ''}`;
                 btn.textContent = f.label;
                 btn.addEventListener('click', () => {
-                    // 🔥 Повторный клик — возврат на 'month'
                     if (calendarViewFilter === f.key) {
                         calendarViewFilter = 'month';
                     } else {
                         calendarViewFilter = f.key;
-                        // Если активирован фильтр недели, а режим 'all' — переключаем на текущий месяц
                         if (f.key !== 'month' && monthFilterInput.value === 'all') {
                             const targetMonth = f.key === 'last-week' ? getWeekRange(-1).weekStart : getWeekRange(0).weekStart;
                             switchMonthTo(`${targetMonth.getFullYear()}-${targetMonth.getMonth()}`);
                         }
                     }
-                    // Обновляем активные кнопки во всех блоках месяцев
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
                     document.querySelectorAll(`.view-filter-btn.${f.cls}`).forEach(b => b.classList.add('active'));
                     renderView();
@@ -1974,44 +2013,37 @@
 
             const visibleCells = allCells.filter(cell => cell.row >= minRow).map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
 
-            // 🔥 Диапазоны недель для фильтрации
             const currentWeek = getWeekRange(0);
             const lastWeek = getWeekRange(-1);
 
-            // 🔥 Фильтруем ячейки по диапазону (для week/last-week)
-            const filteredCells = visibleCells.filter(cell => {
-                if (calendarViewFilter === 'month') return true;
-                if (calendarViewFilter === 'week') {
-                    return cell.dateObj >= currentWeek.weekStart && cell.dateObj <= currentWeek.weekEnd;
-                }
-                if (calendarViewFilter === 'last-week') {
-                    return (cell.dateObj >= lastWeek.weekStart && cell.dateObj <= lastWeek.weekEnd) ||
-                           (cell.dateObj >= currentWeek.weekStart && cell.dateObj <= currentWeek.weekEnd);
-                }
-                return true;
-            });
+            let rangeStart = null;
+            if (calendarViewFilter === 'week') {
+                rangeStart = currentWeek.weekStart;
+            } else if (calendarViewFilter === 'last-week') {
+                rangeStart = lastWeek.weekStart;
+            }
 
-            // 🔥 Пересчитываем displayRow/displayCol только для видимых ячеек
-            const finalCells = filteredCells.map((cell, index) => ({
-                ...cell,
-                displayRow: Math.floor(index / 7) + 1,
-                displayCol: (index % 7) + 1
-            }));
-
-            finalCells.forEach(cell => {
-                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday, displayCol } = cell;
+            visibleCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
                 let cellEl;
                 
                 if (isMobileView && (type === 'prev-month' || type === 'next-month')) return;
+                
+                let shouldHide = false;
+                if (rangeStart && dateObj < rangeStart) {
+                    shouldHide = true;
+                }
                 
                 if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
                     cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.35; filter: grayscale(0.6);';
                     if (!isMobileView) {
-                        cellEl.style.gridColumn = displayCol;
+                        cellEl.style.gridColumn = col;
                         cellEl.style.gridRow = displayRow;
                     }
+                    if (shouldHide) cellEl.style.visibility = 'hidden';
+                    
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
@@ -2025,13 +2057,14 @@
                     const isTodayHighlight = isToday && !activeFilters.ended;
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
                     if (!isMobileView) {
-                        cellStyle += ` grid-column: ${displayCol}; grid-row: ${displayRow};`;
+                        cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
                     }
                     if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
                     cellEl.className = 'day-cell';
                     cellEl.style.cssText = cellStyle;
+                    if (shouldHide) cellEl.style.visibility = 'hidden';
                     if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
                     
                     const dayHeader = document.createElement('div');
@@ -2224,7 +2257,7 @@
 
             if (seasonEpisodeDisplay) html += `<div class="text-[10px] text-slate-500 mb-0.5 font-medium event-info">${seasonEpisodeDisplay}</div>`;
             html += `<div class="text-[10px] text-slate-400 event-info" style="word-wrap: break-word;">Модератор: ${mod}</div>`;
-            if (isMoved) html += `<div class="text-[10px] text-red-400 font-bold mt-0.5">Перенос</div>`;
+            if (isMoved) html += `<div class="text-[10px] text-red-400 font-bold mt-0.5">перенос</div>`;
             if (isSpecial && specialText) html += `<div class="text-[10px] text-yellow-400 font-bold mt-0.5">${specialText}</div>`;
             if (hasBan) html += `<div class="text-[10px] text-red-400 mt-1 font-semibold flex items-center bg-red-500/10 border border-red-500/30 px-1.5 py-1 rounded-lg w-fit" style="word-wrap: break-word;"><svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> ${escapeHtml(banText)}</div>`;
 
