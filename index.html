@@ -410,7 +410,7 @@
         .filter-btn.dub .filter-dot { background: #ec4899; box-shadow: 0 0 10px #ec4899, 0 0 18px rgba(236, 72, 153, 0.5); }
         .filter-btn.dub.active { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.6); box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); color: #f9a8d4; }
 
-        /* 🔥 НОВЫЕ СТИЛИ: фильтры отображения календаря */
+        /* 🔥 Фильтры отображения календаря */
         .view-filters {
             display: flex;
             gap: 8px;
@@ -1085,7 +1085,6 @@
                     option.classList.add('selected');
                     closeMonthDropdown();
                     savedMonthFilter = option.dataset.value;
-                    // 🔥 При ручном выборе месяца сбрасываем фильтр отображения на 'month'
                     calendarViewFilter = 'month';
                     renderView();
                 });
@@ -1810,7 +1809,7 @@
             }
         }
 
-        // 🔥 НОВАЯ ФУНКЦИЯ: заголовок месяца + фильтры отображения в одной строке
+        // 🔥 Заголовок месяца + фильтры отображения в одной строке
         function createMonthBlock(year, monthIndex) {
             const wrapper = document.createElement('div');
             wrapper.className = 'mb-8 last:mb-0';
@@ -1837,11 +1836,16 @@
                 btn.className = `view-filter-btn ${f.cls}${calendarViewFilter === f.key ? ' active' : ''}`;
                 btn.textContent = f.label;
                 btn.addEventListener('click', () => {
-                    calendarViewFilter = f.key;
-                    // 🔥 Если активирован фильтр недели, а режим 'all' — переключаем на текущий месяц
-                    if (f.key !== 'month' && monthFilterInput.value === 'all') {
-                        const targetMonth = f.key === 'last-week' ? getWeekRange(-1).weekStart : getWeekRange(0).weekStart;
-                        switchMonthTo(`${targetMonth.getFullYear()}-${targetMonth.getMonth()}`);
+                    // 🔥 Повторный клик — возврат на 'month'
+                    if (calendarViewFilter === f.key) {
+                        calendarViewFilter = 'month';
+                    } else {
+                        calendarViewFilter = f.key;
+                        // Если активирован фильтр недели, а режим 'all' — переключаем на текущий месяц
+                        if (f.key !== 'month' && monthFilterInput.value === 'all') {
+                            const targetMonth = f.key === 'last-week' ? getWeekRange(-1).weekStart : getWeekRange(0).weekStart;
+                            switchMonthTo(`${targetMonth.getFullYear()}-${targetMonth.getMonth()}`);
+                        }
                     }
                     // Обновляем активные кнопки во всех блоках месяцев
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
@@ -1974,33 +1978,40 @@
             const currentWeek = getWeekRange(0);
             const lastWeek = getWeekRange(-1);
 
-            visibleCells.forEach(cell => {
-                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
+            // 🔥 Фильтруем ячейки по диапазону (для week/last-week)
+            const filteredCells = visibleCells.filter(cell => {
+                if (calendarViewFilter === 'month') return true;
+                if (calendarViewFilter === 'week') {
+                    return cell.dateObj >= currentWeek.weekStart && cell.dateObj <= currentWeek.weekEnd;
+                }
+                if (calendarViewFilter === 'last-week') {
+                    return (cell.dateObj >= lastWeek.weekStart && cell.dateObj <= lastWeek.weekEnd) ||
+                           (cell.dateObj >= currentWeek.weekStart && cell.dateObj <= currentWeek.weekEnd);
+                }
+                return true;
+            });
+
+            // 🔥 Пересчитываем displayRow/displayCol только для видимых ячеек
+            const finalCells = filteredCells.map((cell, index) => ({
+                ...cell,
+                displayRow: Math.floor(index / 7) + 1,
+                displayCol: (index % 7) + 1
+            }));
+
+            finalCells.forEach(cell => {
+                const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday, displayCol } = cell;
                 let cellEl;
                 
                 if (isMobileView && (type === 'prev-month' || type === 'next-month')) return;
                 
-                // 🔥 Проверка вхождения в диапазон выбранного фильтра
-                let inRange = true;
-                if (calendarViewFilter === 'week') {
-                    inRange = dateObj >= currentWeek.weekStart && dateObj <= currentWeek.weekEnd;
-                } else if (calendarViewFilter === 'last-week') {
-                    inRange = (dateObj >= lastWeek.weekStart && dateObj <= lastWeek.weekEnd) ||
-                              (dateObj >= currentWeek.weekStart && dateObj <= currentWeek.weekEnd);
-                }
-                
                 if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
                     cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
-                    // 🔥 Затемнение прошлого месяца ярче: 0.35 вместо 0.2
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.35; filter: grayscale(0.6);';
                     if (!isMobileView) {
-                        cellEl.style.gridColumn = col;
+                        cellEl.style.gridColumn = displayCol;
                         cellEl.style.gridRow = displayRow;
                     }
-                    // 🔥 Скрываем ячейки вне диапазона
-                    if (!inRange) cellEl.style.visibility = 'hidden';
-                    
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
@@ -2014,15 +2025,13 @@
                     const isTodayHighlight = isToday && !activeFilters.ended;
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
                     if (!isMobileView) {
-                        cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
+                        cellStyle += ` grid-column: ${displayCol}; grid-row: ${displayRow};`;
                     }
                     if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
                     cellEl.className = 'day-cell';
                     cellEl.style.cssText = cellStyle;
-                    // 🔥 Скрываем ячейки вне диапазона
-                    if (!inRange) cellEl.style.visibility = 'hidden';
                     if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
                     
                     const dayHeader = document.createElement('div');
