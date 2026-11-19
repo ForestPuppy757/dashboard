@@ -42,6 +42,7 @@
         .dot-moved-past { background-color: #7f1d1d; box-shadow: 0 0 8px #7f1d1d, 0 0 14px rgba(127, 29, 29, 0.4); }
         .dot-special { background-color: #fbbf24; box-shadow: 0 0 15px #fbbf24, 0 0 25px rgba(251, 191, 36, 0.6); animation: pulse 2s infinite; }
         .dot-special-past { background-color: #92400e; box-shadow: 0 0 8px #92400e, 0 0 14px rgba(146, 64, 14, 0.4); }
+        .dot-ended { background-color: #a855f7; box-shadow: 0 0 15px #a855f7, 0 0 25px rgba(168, 85, 247, 0.6); }
         
         .dot-active-today { 
             background-color: #10b981; 
@@ -225,10 +226,7 @@
             max-height: 500px;
             overflow-y: auto;
         }
-        .updates-dropdown.open {
-            display: block;
-            animation: slideDown 0.25s ease;
-        }
+        .updates-dropdown.open { display: block; animation: slideDown 0.25s ease; }
         .updates-dropdown-header {
             padding: 16px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.1);
@@ -236,27 +234,13 @@
             font-size: 15px;
             color: #e2e8f0;
         }
-        .updates-dropdown-empty {
-            padding: 24px 16px;
-            text-align: center;
-            color: #64748b;
-            font-size: 14px;
-        }
-        .update-item {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
-            transition: background 0.15s;
-        }
+        .updates-dropdown-empty { padding: 24px 16px; text-align: center; color: #64748b; font-size: 14px; }
+        .update-item { padding: 12px 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.08); transition: background 0.15s; }
         .update-item:last-child { border-bottom: none; }
         .update-item:hover { background: rgba(102, 126, 234, 0.08); }
         .update-type {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-right: 8px;
-            margin-bottom: 6px;
+            display: inline-block; padding: 3px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 600; margin-right: 8px; margin-bottom: 6px;
         }
         .update-type.voice { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
         .update-type.dub { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
@@ -310,35 +294,16 @@
         .search-clear.visible { display: block; }
         .search-clear:hover { color: #e2e8f0; background: rgba(148, 163, 184, 0.15); }
 
-        /* 🔥 ПЛАВНОЕ РАСКРЫТИЕ ФИЛЬТРОВ */
-        .filter-list-container { 
+        /* 🔥 Плавное раскрытие dropdown поиска и фильтров */
+        .search-dropdown, .filter-list-container {
             display: grid;
             grid-template-rows: 0fr;
-            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.3s ease;
-            margin-top: 0;
-            padding-top: 0;
+            transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .filter-list-container.active { 
-            grid-template-rows: 1fr;
-            margin-top: 16px;
-            overflow-y: auto; 
-        }
-        .filter-list-container > div {
-            overflow: hidden;
-            min-height: 0;
-        }
-
-        .search-dropdown {
-            display: grid;
-            grid-template-rows: 0fr;
-            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 50;
-        }
-        .search-dropdown.active {
+        .search-dropdown.active, .filter-list-container.active {
             grid-template-rows: 1fr;
         }
-        .search-dropdown > div {
+        .search-dropdown > div, .filter-list-container > div {
             overflow: hidden;
             min-height: 0;
         }
@@ -392,11 +357,13 @@
         }
         .search-info-card.past { border-left: 3px solid rgba(148, 163, 184, 0.4); }
         .search-info-card.next { border-left: 3px solid #10b981; }
+        .search-info-card.ended { border-left: 3px solid #a855f7; }
         .search-info-card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
         .search-info-card-series { font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 2px; }
         .search-info-card-meta { font-size: 12px; color: #94a3b8; }
         .search-info-card-date { font-size: 12px; color: #cbd5e1; font-weight: 600; padding: 4px 10px; background: rgba(102, 126, 234, 0.15); border-radius: 6px; flex-shrink: 0; white-space: nowrap; }
         .search-info-card.next .search-info-card-date { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+        .search-info-card.ended .search-info-card-date { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; }
 
         .filter-btn {
             position: relative; display: flex; align-items: center; gap: 8px;
@@ -568,18 +535,20 @@
             </div>
         </header>
 
-        <!-- 🔥 Dropdown поиска вынесен ОТДЕЛЬНО (поверх всего) -->
-        <div id="search-dropdown" class="search-dropdown mb-2">
-            <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
-        </div>
-
-        <!-- Единый контейнер для динамического контента (фильтры + инфо о поиске) -->
+        <!-- 🔥 ЕДИНЫЙ КОНТЕЙНЕР: поиск + фильтры + инфо (всё в одном glass-card) -->
         <div id="dynamic-content" class="mb-6" style="display: none;">
             <div class="glass-card rounded-2xl p-4">
+                <!-- Dropdown поиска (плавное раскрытие внутри контейнера) -->
+                <div id="search-dropdown" class="search-dropdown">
+                    <div class="search-dropdown-inner" id="search-dropdown-inner"></div>
+                </div>
+                
+                <!-- Инфо о поиске (прошедшая/последняя/ближайшая трансляция) -->
                 <div id="search-info-block" class="search-info-block">
                     <div class="search-info-grid" id="search-info-grid"></div>
                 </div>
                 
+                <!-- Результаты фильтров -->
                 <div id="filter-lists">
                     <div id="airing-list" class="filter-list-container"></div>
                     <div id="new-season-list" class="filter-list-container"></div>
@@ -692,56 +661,40 @@
 
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            if (dateStr instanceof Date) {
-                return isNaN(dateStr.getTime()) ? null : dateStr;
-            }
+            if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
             const str = String(dateStr).trim();
             if (!str) return null;
             
             let match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
             if (match) {
-                const day = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const year = parseInt(match[3], 10);
+                const day = parseInt(match[1], 10), month = parseInt(match[2], 10) - 1, year = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
-            
             match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
             if (match) {
-                const day = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const year = parseInt(match[3], 10);
+                const day = parseInt(match[1], 10), month = parseInt(match[2], 10) - 1, year = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
-            
             match = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
             if (match) {
-                const year = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const day = parseInt(match[3], 10);
+                const year = parseInt(match[1], 10), month = parseInt(match[2], 10) - 1, day = parseInt(match[3], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
-            
             match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
             if (match) {
-                const day = parseInt(match[1], 10);
-                const month = parseInt(match[2], 10) - 1;
-                const year = 2000 + parseInt(match[3], 10);
+                const day = parseInt(match[1], 10), month = parseInt(match[2], 10) - 1, year = 2000 + parseInt(match[3], 10);
                 const d = new Date(year, month, day);
                 if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) return d;
             }
-            
             const d = new Date(str);
-            if (!isNaN(d.getTime())) return d;
-            return null;
+            return !isNaN(d.getTime()) ? d : null;
         }
 
         function populateMonthFilter() {
             monthDropdown.innerHTML = '';
-            
             const allOption = document.createElement('div');
             allOption.className = 'custom-select-option all-years';
             allOption.dataset.value = 'all';
@@ -753,7 +706,6 @@
                 yearHeader.className = 'custom-select-option year-header';
                 yearHeader.textContent = `── ${year} год ──`;
                 monthDropdown.appendChild(yearHeader);
-                
                 monthNames.forEach((name, index) => {
                     const option = document.createElement('div');
                     option.className = 'custom-select-option';
@@ -771,13 +723,10 @@
             monthDropdown.querySelectorAll('.custom-select-option:not(.year-header)').forEach(option => {
                 option.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const value = option.dataset.value;
-                    monthFilterInput.value = value;
+                    monthFilterInput.value = option.dataset.value;
                     monthTriggerText.textContent = option.textContent;
-                    
                     monthDropdown.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
                     option.classList.add('selected');
-                    
                     closeMonthDropdown();
                     renderView();
                 });
@@ -829,8 +778,7 @@
             
             if (matches.length === 0) {
                 const converted = convertLayout(query);
-                const convertedLower = converted.toLowerCase();
-                matches = uniqueSeries.filter(s => s.toLowerCase().includes(convertedLower));
+                matches = uniqueSeries.filter(s => s.toLowerCase().includes(converted.toLowerCase()));
                 if (matches.length > 0) this.value = converted;
             }
             
@@ -849,12 +797,11 @@
             
             searchDropdownInner.querySelectorAll('.search-dropdown-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    const seriesName = item.dataset.series;
-                    seriesSearch.value = seriesName;
+                    seriesSearch.value = item.dataset.series;
                     searchClear.classList.add('visible');
-                    activeFilters.search = seriesName;
+                    activeFilters.search = item.dataset.series;
                     closeDropdown();
-                    updateSearchInfo(seriesName);
+                    updateSearchInfo(item.dataset.series);
                     renderView();
                 });
             });
@@ -895,11 +842,14 @@
             return past.length > 0 ? past[0] : null;
         }
 
+        // 🔥 ОБНОВЛЁННАЯ ЛОГИКА: для завершённых сериалов не показываем ближайшую трансляцию
         function updateSearchInfo(seriesName) {
             const pastEvent = findLastPastEvent(seriesName);
             const nextEvent = findNearestEvent(seriesName);
+            const isEnded = isSeriesEnded(seriesName);
             
-            if (!pastEvent && !nextEvent) {
+            // Если ничего нет — скрываем блок
+            if (!pastEvent && !nextEvent && !isEnded) {
                 searchInfoBlock.classList.remove('visible');
                 updateDynamicContentVisibility();
                 return;
@@ -915,50 +865,66 @@
                 else if (season) metaText = `Сезон ${season}`;
                 else if (episode) metaText = `Серия ${episode}`;
                 
-                html += `<div class="search-info-card past" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                // Для завершённых сериалов — особая карточка "Последняя трансляция • Финал сериала"
+                if (isEnded) {
+                    html += `<div class="search-info-card ended" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                        <div>
+                            <div class="search-info-card-label">Последняя трансляция • Финал сериала</div>
+                            <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                            <div class="search-info-card-meta">${metaText}</div>
+                        </div>
+                        <div class="search-info-card-date">${formatDateDMY(pastEvent._parsedDate)}</div>
+                    </div>`;
+                } else {
+                    html += `<div class="search-info-card past" data-date="${formatDateForCell(pastEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                        <div>
+                            <div class="search-info-card-label">Прошедшая трансляция</div>
+                            <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                            <div class="search-info-card-meta">${metaText}</div>
+                        </div>
+                        <div class="search-info-card-date">${formatDateDMY(pastEvent._parsedDate)}</div>
+                    </div>`;
+                }
+            } else if (isEnded) {
+                // Сериал завершён, но прошедших событий нет (странно, но обработаем)
+                html += `<div class="search-info-card ended" style="opacity: 0.7;">
                     <div>
-                        <div class="search-info-card-label">Прошедшая трансляция</div>
+                        <div class="search-info-card-label">Сериал завершён</div>
                         <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
-                        <div class="search-info-card-meta">${metaText}</div>
-                    </div>
-                    <div class="search-info-card-date">${formatDateDMY(pastEvent._parsedDate)}</div>
-                </div>`;
-            } else {
-                html += `<div class="search-info-card past" style="opacity: 0.4;">
-                    <div>
-                        <div class="search-info-card-label">Прошедшая трансляция</div>
-                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
-                        <div class="search-info-card-meta">Нет данных</div>
+                        <div class="search-info-card-meta">Нет данных о трансляциях</div>
                     </div>
                     <div class="search-info-card-date">—</div>
                 </div>`;
             }
             
-            if (nextEvent) {
-                const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
-                const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
-                let metaText = '';
-                if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
-                else if (season) metaText = `Сезон ${season}`;
-                else if (episode) metaText = `Серия ${episode}`;
-                
-                html += `<div class="search-info-card next" data-date="${formatDateForCell(nextEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
-                    <div>
-                        <div class="search-info-card-label">Ближайшая трансляция</div>
-                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
-                        <div class="search-info-card-meta">${metaText}</div>
-                    </div>
-                    <div class="search-info-card-date">${formatDateDMY(nextEvent._parsedDate)}</div>
-                </div>`;
-            } else {
-                html += `<div class="search-info-card next" style="opacity: 0.4;">
-                    <div>
-                        <div class="search-info-card-label">Ближайшая трансляция</div>
-                        <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
-                        <div class="search-info-card-meta">Нет данных</div>
-                    </div>
-                    <div class="search-info-card-date">—</div>
-                </div>`;
+            // Ближайшую трансляцию показываем ТОЛЬКО если сериал НЕ завершён
+            if (!isEnded) {
+                if (nextEvent) {
+                    const season = nextEvent[CONFIG.colSeason] ? nextEvent[CONFIG.colSeason].trim() : '';
+                    const episode = nextEvent[CONFIG.colEpisode] ? nextEvent[CONFIG.colEpisode].trim() : '';
+                    let metaText = '';
+                    if (season && episode) metaText = `Сезон ${season} • Серия ${episode}`;
+                    else if (season) metaText = `Сезон ${season}`;
+                    else if (episode) metaText = `Серия ${episode}`;
+                    
+                    html += `<div class="search-info-card next" data-date="${formatDateForCell(nextEvent._parsedDate)}" data-series="${escapeHtml(seriesName)}">
+                        <div>
+                            <div class="search-info-card-label">Ближайшая трансляция</div>
+                            <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                            <div class="search-info-card-meta">${metaText}</div>
+                        </div>
+                        <div class="search-info-card-date">${formatDateDMY(nextEvent._parsedDate)}</div>
+                    </div>`;
+                } else {
+                    html += `<div class="search-info-card next" style="opacity: 0.4;">
+                        <div>
+                            <div class="search-info-card-label">Ближайшая трансляция</div>
+                            <div class="search-info-card-series">${escapeHtml(seriesName)}</div>
+                            <div class="search-info-card-meta">Нет данных</div>
+                        </div>
+                        <div class="search-info-card-date">—</div>
+                    </div>`;
+                }
             }
             
             searchInfoGrid.innerHTML = html;
@@ -986,19 +952,6 @@
                 renderView();
             });
         });
-
-        // 🔥 Управление видимостью динамического контента
-        function updateDynamicContentVisibility() {
-            const hasSearchInfo = searchInfoBlock.classList.contains('visible');
-            const hasActiveFilters = activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
-            const hasSearchDropdown = searchDropdown.classList.contains('active');
-            
-            if (hasSearchInfo || hasActiveFilters || hasSearchDropdown) {
-                dynamicContent.style.display = 'block';
-            } else {
-                dynamicContent.style.display = 'none';
-            }
-        }
 
         function getLastStatusBefore(seriesName, beforeDate) {
             const relevant = allEvents.filter(e => e[CONFIG.colSeries].trim() === seriesName && e._parsedDate && e._parsedDate <= beforeDate).sort((a, b) => a._parsedDate - b._parsedDate);
@@ -1188,10 +1141,8 @@
                     e.stopPropagation();
                     const seriesName = item.dataset.series;
                     const dateStr = item.dataset.date;
-                    
                     if (selectedEndedSeries === seriesName) selectedEndedSeries = null;
                     else selectedEndedSeries = seriesName;
-                    
                     updateFilterLists();
                     updateDynamicContentVisibility();
                     renderView();
@@ -1242,10 +1193,8 @@
         function matchesActiveFilters(seriesName) {
             const hasAnyFilter = activeFilters.search || activeFilters.airing || activeFilters.newSeason || activeFilters.ended;
             if (!hasAnyFilter) return true;
-            
             if (activeFilters.ended && !activeFilters.search) return true;
             if (activeFilters.newSeason && !activeFilters.search) return true;
-            
             if (activeFilters.search && seriesName !== activeFilters.search) return false;
             if (activeFilters.airing || activeFilters.newSeason || activeFilters.ended) {
                 let matches = false;
@@ -1259,17 +1208,13 @@
 
         function getTodayUpdates() {
             const updates = [];
-            
             allEvents.forEach(event => {
                 const updatedStr = event[CONFIG.colUpdated] ? String(event[CONFIG.colUpdated]).trim() : '';
                 if (!updatedStr) return;
-                
                 const updatedDate = parseDate(updatedStr);
                 if (!updatedDate) return;
-                
                 const isToday = updatedDate.getTime() === today.getTime();
                 const isYesterday = updatedDate.getTime() === yesterday.getTime();
-                
                 if (!isToday && !isYesterday) return;
                 
                 const series = event[CONFIG.colSeries].trim();
@@ -1279,44 +1224,30 @@
                 const dub = event[CONFIG.colDub] ? String(event[CONFIG.colDub]).trim() : '';
                 const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
                 const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
-                
                 const dateLabel = isToday ? 'Сегодня' : 'Вчера';
                 
-                if (voice && voice !== 'ожидаем' && voice !== '') {
-                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                }
-                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
-                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                }
+                if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
                 const statusLower = status.toLowerCase();
-                if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
-                    updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                }
-                if (translator && translator !== 'Не назначен' && translator !== '') {
-                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                }
+                if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
             });
-            
             return updates;
         }
 
         function renderUpdates() {
             todayUpdates = getTodayUpdates();
-            
             if (todayUpdates.length > 0) {
                 updatesBadge.textContent = todayUpdates.length;
                 updatesBadge.style.display = 'block';
             } else {
                 updatesBadge.style.display = 'none';
             }
-            
             if (todayUpdates.length === 0) {
                 updatesList.innerHTML = '<div class="updates-dropdown-empty">Здоровья твоим рукам! Пока нет новостей для тебя</div>';
                 return;
             }
-            
             const typeLabels = { voice: 'Озвучка', dub: 'Дубляж', status: 'Статус', translator: 'Переводчик' };
-            
             updatesList.innerHTML = todayUpdates.map(update => `
                 <div class="update-item">
                     <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
@@ -1328,37 +1259,26 @@
         }
 
         Papa.parse(CONFIG.csvUrl, {
-            download: true, 
-            header: true, 
-            skipEmptyLines: true,
-            dynamicTyping: false,
+            download: true, header: true, skipEmptyLines: true, dynamicTyping: false,
             complete: function(results) {
                 console.log('=== ЗАГРУЗКА CSV ===');
-                console.log('Строк:', results.data.length);
-                console.log('Заголовки:', results.meta.fields);
+                console.log('Строк:', results.data.length, 'Заголовки:', results.meta.fields);
+                if (results.data.length > 0) console.log('Первая строка:', results.data[0]);
                 console.log('Сегодня (дд.мм.гггг):', getTodayFormatted());
                 
-                if (results.data.length > 0) console.log('Первая строка:', results.data[0]);
-                
-                let parsedCount = 0;
-                let failedCount = 0;
-                
+                let parsedCount = 0, failedCount = 0;
                 allEvents = results.data
                     .filter(row => row[CONFIG.colDate] && row[CONFIG.colSeries])
                     .map(row => {
                         const d = parseDate(row[CONFIG.colDate]);
                         if (d) parsedCount++;
-                        else {
-                            failedCount++;
-                            if (failedCount <= 5) console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для:', row[CONFIG.colSeries]);
-                        }
+                        else { failedCount++; if (failedCount <= 5) console.warn('Не удалось распарсить дату:', row[CONFIG.colDate], 'для:', row[CONFIG.colSeries]); }
                         return { ...row, _parsedDate: d };
                     })
                     .filter(row => row._parsedDate !== null)
                     .sort((a, b) => (a._parsedDate || 0) - (b._parsedDate || 0));
                 
-                console.log(`✅ Распарсено: ${parsedCount}, ❌ Ошибок: ${failedCount}`);
-                console.log('Событий:', allEvents.length);
+                console.log(`✅ Распарсено: ${parsedCount}, ❌ Ошибок: ${failedCount}, Событий: ${allEvents.length}`);
                 
                 const seriesSet = new Set(), yearsSet = new Set();
                 allEvents.forEach(event => { 
@@ -1369,8 +1289,7 @@
                 uniqueSeries = Array.from(seriesSet).sort();
                 availableYears = Array.from(yearsSet).sort();
                 
-                console.log('Сериалы:', uniqueSeries);
-                console.log('Годы:', availableYears);
+                console.log('Сериалы:', uniqueSeries, 'Годы:', availableYears);
                 
                 populateMonthFilter();
                 renderUpdates();
@@ -1406,18 +1325,15 @@
             
             if (filter.mode === 'all') {
                 currentRenderContext = { mode: 'year', year: null, month: null };
-                
                 const monthsWithEvents = new Set();
                 allEvents.forEach(event => {
                     if (!event._parsedDate || !matchesActiveFilters(event[CONFIG.colSeries].trim())) return;
                     monthsWithEvents.add(`${event._parsedDate.getFullYear()}-${event._parsedDate.getMonth()}`);
                 });
-                
                 if (monthsWithEvents.size === 0) {
                     wrapper.innerHTML = '<div class="text-center text-slate-400 py-12">Нет событий по выбранным фильтрам</div>';
                     return;
                 }
-                
                 Array.from(monthsWithEvents).sort((a, b) => {
                     const [ya, ma] = a.split('-').map(Number);
                     const [yb, mb] = b.split('-').map(Number);
@@ -1439,7 +1355,6 @@
             title.className = 'month-title';
             title.textContent = `${monthNames[monthIndex]} ${year}`;
             wrapper.appendChild(title);
-
             const header = document.createElement('div');
             header.className = 'calendar-header';
             dayNamesFull.forEach((name, idx) => {
@@ -1449,7 +1364,6 @@
                 header.appendChild(dayEl);
             });
             wrapper.appendChild(header);
-
             const grid = document.createElement('div');
             grid.className = 'calendar-grid';
             wrapper.appendChild(grid);
@@ -1477,7 +1391,6 @@
 
             const useAllEvents = activeFilters.ended || activeFilters.newSeason;
             const eventsByMonthDay = {};
-            
             allEvents.forEach(event => {
                 const d = event._parsedDate;
                 if (d && d.getMonth() === monthIndex && d.getFullYear() === year) {
@@ -1490,7 +1403,6 @@
             });
 
             const isCurrentMonth = today.getMonth() === monthIndex && today.getFullYear() === year;
-
             const allCells = [];
 
             if (startDayOfWeek > 0) {
@@ -1502,16 +1414,13 @@
                     const absolutePosition = i;
                     const row = Math.floor(absolutePosition / 7) + 1;
                     const col = (absolutePosition % 7) + 1;
-                    
                     const dateObj = new Date(prevYear, prevMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                    
                     const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === prevYear && d.getMonth() === prevMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
-                    
                     allCells.push({ type: 'prev-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay: true, isToday: false });
                 }
             }
@@ -1520,15 +1429,12 @@
                 const dateObj = new Date(year, monthIndex, day);
                 const dayOfWeek = dateObj.getDay();
                 const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                
                 const absolutePosition = startDayOfWeek + (day - 1);
                 const row = Math.floor(absolutePosition / 7) + 1;
                 const col = (absolutePosition % 7) + 1;
-                
                 const isPastDay = dateObj < today;
                 const isToday = isCurrentMonth && day === today.getDate();
                 const dayEvents = eventsByMonthDay[day] || [];
-                
                 allCells.push({ type: 'current-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay, isToday });
             }
 
@@ -1542,16 +1448,13 @@
                     const dateObj = new Date(nextYear, nextMonth, day);
                     const dayOfWeek = dateObj.getDay();
                     const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-                    
                     const absolutePosition = totalCells + i;
                     const row = Math.floor(absolutePosition / 7) + 1;
                     const col = (absolutePosition % 7) + 1;
-                    
                     const dayEvents = allEvents.filter(e => {
                         const d = e._parsedDate;
                         return d && d.getFullYear() === nextYear && d.getMonth() === nextMonth && d.getDate() === day && matchesActiveFilters(e[CONFIG.colSeries].trim());
                     });
-                    
                     allCells.push({ type: 'next-month', day, dayIndex, dateObj, dayEvents, row, col, isPastDay: false, isToday: false });
                 }
             }
@@ -1559,29 +1462,22 @@
             let minRow = 1;
             if (activeFilters.airing) {
                 for (const cell of allCells) {
-                    if (!cell.isPastDay || cell.dayEvents.length > 0) {
-                        minRow = cell.row;
-                        break;
-                    }
+                    if (!cell.isPastDay || cell.dayEvents.length > 0) { minRow = cell.row; break; }
                 }
             }
 
-            const visibleCells = allCells
-                .filter(cell => cell.row >= minRow)
-                .map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
+            const visibleCells = allCells.filter(cell => cell.row >= minRow).map(cell => ({ ...cell, displayRow: cell.row - minRow + 1 }));
 
             visibleCells.forEach(cell => {
                 const { type, day, dayIndex, dateObj, dayEvents, col, displayRow, isPastDay, isToday } = cell;
-                
                 let cellEl;
                 
-                if (type === 'prev-month') {
+                if (type === 'prev-month' || type === 'next-month') {
                     cellEl = document.createElement('div');
-                    cellEl.className = 'day-cell prev-month-day';
+                    cellEl.className = `day-cell ${type === 'prev-month' ? 'prev-month-day' : 'next-month-day'}`;
                     cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.2; filter: grayscale(0.6);';
                     cellEl.style.gridColumn = col;
                     cellEl.style.gridRow = displayRow;
-                    
                     const isWeekend = dayIndex >= 5;
                     const dayHeader = document.createElement('div');
                     dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
@@ -1589,38 +1485,17 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-                    applyCellHighlighting(cellEl, dayEvents, dateObj, true, false);
-                    grid.appendChild(cellEl);
-                } else if (type === 'next-month') {
-                    cellEl = document.createElement('div');
-                    cellEl.className = 'day-cell next-month-day';
-                    cellEl.style.cssText = 'background: rgba(15, 23, 42, 0.3); min-height: 120px; padding: 8px; display: flex; flex-direction: column; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.1); opacity: 0.2; filter: grayscale(0.6);';
-                    cellEl.style.gridColumn = col;
-                    cellEl.style.gridRow = displayRow;
-                    
-                    const isWeekend = dayIndex >= 5;
-                    const dayHeader = document.createElement('div');
-                    dayHeader.style.cssText = 'display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;';
-                    const isMobile = window.innerWidth < 768;
-                    const dayName = isMobile ? dayNamesShort[dayIndex] : '';
-                    dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b'};">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: #475569;">${day}</span>`;
-                    cellEl.appendChild(dayHeader);
-                    applyCellHighlighting(cellEl, dayEvents, dateObj, false, false);
+                    applyCellHighlighting(cellEl, dayEvents, dateObj, type === 'prev-month', false);
                     grid.appendChild(cellEl);
                 } else {
                     const isWeekend = dayIndex >= 5;
                     const isTodayHighlight = isToday && !activeFilters.ended;
-                    
-                    let cellClasses = 'day-cell';
                     let cellStyle = 'background: rgba(30, 41, 59, 0.4); min-height: 120px; padding: 8px; display: flex; flex-direction: column; position: relative; transition: all 0.3s; border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.2);';
                     cellStyle += ` grid-column: ${col}; grid-row: ${displayRow};`;
-                    
-                    if (isTodayHighlight) {
-                        cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
-                    }
+                    if (isTodayHighlight) cellStyle += ' box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1); border-color: rgba(167, 139, 250, 0.5);';
                     
                     cellEl = document.createElement('div');
-                    cellEl.className = cellClasses;
+                    cellEl.className = 'day-cell';
                     cellEl.style.cssText = cellStyle;
                     if (isToday && !activeFilters.ended) cellEl.id = 'today-cell';
                     
@@ -1630,12 +1505,7 @@
                     const dayName = isMobile ? dayNamesShort[dayIndex] : '';
                     dayHeader.innerHTML = `${dayName ? `<span style="font-size: 12px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : (isWeekend ? 'rgba(167, 139, 250, 0.7)' : '#64748b')}">${dayName}</span>` : '<span></span>'}<span style="font-size: 14px; font-weight: 700; color: ${isTodayHighlight ? '#a78bfa' : '#cbd5e1'};">${day}</span>`;
                     cellEl.appendChild(dayHeader);
-
-                    if (activeFilters.airing && isPastDay) {
-                        cellEl.style.opacity = '0.2';
-                        cellEl.style.filter = 'grayscale(0.6)';
-                    }
-                    
+                    if (activeFilters.airing && isPastDay) { cellEl.style.opacity = '0.2'; cellEl.style.filter = 'grayscale(0.6)'; }
                     applyCellHighlighting(cellEl, dayEvents, dateObj, false, isToday);
                     grid.appendChild(cellEl);
                 }
@@ -1667,12 +1537,10 @@
                         else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                     });
                 } else if (dayEvents.length > 0) {
-                    cell.style.opacity = '0.2';
-                    cell.style.filter = 'grayscale(0.6)';
+                    cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
                     dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
                 } else {
-                    cell.style.opacity = '0.2';
-                    cell.style.filter = 'grayscale(0.6)';
+                    cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
                     if (!isPrevMonth) {
                         const emptyBlock = document.createElement('div');
                         emptyBlock.style.cssText = 'opacity: 0.25; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; margin-top: 4px;';
@@ -1681,15 +1549,9 @@
                     }
                 }
             } else if (activeFilters.newSeason && selectedNewSeasonSeries) {
-                const hasSelectedNewSeason = dayEvents.some(e => {
-                    if (e[CONFIG.colSeries].trim() !== selectedNewSeasonSeries) return false;
-                    const status = String(e[CONFIG.colStatus] || '').toLowerCase();
-                    return status.includes('финал сезона') || status.includes('в эфире');
-                });
-                
+                const hasSelectedNewSeason = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedNewSeasonSeries && (String(e[CONFIG.colStatus] || '').toLowerCase().includes('финал сезона') || String(e[CONFIG.colStatus] || '').toLowerCase().includes('в эфире')));
                 if (hasSelectedNewSeason) {
-                    cell.style.borderColor = 'rgba(59, 130, 246, 0.6)';
-                    cell.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.3)';
+                    cell.style.borderColor = 'rgba(59, 130, 246, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.3)';
                     dayEvents.forEach(event => {
                         const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                         if (event[CONFIG.colSeries].trim() === selectedNewSeasonSeries && (status.includes('финал сезона') || status.includes('в эфире')))
@@ -1697,8 +1559,7 @@
                         else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                     });
                 } else {
-                    cell.style.opacity = '0.2';
-                    cell.style.filter = 'grayscale(0.6)';
+                    cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
                     if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
                     else if (!isPrevMonth) {
                         const emptyBlock = document.createElement('div');
@@ -1709,13 +1570,10 @@
                 }
             } else if (activeFilters.ended) {
                 const hasEndedSeries = dayEvents.some(e => String(e[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала'));
-                
                 if (selectedEndedSeries) {
                     const hasSelectedEnded = dayEvents.some(e => e[CONFIG.colSeries].trim() === selectedEndedSeries && String(e[CONFIG.colStatus] || '').toLowerCase().includes('финал сериала'));
-                    
                     if (hasSelectedEnded) {
-                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)';
-                        cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
+                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (event[CONFIG.colSeries].trim() === selectedEndedSeries && status.includes('финал сериала'))
@@ -1723,8 +1581,7 @@
                             else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
                     } else {
-                        cell.style.opacity = '0.2';
-                        cell.style.filter = 'grayscale(0.6)';
+                        cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
                         if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
                         else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
@@ -1735,16 +1592,14 @@
                     }
                 } else {
                     if (hasEndedSeries) {
-                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)';
-                        cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
+                        cell.style.borderColor = 'rgba(168, 85, 247, 0.6)'; cell.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.3)';
                         dayEvents.forEach(event => {
                             const status = String(event[CONFIG.colStatus] || '').toLowerCase();
                             if (status.includes('финал сериала')) cell.appendChild(createEventElement(event, false, true, false, false, isToday));
                             else cell.appendChild(createEventElement(event, true, false, false, false, isToday));
                         });
                     } else {
-                        cell.style.opacity = '0.2';
-                        cell.style.filter = 'grayscale(0.6)';
+                        cell.style.opacity = '0.2'; cell.style.filter = 'grayscale(0.6)';
                         if (dayEvents.length > 0) dayEvents.forEach(event => cell.appendChild(createEventElement(event, true, false, false, false, isToday)));
                         else if (!isPrevMonth) {
                             const emptyBlock = document.createElement('div');
@@ -1775,23 +1630,19 @@
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let dotClass = 'dot-active', isMoved = false, isSpecial = false, specialText = '';
             let bgClass = 'bg-slate-800/60 border-slate-600/30 hover:bg-slate-800/80';
-
             const eventDate = event._parsedDate;
             const isPast = eventDate && eventDate < today;
-            
             const isDeepFaded = isFaded;
             const isLightFaded = isPast && !isFaded;
             
             if (statusRaw.includes('финал сезона') || statusRaw.includes('финал сериала') || statusRaw.includes('новинка')) {
-                isSpecial = true;
-                specialText = statusRaw;
+                isSpecial = true; specialText = statusRaw;
                 bgClass = 'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20';
                 if (isToday) { dotClass = 'dot-special-today'; bgClass = 'today-bg-special'; }
                 else if (isDeepFaded || isLightFaded) dotClass = 'dot-special-past';
                 else dotClass = 'dot-special';
             } else if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) {
-                isMoved = true;
-                bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
+                isMoved = true; bgClass = 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20';
                 if (isToday) { dotClass = 'dot-moved-today'; bgClass = 'today-bg-moved'; }
                 else if (isDeepFaded || isLightFaded) dotClass = 'dot-moved-past';
                 else dotClass = 'dot-moved';
@@ -1808,7 +1659,6 @@
             if (isEndedHighlight) extraClasses += ' highlighted-event';
             if (isSearchHighlight) extraClasses += ' search-nearest-event';
             if (isNewSeasonHighlight) extraClasses += ' highlighted-new-season-event';
-            
             eventEl.className = `event-card text-xs p-2 rounded-xl border mb-1.5 ${bgClass} ${extraClasses}`;
             
             const isNovelty = isSpecial && specialText.includes('новинка');
@@ -1853,23 +1703,13 @@
                     if (isMobile) {
                         if (!noveltyFirstClick.has(noveltyKey)) {
                             const wrapper = eventEl.querySelector('.novelty-wrapper');
-                            if (wrapper) {
-                                wrapper.classList.add('show-tooltip');
-                                noveltyFirstClick.add(noveltyKey);
-                                setTimeout(() => { wrapper.classList.remove('show-tooltip'); noveltyFirstClick.delete(noveltyKey); }, 2000);
-                            }
-                        } else {
-                            noveltyFirstClick.delete(noveltyKey);
-                            openModal(event);
-                        }
-                    } else {
-                        openModal(event);
-                    }
+                            if (wrapper) { wrapper.classList.add('show-tooltip'); noveltyFirstClick.add(noveltyKey); setTimeout(() => { wrapper.classList.remove('show-tooltip'); noveltyFirstClick.delete(noveltyKey); }, 2000); }
+                        } else { noveltyFirstClick.delete(noveltyKey); openModal(event); }
+                    } else { openModal(event); }
                 });
             } else {
                 eventEl.addEventListener('click', (e) => { e.stopPropagation(); openModal(event); });
             }
-            
             return eventEl;
         }
 
@@ -1889,11 +1729,9 @@
             const statusRaw = (event[CONFIG.colStatus] || '').trim().toLowerCase();
             let isMoved = false;
             if (statusRaw.includes('перенес') || statusRaw.includes('перенос') || statusRaw.includes('измен')) isMoved = true;
-
             const backContent = document.getElementById('modal-back-content');
             backContent.innerHTML = '';
             const rows = [];
-
             if (isMoved) {
                 const reason = event[CONFIG.colMoveReason] ? event[CONFIG.colMoveReason].trim() : '';
                 const answer = event[CONFIG.colMoveAnswer] ? event[CONFIG.colMoveAnswer].trim() : '';
@@ -1902,21 +1740,14 @@
             } else {
                 const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
                 if (translator) rows.push({ label: '🌐 Переводчик', value: translator });
-                
                 const voice = event[CONFIG.colVoice] ? event[CONFIG.colVoice].trim() : '';
                 const dub = event[CONFIG.colDub] ? event[CONFIG.colDub].trim() : '';
-                let voiceValue = 'ожидаем';
-                if (voice) voiceValue = formatDateWithDay(voice);
+                let voiceValue = 'ожидаем'; if (voice) voiceValue = formatDateWithDay(voice);
                 rows.push({ label: '🎙️ Озвучка от AlisaDirilis', value: voiceValue });
                 let dubValue = 'ожидаем';
-                if (dub) {
-                    const dubLower = dub.toLowerCase();
-                    if (dubLower.includes('не будет')) dubValue = 'Не будет';
-                    else dubValue = formatDateWithDay(dub);
-                }
+                if (dub) { const dubLower = dub.toLowerCase(); if (dubLower.includes('не будет')) dubValue = 'Не будет'; else dubValue = formatDateWithDay(dub); }
                 rows.push({ label: '🎤 Дубляж', value: dubValue });
             }
-
             rows.forEach(row => {
                 const rowEl = document.createElement('div');
                 rowEl.className = 'info-row';
@@ -1927,7 +1758,6 @@
                 }
                 backContent.appendChild(rowEl);
             });
-
             backContent.querySelectorAll('.quote-box').forEach(box => {
                 box.addEventListener('click', async (e) => {
                     e.stopPropagation();
@@ -1935,39 +1765,18 @@
                     try {
                         await navigator.clipboard.writeText(text);
                         box.classList.add('copied');
-                        const hint = box.querySelector('.copy-hint-text');
-                        if (hint) hint.textContent = '✓ Скопировано!';
-                        const hintContainer = box.querySelector('.copy-hint');
-                        if (hintContainer) hintContainer.classList.add('copied');
-                        setTimeout(() => {
-                            box.classList.remove('copied');
-                            if (hint) hint.textContent = 'Нажмите, чтобы скопировать';
-                            if (hintContainer) hintContainer.classList.remove('copied');
-                        }, 2000);
+                        const hint = box.querySelector('.copy-hint-text'); if (hint) hint.textContent = '✓ Скопировано!';
+                        const hintContainer = box.querySelector('.copy-hint'); if (hintContainer) hintContainer.classList.add('copied');
+                        setTimeout(() => { box.classList.remove('copied'); if (hint) hint.textContent = 'Нажмите, чтобы скопировать'; if (hintContainer) hintContainer.classList.remove('copied'); }, 2000);
                     } catch (err) {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0';
+                        const textarea = document.createElement('textarea'); textarea.value = text; textarea.style.position = 'fixed'; textarea.style.opacity = '0';
                         document.body.appendChild(textarea); textarea.select();
-                        try {
-                            document.execCommand('copy');
-                            box.classList.add('copied');
-                            const hint = box.querySelector('.copy-hint-text');
-                            if (hint) hint.textContent = '✓ Скопировано!';
-                            setTimeout(() => { box.classList.remove('copied'); if (hint) hint.textContent = 'Нажмите, чтобы скопировать'; }, 2000);
-                        } catch (e2) { console.error('Не удалось скопировать', e2); }
+                        try { document.execCommand('copy'); box.classList.add('copied'); const hint = box.querySelector('.copy-hint-text'); if (hint) hint.textContent = '✓ Скопировано!'; setTimeout(() => { box.classList.remove('copied'); if (hint) hint.textContent = 'Нажмите, чтобы скопировать'; }, 2000); } catch (e2) { console.error('Не удалось скопировать', e2); }
                         document.body.removeChild(textarea);
                     }
                 });
             });
-
-            setTimeout(() => {
-                const backFace = document.querySelector('.flip-back');
-                const contentHeight = backFace.scrollHeight;
-                const minHeight = Math.max(200, contentHeight + 60);
-                flipContainer.style.height = `${minHeight}px`;
-                flipCard.style.height = `${minHeight}px`;
-            }, 10);
-
+            setTimeout(() => { const backFace = document.querySelector('.flip-back'); const minHeight = Math.max(200, backFace.scrollHeight + 60); flipContainer.style.height = `${minHeight}px`; flipCard.style.height = `${minHeight}px`; }, 10);
             flipCard.classList.remove('flipped');
             modalOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1977,21 +1786,13 @@
         function closeModal() {
             modalOverlay.classList.remove('active');
             document.body.style.overflow = '';
-            setTimeout(() => {
-                flipCard.classList.remove('flipped');
-                setTimeout(() => { flipContainer.style.height = ''; flipCard.style.height = ''; }, 300);
-            }, 300);
+            setTimeout(() => { flipCard.classList.remove('flipped'); setTimeout(() => { flipContainer.style.height = ''; flipCard.style.height = ''; }, 300); }, 300);
         }
 
         modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal(); });
 
-        function escapeHtml(text) { 
-            if (!text) return ''; 
-            const div = document.createElement('div'); 
-            div.textContent = text; 
-            return div.innerHTML; 
-        }
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     </script>
 </body>
 </html>
