@@ -741,7 +741,6 @@
         let activeFilters = { search: '', airing: false, newSeason: false, ended: false, voice: false, dub: false };
         let selectedEndedSeries = null;
         let selectedNewSeasonSeries = null;
-        // 🔥 Ключи "серия|дата" для трёх фильтров
         let selectedAiringKey = null;
         let selectedVoiceKey = null;
         let selectedDubKey = null;
@@ -1469,7 +1468,6 @@
             if (activeFilters.ended) activeFilterNames.push('ended');
             const multipleFilters = activeFilterNames.length > 1;
             
-            // 🔥 В ЭФИРЕ — идентичная логика
             if (activeFilters.airing) {
                 const items = getAiringList();
                 if (items.length > 0) {
@@ -1574,7 +1572,6 @@
                 setTimeout(() => { if (!activeFilters.ended) endedList.innerHTML = ''; }, 400);
             }
 
-            // 🔥 ALISADIRILIS — идентичная логика "В эфире"
             if (activeFilters.voice) {
                 const waiting = getVoiceWaitingList();
                 const released = getVoiceReleasedList();
@@ -1632,7 +1629,6 @@
                 setTimeout(() => { if (!activeFilters.voice) voiceList.innerHTML = ''; }, 400);
             }
 
-            // 🔥 ДУБЛЯЖ — идентичная логика "В эфире"
             if (activeFilters.dub) {
                 const waiting = getDubWaitingList();
                 const released = getDubReleasedList();
@@ -1691,7 +1687,6 @@
             }
         }
 
-        // 🔥 Универсальный обработчик — работает одинаково для всех трёх фильтров
         function attachFilterItemClickHandlers(container, filterType) {
             container.querySelectorAll('.filter-list-item').forEach(item => {
                 item.addEventListener('click', (e) => {
@@ -2166,7 +2161,6 @@
             });
         }
 
-        // 🔥 ИДЕНТИЧНАЯ ЛОГИКА ДЛЯ ВСЕХ ТРЁХ ФИЛЬТРОВ: подсвечивается только конкретная карточка на конкретную дату
         function applyCellHighlighting(cell, dayEvents, dateObj, isPrevMonth, isToday) {
             const isPastDay = dateObj < today;
             
@@ -2265,13 +2259,15 @@
                     }
                 }
             } else if (activeFilters.airing) {
-                // 🔥 Идентичная логика для всех трёх фильтров
                 if (selectedAiringKey) {
                     const [selSeries, selDate] = selectedAiringKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
+                        // 🔥 Подсветка ячейки как у ended/newSeason
+                        cell.style.borderColor = 'rgba(16, 185, 129, 0.6)';
+                        cell.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedAiringKey)
@@ -2299,13 +2295,15 @@
                     }
                 }
             } else if (activeFilters.voice) {
-                // 🔥 Идентичная логика для AlisaDirilis
                 if (selectedVoiceKey) {
                     const [selSeries, selDate] = selectedVoiceKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
+                        // 🔥 Подсветка ячейки как у ended/newSeason
+                        cell.style.borderColor = 'rgba(249, 115, 22, 0.6)';
+                        cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedVoiceKey)
@@ -2333,13 +2331,15 @@
                     }
                 }
             } else if (activeFilters.dub) {
-                // 🔥 Идентичная логика для Дубляж
                 if (selectedDubKey) {
                     const [selSeries, selDate] = selectedDubKey.split('|');
                     const hasSelectedInCell = dayEvents.some(e => 
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
+                        // 🔥 Подсветка ячейки как у ended/newSeason
+                        cell.style.borderColor = 'rgba(236, 72, 153, 0.6)';
+                        cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedDubKey)
