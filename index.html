@@ -285,7 +285,6 @@
             white-space: nowrap;
         }
         .updates-day-divider-label.today { color: #6ee7b7; }
-        /* 🔥 Цвет "Вчера" — тёмно-зелёный как у прошедших трансляций */
         .updates-day-divider-label.yesterday { color: #065f46; }
 
         .month-title {
@@ -813,7 +812,6 @@
             return String(text || '').toLowerCase().replace(/ё/g, 'е');
         }
 
-        // 🔥 Расстояние Левенштейна для нечёткого поиска
         function levenshteinDistance(a, b) {
             const matrix = [];
             for (let i = 0; i <= b.length; i++) matrix[i] = [i];
@@ -835,7 +833,6 @@
             return matrix[b.length][a.length];
         }
 
-        // 🔥 Допустимое количество ошибок в зависимости от длины
         function getMaxErrors(len) {
             if (len <= 4) return 1;
             if (len <= 8) return 2;
@@ -1218,7 +1215,6 @@
         function openDropdown() { searchDropdown.classList.add('active'); }
         function closeDropdown() { searchDropdown.classList.remove('active'); }
 
-        // 🔥 Нечёткий поиск с поддержкой опечаток
         seriesSearch.addEventListener('input', function() {
             let query = this.value.trim();
             searchClear.classList.toggle('visible', this.value.length > 0);
@@ -1233,16 +1229,13 @@
             
             const queryNormalized = normalizeSearch(query);
             
-            // 1. Точное вхождение (подстрока)
             let exactMatches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
             
-            // 2. Если точных нет — нечёткий поиск по расстоянию Левенштейна
             let fuzzyMatches = [];
             if (exactMatches.length === 0 && queryNormalized.length >= 2) {
                 const maxErrors = getMaxErrors(queryNormalized.length);
                 const scored = uniqueSeries.map(s => {
                     const sNorm = normalizeSearch(s);
-                    // Проверяем расстояние между запросом и каждым подстрокой сериала
                     let bestDist = Infinity;
                     for (let start = 0; start <= sNorm.length - queryNormalized.length; start++) {
                         for (let len = Math.max(queryNormalized.length - 1, queryNormalized.length); len <= queryNormalized.length + 2 && start + len <= sNorm.length; len++) {
@@ -1251,7 +1244,6 @@
                             if (dist < bestDist) bestDist = dist;
                         }
                     }
-                    // Также проверяем полное название
                     const fullDist = levenshteinDistance(queryNormalized, sNorm);
                     if (fullDist < bestDist) bestDist = fullDist;
                     return { name: s, dist: bestDist };
@@ -1267,7 +1259,6 @@
                 return;
             }
             
-            // Показываем сначала точные, потом нечёткие
             const displayMatches = exactMatches.length > 0 ? exactMatches : fuzzyMatches;
             const isFuzzy = exactMatches.length === 0;
             
@@ -1859,6 +1850,7 @@
             }
         }
 
+        // 🔥 ИСПРАВЛЕНО: подсветка конкретной карточки без затемнения других
         function highlightCell(day, seriesName) {
             let cellFound = false;
             
@@ -1870,9 +1862,23 @@
                         const title = card.querySelector('.event-title');
                         if (title && title.textContent.trim() === seriesName) {
                             cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                            
+                            // 🔥 Подсветка ячейки
                             cell.style.transition = 'all 0.5s ease';
                             cell.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.8)';
-                            setTimeout(() => { cell.style.boxShadow = ''; }, 2500);
+                            
+                            // 🔥 Подсветка конкретной карточки
+                            card.style.transition = 'all 0.5s ease';
+                            card.style.borderColor = 'rgba(102, 126, 234, 0.9)';
+                            card.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.6)';
+                            card.style.background = 'rgba(102, 126, 234, 0.2)';
+                            
+                            setTimeout(() => { 
+                                cell.style.boxShadow = ''; 
+                                card.style.borderColor = '';
+                                card.style.boxShadow = '';
+                                card.style.background = '';
+                            }, 3000);
                             cellFound = true;
                         }
                     });
@@ -2002,14 +2008,23 @@
             
             updatesList.innerHTML = html;
             
+            // 🔥 Обработчик клика на обновление — переход к трансляции БЕЗ затемнения
             updatesList.querySelectorAll('.update-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const dateStr = item.dataset.date;
                     const series = item.dataset.series;
                     if (dateStr && series) {
+                        // 🔥 Сбрасываем выбранные ключи фильтров, чтобы не было затемнения
+                        selectedAiringKey = null;
+                        selectedVoiceKey = null;
+                        selectedDubKey = null;
+                        
+                        // Закрываем dropdown обновлений
                         updatesDropdown.classList.remove('open');
                         updatesBtn.classList.remove('active');
+                        
+                        // Переходим к трансляции
                         scrollToCell(dateStr, series);
                     }
                 });
