@@ -255,7 +255,6 @@
             display: inline-block; padding: 3px 8px; border-radius: 6px;
             font-size: 11px; font-weight: 600; margin-right: 8px; margin-bottom: 6px;
         }
-        /* 🔥 Оранжевый цвет для Озвучки (как у AlisaDirilis) */
         .update-type.voice { background: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
         .update-type.dub { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
         .update-type.status { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -264,7 +263,6 @@
         .update-detail { font-size: 13px; color: #94a3b8; line-height: 1.4; }
         .update-date-label { font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic; }
         
-        /* 🔥 Разделитель между днями в обновлениях */
         .updates-day-divider {
             display: flex;
             align-items: center;
@@ -803,7 +801,6 @@
             return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
         }
 
-        // 🔥 Нормализация для поиска: ё → е, нижний регистр
         function normalizeSearch(text) {
             return String(text || '').toLowerCase().replace(/ё/g, 'е');
         }
@@ -1195,10 +1192,7 @@
                 return; 
             }
             
-            // 🔥 Нормализация запроса: ё → е, нижний регистр
             const queryNormalized = normalizeSearch(query);
-            
-            // 🔥 Поиск с учётом ё/е и регистра
             let matches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
             
             if (matches.length === 0) {
@@ -1889,9 +1883,9 @@
                 }
                 
                 if (changeType === 'manual' || changeType === '') {
-                    if if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                     if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
-                    const statusStatusLower = status.toLowerCase();
+                    const statusLower = status.toLowerCase();
                     if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                     if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                 }
@@ -1914,7 +1908,6 @@
             }
             const typeLabels = { voice: 'Озвучка', dub: 'Дубляж', status: 'Статус', translator: 'Переводчик' };
             
-            // 🔥 Группировка по дням
             const todayItems = todayUpdates.filter(u => u.dateValue === 'today');
             const yesterdayItems = todayUpdates.filter(u => u.dateValue === 'yesterday');
             
@@ -1946,7 +1939,6 @@
             
             updatesList.innerHTML = html;
             
-            // 🔥 Обработчики клика на обновления
             updatesList.querySelectorAll('.update-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
