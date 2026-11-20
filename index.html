@@ -248,20 +248,46 @@
             z-index: 10;
         }
         .updates-dropdown-empty { padding: 24px 16px; text-align: center; color: #64748b; font-size: 14px; }
-        .update-item { padding: 12px 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.08); transition: background 0.15s; }
+        .update-item { padding: 12px 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.08); transition: background 0.15s; cursor: pointer; }
         .update-item:last-child { border-bottom: none; }
         .update-item:hover { background: rgba(102, 126, 234, 0.08); }
         .update-type {
             display: inline-block; padding: 3px 8px; border-radius: 6px;
             font-size: 11px; font-weight: 600; margin-right: 8px; margin-bottom: 6px;
         }
-        .update-type.voice { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        /* 🔥 Оранжевый цвет для Озвучки (как у AlisaDirilis) */
+        .update-type.voice { background: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
         .update-type.dub { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
         .update-type.status { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
         .update-type.translator { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
         .update-series { font-weight: 600; color: #e2e8f0; font-size: 14px; margin-bottom: 4px; }
         .update-detail { font-size: 13px; color: #94a3b8; line-height: 1.4; }
         .update-date-label { font-size: 11px; color: #64748b; margin-top: 4px; font-style: italic; }
+        
+        /* 🔥 Разделитель между днями в обновлениях */
+        .updates-day-divider {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px 6px;
+            gap: 12px;
+        }
+        .updates-day-divider::before,
+        .updates-day-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent);
+        }
+        .updates-day-divider-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            white-space: nowrap;
+        }
+        .updates-day-divider-label.today { color: #6ee7b7; }
+        .updates-day-divider-label.yesterday { color: #fdba74; }
 
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
@@ -777,6 +803,11 @@
             return text.split('').map(ch => layoutMap[ch] !== undefined ? layoutMap[ch] : ch).join('');
         }
 
+        // 🔥 Нормализация для поиска: ё → е, нижний регистр
+        function normalizeSearch(text) {
+            return String(text || '').toLowerCase().replace(/ё/g, 'е');
+        }
+
         function getTodayFormatted() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
@@ -1164,12 +1195,16 @@
                 return; 
             }
             
-            const queryLower = query.toLowerCase();
-            let matches = uniqueSeries.filter(s => s.toLowerCase().includes(queryLower));
+            // 🔥 Нормализация запроса: ё → е, нижний регистр
+            const queryNormalized = normalizeSearch(query);
+            
+            // 🔥 Поиск с учётом ё/е и регистра
+            let matches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
             
             if (matches.length === 0) {
                 const converted = convertLayout(query);
-                matches = uniqueSeries.filter(s => s.toLowerCase().includes(converted.toLowerCase()));
+                const convertedNormalized = normalizeSearch(converted);
+                matches = uniqueSeries.filter(s => normalizeSearch(s).includes(convertedNormalized));
                 if (matches.length > 0) this.value = converted;
             }
             
@@ -1350,7 +1385,6 @@
                 if (!activeFilters.voice) selectedVoiceKey = null;
                 if (!activeFilters.dub) selectedDubKey = null;
                 
-                // 🔥 Для "В эфире" — Неделя, для AlisaDirilis и Дубляж — Прошлая неделя
                 if (filter === 'airing' && !wasActive) {
                     calendarViewFilter = 'week';
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
@@ -1836,29 +1870,30 @@
                 const translator = event[CONFIG.colTranslator] ? event[CONFIG.colTranslator].trim() : '';
                 const status = event[CONFIG.colStatus] ? event[CONFIG.colStatus].trim() : '';
                 const dateLabel = isToday ? 'Сегодня' : 'Вчера';
+                const dateValue = isToday ? 'today' : 'yesterday';
                 
                 if (changeType.includes('voice') && voice && voice !== 'ожидаем' && voice !== '') {
-                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                 }
                 if (changeType.includes('dub') && dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
-                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                 }
                 if (changeType.includes('status')) {
                     const statusLower = status.toLowerCase();
                     if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
-                        updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                        updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                     }
                 }
                 if (changeType.includes('translator') && translator && translator !== 'Не назначен' && translator !== '') {
-                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                 }
                 
                 if (changeType === 'manual' || changeType === '') {
-                    if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                    if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                    const statusLower = status.toLowerCase();
-                    if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
-                    if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel });
+                    if if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    const statusStatusLower = status.toLowerCase();
+                    if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
                 }
             });
             
@@ -1878,14 +1913,52 @@
                 return;
             }
             const typeLabels = { voice: 'Озвучка', dub: 'Дубляж', status: 'Статус', translator: 'Переводчик' };
-            updatesList.innerHTML = todayUpdates.map(update => `
-                <div class="update-item">
-                    <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
-                    <div class="update-series">${escapeHtml(update.series)}</div>
-                    <div class="update-detail">${escapeHtml(update.detail)}</div>
-                    <div class="update-date-label">${update.dateLabel} • ${update.date}</div>
-                </div>
-            `).join('');
+            
+            // 🔥 Группировка по дням
+            const todayItems = todayUpdates.filter(u => u.dateValue === 'today');
+            const yesterdayItems = todayUpdates.filter(u => u.dateValue === 'yesterday');
+            
+            let html = '';
+            
+            if (todayItems.length > 0) {
+                html += `<div class="updates-day-divider"><span class="updates-day-divider-label today">Сегодня</span></div>`;
+                html += todayItems.map(update => `
+                    <div class="update-item" data-date="${update.date}" data-series="${escapeHtml(update.series)}">
+                        <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
+                        <div class="update-series">${escapeHtml(update.series)}</div>
+                        <div class="update-detail">${escapeHtml(update.detail)}</div>
+                        <div class="update-date-label">${update.dateLabel} • ${update.date}</div>
+                    </div>
+                `).join('');
+            }
+            
+            if (yesterdayItems.length > 0) {
+                html += `<div class="updates-day-divider"><span class="updates-day-divider-label yesterday">Вчера</span></div>`;
+                html += yesterdayItems.map(update => `
+                    <div class="update-item" data-date="${update.date}" data-series="${escapeHtml(update.series)}">
+                        <span class="update-type ${update.type}">${typeLabels[update.type]}</span>
+                        <div class="update-series">${escapeHtml(update.series)}</div>
+                        <div class="update-detail">${escapeHtml(update.detail)}</div>
+                        <div class="update-date-label">${update.dateLabel} • ${update.date}</div>
+                    </div>
+                `).join('');
+            }
+            
+            updatesList.innerHTML = html;
+            
+            // 🔥 Обработчики клика на обновления
+            updatesList.querySelectorAll('.update-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dateStr = item.dataset.date;
+                    const series = item.dataset.series;
+                    if (dateStr && series) {
+                        updatesDropdown.classList.remove('open');
+                        updatesBtn.classList.remove('active');
+                        scrollToCell(dateStr, series);
+                    }
+                });
+            });
         }
 
         function parseFilterValue(value) {
@@ -2307,7 +2380,6 @@
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки оранжевым + сброс затемнения
                         cell.style.borderColor = 'rgba(249, 115, 22, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
                         cell.style.opacity = '1';
@@ -2345,7 +2417,6 @@
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки розовым + сброс затемнения
                         cell.style.borderColor = 'rgba(236, 72, 153, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
                         cell.style.opacity = '1';
