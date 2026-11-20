@@ -1695,17 +1695,22 @@
                     const dateStr = item.dataset.date;
                     const key = `${seriesName}|${dateStr}`;
                     
+                    console.log(`🔍 Клик по фильтру ${filterType}: серия="${seriesName}", дата="${dateStr}", ключ="${key}"`);
+                    
                     if (filterType === 'airing') {
                         selectedAiringKey = selectedAiringKey === key ? null : key;
+                        console.log(`  → selectedAiringKey = "${selectedAiringKey}"`);
                     } else if (filterType === 'voice') {
                         selectedVoiceKey = selectedVoiceKey === key ? null : key;
+                        console.log(`  → selectedVoiceKey = "${selectedVoiceKey}"`);
                     } else if (filterType === 'dub') {
                         selectedDubKey = selectedDubKey === key ? null : key;
+                        console.log(`  → selectedDubKey = "${selectedDubKey}"`);
                     }
                     
                     updateFilterLists();
                     renderView();
-                    setTimeout(() => scrollToCell(dateStr, seriesName), 100);
+                    setTimeout(() => scrollToCell(dateStr, seriesName), 300);
                 });
             });
         }
@@ -1748,6 +1753,8 @@
             const targetMonthValue = `${year}-${month}`;
             const currentMonthValue = monthFilterInput.value;
 
+            console.log(`🔍 scrollToCell: день=${day}, серия="${seriesName}", целевой месяц="${targetMonthValue}", текущий месяц="${currentMonthValue}"`);
+
             if (currentMonthValue !== targetMonthValue) {
                 monthFilterInput.value = targetMonthValue;
                 const option = monthDropdown.querySelector(`[data-value="${targetMonthValue}"]`);
@@ -1757,21 +1764,24 @@
                     option.classList.add('selected');
                 }
                 renderView();
-                setTimeout(() => highlightCell(day, seriesName), 200);
+                setTimeout(() => highlightCell(day, seriesName), 300);
             } else {
                 highlightCell(day, seriesName);
             }
         }
 
         function highlightCell(day, seriesName) {
+            console.log(`🔍 highlightCell: ищем день ${day}, серию "${seriesName}"`);
             let cellFound = false;
             
             document.querySelectorAll('.day-cell').forEach(cell => {
                 const cellDay = parseInt(cell.dataset.day);
+                console.log(`  → Ячейка: data-day="${cell.dataset.day}", cellDay=${cellDay}`);
                 
                 if (cellDay === day) {
                     cell.querySelectorAll('.event-card').forEach(card => {
                         const title = card.querySelector('.event-title');
+                        console.log(`    → Карточка: title="${title ? title.textContent.trim() : 'null'}"`);
                         if (title && title.textContent.trim() === seriesName) {
                             cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                             cell.style.transition = 'all 0.5s ease';
@@ -1784,7 +1794,7 @@
             });
             
             if (!cellFound) {
-                console.warn(`Не удалось найти трансляцию "${seriesName}" на ${day} число`);
+                console.warn(`❌ Не удалось найти трансляцию "${seriesName}" на ${day} число`);
             }
         }
 
@@ -2265,7 +2275,6 @@
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки как у ended/newSeason
                         cell.style.borderColor = 'rgba(16, 185, 129, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
                         dayEvents.forEach(event => {
@@ -2295,13 +2304,19 @@
                     }
                 }
             } else if (activeFilters.voice) {
+                console.log(`🔍 applyCellHighlighting: voice активен, selectedVoiceKey="${selectedVoiceKey}", dayEvents.length=${dayEvents.length}`);
                 if (selectedVoiceKey) {
                     const [selSeries, selDate] = selectedVoiceKey.split('|');
-                    const hasSelectedInCell = dayEvents.some(e => 
-                        e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
-                    );
+                    console.log(`  → selSeries="${selSeries}", selDate="${selDate}"`);
+                    const hasSelectedInCell = dayEvents.some(e => {
+                        const eSeries = e[CONFIG.colSeries].trim();
+                        const eDate = formatDateDMY(e._parsedDate);
+                        const match = eSeries === selSeries && eDate === selDate;
+                        if (match) console.log(`  → НАЙДЕНО: ${eSeries} на ${eDate}`);
+                        return match;
+                    });
+                    console.log(`  → hasSelectedInCell = ${hasSelectedInCell}`);
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки как у ended/newSeason
                         cell.style.borderColor = 'rgba(249, 115, 22, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
                         dayEvents.forEach(event => {
@@ -2331,13 +2346,19 @@
                     }
                 }
             } else if (activeFilters.dub) {
+                console.log(`🔍 applyCellHighlighting: dub активен, selectedDubKey="${selectedDubKey}", dayEvents.length=${dayEvents.length}`);
                 if (selectedDubKey) {
                     const [selSeries, selDate] = selectedDubKey.split('|');
-                    const hasSelectedInCell = dayEvents.some(e => 
-                        e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
-                    );
+                    console.log(`  → selSeries="${selSeries}", selDate="${selDate}"`);
+                    const hasSelectedInCell = dayEvents.some(e => {
+                        const eSeries = e[CONFIG.colSeries].trim();
+                        const eDate = formatDateDMY(e._parsedDate);
+                        const match = eSeries === selSeries && eDate === selDate;
+                        if (match) console.log(`  → НАЙДЕНО: ${eSeries} на ${eDate}`);
+                        return match;
+                    });
+                    console.log(`  → hasSelectedInCell = ${hasSelectedInCell}`);
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки как у ended/newSeason
                         cell.style.borderColor = 'rgba(236, 72, 153, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
                         dayEvents.forEach(event => {
