@@ -1228,7 +1228,6 @@
             }
             
             const queryNormalized = normalizeSearch(query);
-            
             let exactMatches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
             
             let fuzzyMatches = [];
@@ -1850,7 +1849,6 @@
             }
         }
 
-        // 🔥 ИСПРАВЛЕНО: подсветка конкретной карточки без затемнения других
         function highlightCell(day, seriesName) {
             let cellFound = false;
             
@@ -1862,23 +1860,9 @@
                         const title = card.querySelector('.event-title');
                         if (title && title.textContent.trim() === seriesName) {
                             cell.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                            
-                            // 🔥 Подсветка ячейки
                             cell.style.transition = 'all 0.5s ease';
                             cell.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.8)';
-                            
-                            // 🔥 Подсветка конкретной карточки
-                            card.style.transition = 'all 0.5s ease';
-                            card.style.borderColor = 'rgba(102, 126, 234, 0.9)';
-                            card.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.6)';
-                            card.style.background = 'rgba(102, 126, 234, 0.2)';
-                            
-                            setTimeout(() => { 
-                                cell.style.boxShadow = ''; 
-                                card.style.borderColor = '';
-                                card.style.boxShadow = '';
-                                card.style.background = '';
-                            }, 3000);
+                            setTimeout(() => { cell.style.boxShadow = ''; }, 2500);
                             cellFound = true;
                         }
                     });
@@ -1935,28 +1919,31 @@
                 const dateLabel = isToday ? 'Сегодня' : 'Вчера';
                 const dateValue = isToday ? 'today' : 'yesterday';
                 
+                // 🔥 ИСПРАВЛЕНО: передаём дату эфира (event._parsedDate), а не дату обновления
+                const airDate = formatDateDMY(event._parsedDate);
+                
                 if (changeType.includes('voice') && voice && voice !== 'ожидаем' && voice !== '') {
-                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                 }
                 if (changeType.includes('dub') && dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') {
-                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                 }
                 if (changeType.includes('status')) {
                     const statusLower = status.toLowerCase();
                     if (statusLower.includes('перенос') || statusLower.includes('перенес')) {
-                        updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                        updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                     }
                 }
                 if (changeType.includes('translator') && translator && translator !== 'Не назначен' && translator !== '') {
-                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                 }
                 
                 if (changeType === 'manual' || changeType === '') {
-                    if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
-                    if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    if (voice && voice !== 'ожидаем' && voice !== '') updates.push({ type: 'voice', series, detail: `Вышла озвучка от AlisaDirilis — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
+                    if (dub && dub !== 'ожидаем' && dub.toLowerCase() !== 'не будет' && dub !== '') updates.push({ type: 'dub', series, detail: `Вышел дубляж — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                     const statusLower = status.toLowerCase();
-                    if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
-                    if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: updatedStr, dateLabel, dateValue });
+                    if (statusLower.includes('перенос') || statusLower.includes('перенес')) updates.push({ type: 'status', series, detail: `Статус изменён на "Перенос" — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
+                    if (translator && translator !== 'Не назначен' && translator !== '') updates.push({ type: 'translator', series, detail: `Переводчик: ${translator} — Сезон ${season} Серия ${episode}`, date: airDate, dateLabel, dateValue });
                 }
             });
             
@@ -2008,19 +1995,20 @@
             
             updatesList.innerHTML = html;
             
-            // 🔥 Обработчик клика на обновление — переход к трансляции БЕЗ затемнения
+            // 🔥 Навешиваем обработчики клика на каждое обновление
             updatesList.querySelectorAll('.update-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const dateStr = item.dataset.date;
                     const series = item.dataset.series;
+                    console.log(`🔍 Клик по обновлению: серия="${series}", дата="${dateStr}"`);
                     if (dateStr && series) {
-                        // 🔥 Сбрасываем выбранные ключи фильтров, чтобы не было затемнения
+                        // Сбрасываем выбранные ключи фильтров
                         selectedAiringKey = null;
                         selectedVoiceKey = null;
                         selectedDubKey = null;
                         
-                        // Закрываем dropdown обновлений
+                        // Закрываем dropdown
                         updatesDropdown.classList.remove('open');
                         updatesBtn.classList.remove('active');
                         
