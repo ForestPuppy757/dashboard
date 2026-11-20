@@ -1338,7 +1338,6 @@
             });
         }
 
-        // 🔥 Обработчик клика на кнопки фильтров
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const filter = this.dataset.filter;
@@ -1351,7 +1350,7 @@
                 if (!activeFilters.voice) selectedVoiceKey = null;
                 if (!activeFilters.dub) selectedDubKey = null;
                 
-                // 🔥 Для "В эфире" — активируем "Неделя", для AlisaDirilis и Дубляж — "Прошлая неделя"
+                // 🔥 Для "В эфире" — Неделя, для AlisaDirilis и Дубляж — Прошлая неделя
                 if (filter === 'airing' && !wasActive) {
                     calendarViewFilter = 'week';
                     document.querySelectorAll('.view-filter-btn').forEach(b => b.classList.remove('active'));
@@ -2273,6 +2272,8 @@
                     if (hasSelectedInCell) {
                         cell.style.borderColor = 'rgba(16, 185, 129, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.3)';
+                        cell.style.opacity = '1';
+                        cell.style.filter = 'none';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedAiringKey)
@@ -2306,9 +2307,11 @@
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки оранжевым цветом
+                        // 🔥 Подсветка ячейки оранжевым + сброс затемнения
                         cell.style.borderColor = 'rgba(249, 115, 22, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(249, 115, 22, 0.3)';
+                        cell.style.opacity = '1';
+                        cell.style.filter = 'none';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedVoiceKey)
@@ -2342,9 +2345,11 @@
                         e[CONFIG.colSeries].trim() === selSeries && formatDateDMY(e._parsedDate) === selDate
                     );
                     if (hasSelectedInCell) {
-                        // 🔥 Подсветка ячейки розовым цветом
+                        // 🔥 Подсветка ячейки розовым + сброс затемнения
                         cell.style.borderColor = 'rgba(236, 72, 153, 0.6)';
                         cell.style.boxShadow = '0 0 15px rgba(236, 72, 153, 0.3)';
+                        cell.style.opacity = '1';
+                        cell.style.filter = 'none';
                         dayEvents.forEach(event => {
                             const eventKey = `${event[CONFIG.colSeries].trim()}|${formatDateDMY(event._parsedDate)}`;
                             if (eventKey === selectedDubKey)
