@@ -285,7 +285,8 @@
             white-space: nowrap;
         }
         .updates-day-divider-label.today { color: #6ee7b7; }
-        .updates-day-divider-label.yesterday { color: #fdba74; }
+        /* 🔥 Цвет "Вчера" — тёмно-зелёный как у прошедших трансляций */
+        .updates-day-divider-label.yesterday { color: #065f46; }
 
         .month-title {
             font-size: 1.5rem; font-weight: 700; color: #e2e8f0;
@@ -362,6 +363,13 @@
         .search-dropdown-item:last-child { border-bottom: none; }
         .search-dropdown-item:hover { background: rgba(102, 126, 234, 0.2); }
         .search-dropdown-empty { padding: 14px; text-align: center; color: #64748b; font-size: 13px; }
+        .search-dropdown-item.fuzzy-match { color: #fdba74; }
+        .search-dropdown-item.fuzzy-match::after {
+            content: ' (похоже)';
+            font-size: 11px;
+            color: #94a3b8;
+            font-style: italic;
+        }
 
         .search-info-block {
             margin-top: 12px;
@@ -805,6 +813,36 @@
             return String(text || '').toLowerCase().replace(/ё/g, 'е');
         }
 
+        // 🔥 Расстояние Левенштейна для нечёткого поиска
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        // 🔥 Допустимое количество ошибок в зависимости от длины
+        function getMaxErrors(len) {
+            if (len <= 4) return 1;
+            if (len <= 8) return 2;
+            if (len <= 15) return 2;
+            return 3;
+        }
+
         function getTodayFormatted() {
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
@@ -1180,6 +1218,7 @@
         function openDropdown() { searchDropdown.classList.add('active'); }
         function closeDropdown() { searchDropdown.classList.remove('active'); }
 
+        // 🔥 Нечёткий поиск с поддержкой опечаток
         seriesSearch.addEventListener('input', function() {
             let query = this.value.trim();
             searchClear.classList.toggle('visible', this.value.length > 0);
@@ -1193,23 +1232,47 @@
             }
             
             const queryNormalized = normalizeSearch(query);
-            let matches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
             
-            if (matches.length === 0) {
-                const converted = convertLayout(query);
-                const convertedNormalized = normalizeSearch(converted);
-                matches = uniqueSeries.filter(s => normalizeSearch(s).includes(convertedNormalized));
-                if (matches.length > 0) this.value = converted;
+            // 1. Точное вхождение (подстрока)
+            let exactMatches = uniqueSeries.filter(s => normalizeSearch(s).includes(queryNormalized));
+            
+            // 2. Если точных нет — нечёткий поиск по расстоянию Левенштейна
+            let fuzzyMatches = [];
+            if (exactMatches.length === 0 && queryNormalized.length >= 2) {
+                const maxErrors = getMaxErrors(queryNormalized.length);
+                const scored = uniqueSeries.map(s => {
+                    const sNorm = normalizeSearch(s);
+                    // Проверяем расстояние между запросом и каждым подстрокой сериала
+                    let bestDist = Infinity;
+                    for (let start = 0; start <= sNorm.length - queryNormalized.length; start++) {
+                        for (let len = Math.max(queryNormalized.length - 1, queryNormalized.length); len <= queryNormalized.length + 2 && start + len <= sNorm.length; len++) {
+                            const sub = sNorm.substr(start, len);
+                            const dist = levenshteinDistance(queryNormalized, sub);
+                            if (dist < bestDist) bestDist = dist;
+                        }
+                    }
+                    // Также проверяем полное название
+                    const fullDist = levenshteinDistance(queryNormalized, sNorm);
+                    if (fullDist < bestDist) bestDist = fullDist;
+                    return { name: s, dist: bestDist };
+                }).filter(x => x.dist <= maxErrors)
+                  .sort((a, b) => a.dist - b.dist);
+                
+                fuzzyMatches = scored.map(x => x.name);
             }
             
-            if (matches.length === 0) {
+            if (exactMatches.length === 0 && fuzzyMatches.length === 0) {
                 searchDropdownInner.innerHTML = '<div class="search-dropdown-empty">Ничего не найдено</div>';
                 openDropdown();
                 return;
             }
             
-            searchDropdownInner.innerHTML = matches.map(s => 
-                `<div class="search-dropdown-item" data-series="${escapeHtml(s)}">${escapeHtml(s)}</div>`
+            // Показываем сначала точные, потом нечёткие
+            const displayMatches = exactMatches.length > 0 ? exactMatches : fuzzyMatches;
+            const isFuzzy = exactMatches.length === 0;
+            
+            searchDropdownInner.innerHTML = displayMatches.map(s => 
+                `<div class="search-dropdown-item${isFuzzy ? ' fuzzy-match' : ''}" data-series="${escapeHtml(s)}">${escapeHtml(s)}</div>`
             ).join('');
             openDropdown();
             
